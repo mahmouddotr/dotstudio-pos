@@ -1426,33 +1426,25 @@ function playIntro() {
   }, 2500);
 }
 
-const FB = { apiKey: "AIzaSyBLG-wsDxdIcXpaMVXJoiTXZ68xx-tog3Q", authDomain: "cazenova-pos.firebaseapp.com", projectId: "cazenova-pos", storageBucket: "cazenova-pos.firebasestorage.app", messagingSenderId: "412831386037", appId: "1:412831386037:web:b3bb26cefcd79e0c8e71fc" };
-let db = null;
-function initFB() { try { if (!firebase.apps.length) firebase.initializeApp(FB); db = firebase.firestore(); console.log('[CZ] Firebase ready') } catch (e) { console.error(e) } }
-
-async function doLogin() {
-  const u = document.getElementById('loginUser').value.trim();
-  const p = document.getElementById('loginPass').value;
-  const e = document.getElementById('loginErr');
-  const b = document.getElementById('loginBtn');
-  e.textContent = ''; e.style.color = 'var(--red)';
-  if (!u || !p) { e.textContent = T('errEmpty'); return }
-  b.disabled = true; e.textContent = T('errChecking'); e.style.color = 'var(--text-2)';
-  if (!db) { e.textContent = T('errConn'); e.style.color = 'var(--red)'; b.disabled = false; return }
-  try {
-    const s = await db.collection('users').where('username', '==', u).where('password', '==', p).limit(1).get();
-    if (s.empty) { e.textContent = T('errInvalid'); e.style.color = 'var(--red)'; b.disabled = false; return }
-    const ud = s.docs[0], user = { id: ud.id, ...ud.data() };
-    if (user.is_active === false) { e.textContent = T('errSuspended'); e.style.color = 'var(--red)'; b.disabled = false; return }
-    localStorage.setItem('cz_session', user.id);
-    localStorage.setItem('cz_user', JSON.stringify(user));
-    e.textContent = T('errSuccess'); e.style.color = 'var(--green)';
-    setTimeout(() => { alert('✅ ' + T('errSuccess') + '\n' + (user.name || user.username)); b.disabled = false }, 900);
-  } catch (err) { console.error(err); e.textContent = 'Error: ' + err.message; e.style.color = 'var(--red)'; b.disabled = false }
+const LOGIN_ACCOUNTS = Object.freeze({
+  admin: { password: 'admin2026', route: 'admin/dashboard.html' }, dina: { password: 'dina2026', route: 'admin/dashboard.html' }, amal: { password: 'amal2026', route: 'admin/dashboard.html' }, fatma: { password: 'fatma2026', route: 'admin/dashboard.html' }, nada: { password: 'nada2026', route: 'admin/dashboard.html' }, basmala: { password: 'basmala2026', route: 'admin/dashboard.html' },
+  caznova: { password: 'caznova2026', route: 'owner/dashboard.html' }, smozy: { password: 'smozy2026', route: 'owner/dashboard.html' }, bnsheikh: { password: 'bnsheikh2026', route: 'owner/dashboard.html' }, mastore: { password: 'mastore2026', route: 'owner/dashboard.html' },
+  ca_cashier: { password: 'ca_cashier2026', route: 'cashier/pos.html' }, sm_cashier: { password: 'sm_cashier2026', route: 'cashier/pos.html' }, bn_cashier: { password: 'bn_cashier2026', route: 'cashier/pos.html' }, ma_cashier: { password: 'ma_cashier2026', route: 'cashier/pos.html' },
+  talqa: { password: 'talqa2026', route: 'delivery/dashboard.html' }, hala: { password: 'hala2026', route: 'delivery/dashboard.html' }, ahla: { password: 'ahla2026', route: 'delivery/dashboard.html' }, customer: { password: 'customer2026', route: 'customer/storefront.html' }
+});
+function doLogin() {
+  const username = document.getElementById('loginUser').value.trim().toLowerCase();
+  const password = document.getElementById('loginPass').value;
+  const error = document.getElementById('loginErr');
+  const button = document.getElementById('loginBtn');
+  error.textContent = '';
+  if (button) button.disabled = false;
+  const account = LOGIN_ACCOUNTS[username];
+  if (account && account.password === password) { window.location.href = account.route; return; }
+  error.textContent = 'بيانات الدخول غير صحيحة';
+  error.style.color = 'var(--red)';
 }
-
 window.addEventListener('DOMContentLoaded', () => {
-  initFB();
   setLang(state.lang);
   playIntro();
   const pi = document.getElementById('loginPass'), ui = document.getElementById('loginUser');
