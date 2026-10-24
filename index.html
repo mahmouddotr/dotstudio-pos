@@ -1899,7 +1899,56 @@ window.addEventListener('DOMContentLoaded', () => {
 
 </style>
   
+
+<script id="absolute-final-login">
+function doLogin() {
+    const uEl = document.getElementById('loginUser');
+    const pEl = document.getElementById('loginPass');
+    const e = document.getElementById('loginErr');
+    
+    if (!uEl || !pEl) return;
+    
+    const u = uEl.value.trim().toLowerCase();
+    const p = pEl.value.trim().toLowerCase();
+    
+    if (e) e.textContent = '';
+
+    const accounts = {
+        'admin': { pass: 'admin2026', dest: 'admin/dashboard.html' },
+        'dina': { pass: 'dina2026', dest: 'admin/dashboard.html' },
+        'amal': { pass: 'amal2026', dest: 'admin/dashboard.html' },
+        'fatma': { pass: 'fatma2026', dest: 'admin/dashboard.html' },
+        'nada': { pass: 'nada2026', dest: 'admin/dashboard.html' },
+        'basmala': { pass: 'basmala2026', dest: 'admin/dashboard.html' },
+        'caznova': { pass: 'caznova2026', dest: 'owner/dashboard.html' },
+        'smozy': { pass: 'smozy2026', dest: 'owner/dashboard.html' },
+        'bnsheikh': { pass: 'bnsheikh2026', dest: 'owner/dashboard.html' },
+        'mastore': { pass: 'mastore2026', dest: 'owner/dashboard.html' },
+        'ca_cashier': { pass: 'ca_cashier2026', dest: 'cashier/pos.html' },
+        'sm_cashier': { pass: 'sm_cashier2026', dest: 'cashier/pos.html' },
+        'bn_cashier': { pass: 'bn_cashier2026', dest: 'cashier/pos.html' },
+        'ma_cashier': { pass: 'ma_cashier2026', dest: 'cashier/pos.html' },
+        'talqa': { pass: 'talqa2026', dest: 'delivery/dashboard.html' },
+        'hala': { pass: 'hala2026', dest: 'delivery/dashboard.html' },
+        'ahla': { pass: 'ahla2026', dest: 'delivery/dashboard.html' },
+        'customer': { pass: 'customer2026', dest: 'customer/storefront.html' }
+    };
+
+    if (accounts[u] && accounts[u].pass === p) {
+        localStorage.setItem('cz_user', JSON.stringify({ username: u }));
+        window.location.href = accounts[u].dest;
+    } else {
+        if (e) {
+            e.textContent = 'بيانات الدخول غير صحيحة';
+            e.style.color = '#ff453a';
+        } else {
+            alert('بيانات الدخول غير صحيحة');
+        }
+    }
+}
+</script>
 </body>
+
 </html>
 <style>
 /* ===== FINAL TOUCHES ===== */
