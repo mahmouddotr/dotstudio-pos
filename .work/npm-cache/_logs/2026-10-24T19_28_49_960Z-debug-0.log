@@ -1,0 +1,253 @@
+0 verbose cli /usr/local/bin/node /usr/local/lib/node_modules/npm/bin/npm-cli.js
+1 info using npm@11.19.1
+2 info using node@v24.22.1
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/Users/dot/Desktop/BRTFOLIO/DotStudio® - POS-OLD/DotStudio_APPLE_FINAL/.npmrc
+5 silly config load:file:/Users/dot/.npmrc
+6 silly config load:file:/usr/local/etc/npmrc
+7 verbose title npm exec localtunnel --port 8000
+8 verbose argv "exec" "--yes" "--" "localtunnel" "--port" "8000"
+9 verbose logfile logs-max:10 dir:/Users/dot/Desktop/BRTFOLIO/DotStudio® - POS-OLD/DotStudio_APPLE_FINAL/.work/npm-cache/_logs/2026-10-24T19_28_49_960Z-
+10 verbose logfile /Users/dot/Desktop/BRTFOLIO/DotStudio® - POS-OLD/DotStudio_APPLE_FINAL/.work/npm-cache/_logs/2026-10-24T19_28_49_960Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:2348810240 maxSize:587202560 maxEntrySize:293601280
+13 http fetch GET 200 https://registry.npmmirror.com/localtunnel 133ms (cache miss)
+14 silly packumentCache heap:2348810240 maxSize:587202560 maxEntrySize:293601280
+15 silly packumentCache heap:2348810240 maxSize:587202560 maxEntrySize:293601280
+16 silly idealTree buildDeps
+17 silly fetch manifest localtunnel@2.0.2
+18 silly packumentCache full:https://registry.npmmirror.com/localtunnel cache-miss
+19 http fetch GET 200 https://registry.npmmirror.com/localtunnel 421ms (cache miss)
+20 silly packumentCache full:https://registry.npmmirror.com/localtunnel set size:10779 disposed:false
+21 silly placeDep ROOT localtunnel@2.0.2 OK for:  want: 2.0.2
+22 silly fetch manifest axios@0.21.4
+23 silly packumentCache full:https://registry.npmmirror.com/axios cache-miss
+24 silly fetch manifest debug@4.3.2
+25 silly packumentCache full:https://registry.npmmirror.com/debug cache-miss
+26 silly fetch manifest openurl@1.1.1
+27 silly packumentCache full:https://registry.npmmirror.com/openurl cache-miss
+28 silly fetch manifest yargs@17.1.1
+29 silly packumentCache full:https://registry.npmmirror.com/yargs cache-miss
+30 http fetch GET 200 https://registry.npmmirror.com/npm 653ms
+31 http fetch GET 200 https://registry.npmmirror.com/axios 319ms (cache miss)
+32 silly packumentCache full:https://registry.npmmirror.com/axios set size:143317 disposed:false
+33 http fetch GET 200 https://registry.npmmirror.com/debug 331ms (cache miss)
+34 silly packumentCache full:https://registry.npmmirror.com/debug set size:32036 disposed:false
+35 http fetch GET 200 https://registry.npmmirror.com/yargs 532ms (cache miss)
+36 silly packumentCache full:https://registry.npmmirror.com/yargs set size:98501 disposed:false
+37 http fetch GET 200 https://registry.npmmirror.com/openurl 1381ms (cache miss)
+38 silly packumentCache full:https://registry.npmmirror.com/openurl set size:2216 disposed:false
+39 silly placeDep ROOT axios@0.21.4 OK for: localtunnel@2.0.2 want: 0.21.4
+40 silly placeDep ROOT debug@4.3.2 OK for: localtunnel@2.0.2 want: 4.3.2
+41 silly placeDep ROOT openurl@1.1.1 OK for: localtunnel@2.0.2 want: 1.1.1
+42 silly placeDep ROOT yargs@17.1.1 OK for: localtunnel@2.0.2 want: 17.1.1
+43 silly fetch manifest follow-redirects@^1.14.0
+44 silly packumentCache full:https://registry.npmmirror.com/follow-redirects cache-miss
+45 silly fetch manifest ms@2.1.2
+46 silly packumentCache full:https://registry.npmmirror.com/ms cache-miss
+47 silly fetch manifest cliui@^7.0.2
+48 silly packumentCache full:https://registry.npmmirror.com/cliui cache-miss
+49 silly fetch manifest escalade@^3.1.1
+50 silly packumentCache full:https://registry.npmmirror.com/escalade cache-miss
+51 silly fetch manifest get-caller-file@^2.0.5
+52 silly packumentCache full:https://registry.npmmirror.com/get-caller-file cache-miss
+53 silly fetch manifest require-directory@^2.1.1
+54 silly packumentCache full:https://registry.npmmirror.com/require-directory cache-miss
+55 silly fetch manifest string-width@^4.2.0
+56 silly packumentCache full:https://registry.npmmirror.com/string-width cache-miss
+57 http fetch GET 200 https://registry.npmmirror.com/ms 118ms (cache miss)
+58 silly packumentCache full:https://registry.npmmirror.com/ms set size:15985 disposed:false
+59 silly fetch manifest y18n@^5.0.5
+60 silly packumentCache full:https://registry.npmmirror.com/y18n cache-miss
+61 http fetch GET 200 https://registry.npmmirror.com/get-caller-file 121ms (cache miss)
+62 silly packumentCache full:https://registry.npmmirror.com/get-caller-file set size:3962 disposed:false
+63 silly fetch manifest yargs-parser@^20.2.2
+64 silly packumentCache full:https://registry.npmmirror.com/yargs-parser cache-miss
+65 http fetch GET 200 https://registry.npmmirror.com/escalade 185ms (cache miss)
+66 silly packumentCache full:https://registry.npmmirror.com/escalade set size:6820 disposed:false
+67 http fetch GET 200 https://registry.npmmirror.com/cliui 201ms (cache miss)
+68 silly packumentCache full:https://registry.npmmirror.com/cliui set size:13583 disposed:false
+69 http fetch GET 200 https://registry.npmmirror.com/y18n 157ms (cache miss)
+70 silly packumentCache full:https://registry.npmmirror.com/y18n set size:9369 disposed:false
+71 http fetch GET 200 https://registry.npmmirror.com/follow-redirects 289ms (cache miss)
+72 silly packumentCache full:https://registry.npmmirror.com/follow-redirects set size:30718 disposed:false
+73 http fetch GET 200 https://registry.npmmirror.com/string-width 307ms (cache miss)
+74 silly packumentCache full:https://registry.npmmirror.com/string-width set size:14632 disposed:false
+75 http fetch GET 200 https://registry.npmmirror.com/require-directory 316ms (cache miss)
+76 silly packumentCache full:https://registry.npmmirror.com/require-directory set size:5300 disposed:false
+77 http fetch GET 200 https://registry.npmmirror.com/yargs-parser 279ms (cache miss)
+78 silly packumentCache full:https://registry.npmmirror.com/yargs-parser set size:34874 disposed:false
+79 silly placeDep ROOT follow-redirects@1.16.1 OK for: axios@0.21.4 want: ^1.14.0
+80 silly placeDep ROOT ms@2.1.2 OK for: debug@4.3.2 want: 2.1.2
+81 silly placeDep ROOT cliui@7.0.4 OK for: yargs@17.1.1 want: ^7.0.2
+82 silly placeDep ROOT escalade@3.2.0 OK for: yargs@17.1.1 want: ^3.1.1
+83 silly placeDep ROOT get-caller-file@2.0.5 OK for: yargs@17.1.1 want: ^2.0.5
+84 silly placeDep ROOT require-directory@2.1.1 OK for: yargs@17.1.1 want: ^2.1.1
+85 silly placeDep ROOT string-width@4.2.3 OK for: yargs@17.1.1 want: ^4.2.0
+86 silly placeDep ROOT y18n@5.0.8 OK for: yargs@17.1.1 want: ^5.0.5
+87 silly placeDep ROOT yargs-parser@20.2.9 OK for: yargs@17.1.1 want: ^20.2.2
+88 silly fetch manifest strip-ansi@^6.0.0
+89 silly packumentCache full:https://registry.npmmirror.com/strip-ansi cache-miss
+90 silly fetch manifest wrap-ansi@^7.0.0
+91 silly packumentCache full:https://registry.npmmirror.com/wrap-ansi cache-miss
+92 silly fetch manifest emoji-regex@^8.0.0
+93 silly packumentCache full:https://registry.npmmirror.com/emoji-regex cache-miss
+94 silly fetch manifest is-fullwidth-code-point@^3.0.0
+95 silly packumentCache full:https://registry.npmmirror.com/is-fullwidth-code-point cache-miss
+96 silly fetch manifest strip-ansi@^6.0.1
+97 silly packumentCache full:https://registry.npmmirror.com/strip-ansi cache-miss
+98 http fetch GET 200 https://registry.npmmirror.com/strip-ansi 89ms (cache miss)
+99 silly packumentCache full:https://registry.npmmirror.com/strip-ansi set size:8259 disposed:false
+100 http fetch GET 200 https://registry.npmmirror.com/strip-ansi 92ms (cache miss)
+101 silly packumentCache full:https://registry.npmmirror.com/strip-ansi set size:8259 disposed:false
+102 silly packumentCache full:https://registry.npmmirror.com/strip-ansi dispose
+103 http fetch GET 200 https://registry.npmmirror.com/wrap-ansi 110ms (cache miss)
+104 silly packumentCache full:https://registry.npmmirror.com/wrap-ansi set size:11587 disposed:false
+105 http fetch GET 200 https://registry.npmmirror.com/emoji-regex 112ms (cache miss)
+106 silly packumentCache full:https://registry.npmmirror.com/emoji-regex set size:18318 disposed:false
+107 http fetch GET 200 https://registry.npmmirror.com/is-fullwidth-code-point 160ms (cache miss)
+108 silly packumentCache full:https://registry.npmmirror.com/is-fullwidth-code-point set size:3385 disposed:false
+109 silly placeDep ROOT strip-ansi@6.0.1 OK for: cliui@7.0.4 want: ^6.0.0
+110 silly placeDep ROOT wrap-ansi@7.0.0 OK for: cliui@7.0.4 want: ^7.0.0
+111 silly fetch manifest ansi-regex@^5.0.1
+112 silly packumentCache full:https://registry.npmmirror.com/ansi-regex cache-miss
+113 silly fetch manifest ansi-styles@^4.0.0
+114 silly packumentCache full:https://registry.npmmirror.com/ansi-styles cache-miss
+115 http fetch GET 200 https://registry.npmmirror.com/ansi-styles 106ms (cache miss)
+116 silly packumentCache full:https://registry.npmmirror.com/ansi-styles set size:14621 disposed:false
+117 http fetch GET 200 https://registry.npmmirror.com/ansi-regex 109ms (cache miss)
+118 silly packumentCache full:https://registry.npmmirror.com/ansi-regex set size:10929 disposed:false
+119 silly placeDep ROOT emoji-regex@8.0.0 OK for: string-width@4.2.3 want: ^8.0.0
+120 silly placeDep ROOT is-fullwidth-code-point@3.0.0 OK for: string-width@4.2.3 want: ^3.0.0
+121 silly placeDep ROOT ansi-regex@5.0.1 OK for: strip-ansi@6.0.1 want: ^5.0.1
+122 silly placeDep ROOT ansi-styles@4.3.0 OK for: wrap-ansi@7.0.0 want: ^4.0.0
+123 silly fetch manifest color-convert@^2.0.1
+124 silly packumentCache full:https://registry.npmmirror.com/color-convert cache-miss
+125 http fetch GET 200 https://registry.npmmirror.com/color-convert 91ms (cache miss)
+126 silly packumentCache full:https://registry.npmmirror.com/color-convert set size:13807 disposed:false
+127 silly placeDep ROOT color-convert@2.0.1 OK for: ansi-styles@4.3.0 want: ^2.0.1
+128 silly fetch manifest color-name@~1.1.4
+129 silly packumentCache full:https://registry.npmmirror.com/color-name cache-miss
+130 http fetch GET 200 https://registry.npmmirror.com/color-name 86ms (cache miss)
+131 silly packumentCache full:https://registry.npmmirror.com/color-name set size:5598 disposed:false
+132 silly placeDep ROOT color-name@1.1.4 OK for: color-convert@2.0.1 want: ~1.1.4
+133 silly reify moves {}
+134 silly audit bulk request {
+134 silly audit   localtunnel: [ '2.0.2' ],
+134 silly audit   axios: [ '0.21.4' ],
+134 silly audit   debug: [ '4.3.2' ],
+134 silly audit   openurl: [ '1.1.1' ],
+134 silly audit   yargs: [ '17.1.1' ],
+134 silly audit   'follow-redirects': [ '1.16.1' ],
+134 silly audit   ms: [ '2.1.2' ],
+134 silly audit   cliui: [ '7.0.4' ],
+134 silly audit   escalade: [ '3.2.0' ],
+134 silly audit   'get-caller-file': [ '2.0.5' ],
+134 silly audit   'require-directory': [ '2.1.1' ],
+134 silly audit   'string-width': [ '4.2.3' ],
+134 silly audit   y18n: [ '5.0.8' ],
+134 silly audit   'yargs-parser': [ '20.2.9' ],
+134 silly audit   'strip-ansi': [ '6.0.1' ],
+134 silly audit   'wrap-ansi': [ '7.0.0' ],
+134 silly audit   'emoji-regex': [ '8.0.0' ],
+134 silly audit   'is-fullwidth-code-point': [ '3.0.0' ],
+134 silly audit   'ansi-regex': [ '5.0.1' ],
+134 silly audit   'ansi-styles': [ '4.3.0' ],
+134 silly audit   'color-convert': [ '2.0.1' ],
+134 silly audit   'color-name': [ '1.1.4' ]
+134 silly audit }
+135 http cache is-fullwidth-code-point@https://registry.npmmirror.com/is-fullwidth-code-point/-/is-fullwidth-code-point-3.0.0.tgz 0ms (cache hit)
+136 http cache color-name@https://registry.npmmirror.com/color-name/-/color-name-1.1.4.tgz 0ms (cache hit)
+137 http cache emoji-regex@https://registry.npmmirror.com/emoji-regex/-/emoji-regex-8.0.0.tgz 0ms (cache hit)
+138 http cache color-convert@https://registry.npmmirror.com/color-convert/-/color-convert-2.0.1.tgz 0ms (cache hit)
+139 http cache strip-ansi@https://registry.npmmirror.com/strip-ansi/-/strip-ansi-6.0.1.tgz 0ms (cache hit)
+140 http cache ansi-regex@https://registry.npmmirror.com/ansi-regex/-/ansi-regex-5.0.1.tgz 0ms (cache hit)
+141 http cache yargs-parser@https://registry.npmmirror.com/yargs-parser/-/yargs-parser-20.2.9.tgz 0ms (cache hit)
+142 http cache ansi-styles@https://registry.npmmirror.com/ansi-styles/-/ansi-styles-4.3.0.tgz 0ms (cache hit)
+143 http cache y18n@https://registry.npmmirror.com/y18n/-/y18n-5.0.8.tgz 0ms (cache hit)
+144 http cache require-directory@https://registry.npmmirror.com/require-directory/-/require-directory-2.1.1.tgz 0ms (cache hit)
+145 http cache escalade@https://registry.npmmirror.com/escalade/-/escalade-3.2.0.tgz 0ms (cache hit)
+146 http cache cliui@https://registry.npmmirror.com/cliui/-/cliui-7.0.4.tgz 0ms (cache hit)
+147 http cache wrap-ansi@https://registry.npmmirror.com/wrap-ansi/-/wrap-ansi-7.0.0.tgz 0ms (cache hit)
+148 http cache string-width@https://registry.npmmirror.com/string-width/-/string-width-4.2.3.tgz 0ms (cache hit)
+149 http cache follow-redirects@https://registry.npmmirror.com/follow-redirects/-/follow-redirects-1.16.1.tgz 0ms (cache hit)
+150 http cache get-caller-file@https://registry.npmmirror.com/get-caller-file/-/get-caller-file-2.0.5.tgz 0ms (cache hit)
+151 http cache yargs@https://registry.npmmirror.com/yargs/-/yargs-17.1.1.tgz 0ms (cache hit)
+152 http cache ms@https://registry.npmmirror.com/ms/-/ms-2.1.2.tgz 0ms (cache hit)
+153 http cache axios@https://registry.npmmirror.com/axios/-/axios-0.21.4.tgz 0ms (cache hit)
+154 http cache openurl@https://registry.npmmirror.com/openurl/-/openurl-1.1.1.tgz 0ms (cache hit)
+155 http cache debug@https://registry.npmmirror.com/debug/-/debug-4.3.2.tgz 0ms (cache hit)
+156 http cache localtunnel@https://registry.npmmirror.com/localtunnel/-/localtunnel-2.0.2.tgz 0ms (cache hit)
+157 silly tarball no local data for is-fullwidth-code-point@https://registry.npmmirror.com/is-fullwidth-code-point/-/is-fullwidth-code-point-3.0.0.tgz. Extracting by manifest.
+158 silly tarball no local data for color-name@https://registry.npmmirror.com/color-name/-/color-name-1.1.4.tgz. Extracting by manifest.
+159 silly tarball no local data for emoji-regex@https://registry.npmmirror.com/emoji-regex/-/emoji-regex-8.0.0.tgz. Extracting by manifest.
+160 silly tarball no local data for color-convert@https://registry.npmmirror.com/color-convert/-/color-convert-2.0.1.tgz. Extracting by manifest.
+161 silly tarball no local data for strip-ansi@https://registry.npmmirror.com/strip-ansi/-/strip-ansi-6.0.1.tgz. Extracting by manifest.
+162 silly tarball no local data for ansi-regex@https://registry.npmmirror.com/ansi-regex/-/ansi-regex-5.0.1.tgz. Extracting by manifest.
+163 silly tarball no local data for yargs-parser@https://registry.npmmirror.com/yargs-parser/-/yargs-parser-20.2.9.tgz. Extracting by manifest.
+164 silly tarball no local data for ansi-styles@https://registry.npmmirror.com/ansi-styles/-/ansi-styles-4.3.0.tgz. Extracting by manifest.
+165 silly tarball no local data for y18n@https://registry.npmmirror.com/y18n/-/y18n-5.0.8.tgz. Extracting by manifest.
+166 silly tarball no local data for require-directory@https://registry.npmmirror.com/require-directory/-/require-directory-2.1.1.tgz. Extracting by manifest.
+167 silly tarball no local data for escalade@https://registry.npmmirror.com/escalade/-/escalade-3.2.0.tgz. Extracting by manifest.
+168 silly tarball no local data for cliui@https://registry.npmmirror.com/cliui/-/cliui-7.0.4.tgz. Extracting by manifest.
+169 silly tarball no local data for wrap-ansi@https://registry.npmmirror.com/wrap-ansi/-/wrap-ansi-7.0.0.tgz. Extracting by manifest.
+170 silly tarball no local data for string-width@https://registry.npmmirror.com/string-width/-/string-width-4.2.3.tgz. Extracting by manifest.
+171 silly tarball no local data for follow-redirects@https://registry.npmmirror.com/follow-redirects/-/follow-redirects-1.16.1.tgz. Extracting by manifest.
+172 silly tarball no local data for get-caller-file@https://registry.npmmirror.com/get-caller-file/-/get-caller-file-2.0.5.tgz. Extracting by manifest.
+173 silly tarball no local data for yargs@https://registry.npmmirror.com/yargs/-/yargs-17.1.1.tgz. Extracting by manifest.
+174 silly tarball no local data for ms@https://registry.npmmirror.com/ms/-/ms-2.1.2.tgz. Extracting by manifest.
+175 silly tarball no local data for axios@https://registry.npmmirror.com/axios/-/axios-0.21.4.tgz. Extracting by manifest.
+176 silly tarball no local data for openurl@https://registry.npmmirror.com/openurl/-/openurl-1.1.1.tgz. Extracting by manifest.
+177 silly tarball no local data for debug@https://registry.npmmirror.com/debug/-/debug-4.3.2.tgz. Extracting by manifest.
+178 silly tarball no local data for localtunnel@https://registry.npmmirror.com/localtunnel/-/localtunnel-2.0.2.tgz. Extracting by manifest.
+179 http fetch POST 404 https://registry.npmmirror.com/-/npm/v1/security/advisories/bulk 46ms
+180 verbose audit error HttpErrorGeneral: 404 Not Found - POST https://registry.npmmirror.com/-/npm/v1/security/advisories/bulk - [NOT_IMPLEMENTED] /-/npm/v1/security/* not implemented yet
+180 verbose audit error     at /usr/local/lib/node_modules/npm/node_modules/npm-registry-fetch/lib/check-response.js:103:15
+180 verbose audit error     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+180 verbose audit error     at async #getReport (/usr/local/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/audit-report.js:334:19)
+180 verbose audit error     at async AuditReport.run (/usr/local/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/audit-report.js:101:19) {
+180 verbose audit error   headers: [Object: null prototype] {
+180 verbose audit error     server: [ 'Tengine' ],
+180 verbose audit error     date: [ 'Sat, 24 Oct 2026 19:28:53 GMT' ],
+180 verbose audit error     'content-type': [ 'application/json' ],
+180 verbose audit error     'transfer-encoding': [ 'chunked' ],
+180 verbose audit error     connection: [ 'keep-alive' ],
+180 verbose audit error     'strict-transport-security': [ 'max-age=5184000' ],
+180 verbose audit error     via: [ 'ens-cache3.eg1[,404666]' ],
+180 verbose audit error     'timing-allow-origin': [ '*' ],
+180 verbose audit error     eagleid: [ 'a3b5619717928701333907626e' ],
+180 verbose audit error     'x-fetch-attempts': [ '1' ]
+180 verbose audit error   },
+180 verbose audit error   statusCode: 404,
+180 verbose audit error   code: 'E404',
+180 verbose audit error   method: 'POST',
+180 verbose audit error   uri: 'https://registry.npmmirror.com/-/npm/v1/security/advisories/bulk',
+180 verbose audit error   body: {
+180 verbose audit error     error: '[NOT_IMPLEMENTED] /-/npm/v1/security/* not implemented yet'
+180 verbose audit error   },
+180 verbose audit error   pkgid: undefined
+180 verbose audit error }
+181 silly audit error [object Object]
+182 silly audit report null
+183 http fetch GET 200 https://cdn.npmmirror.com/packages/emoji-regex/8.0.0/emoji-regex-8.0.0.tgz 804ms (cache miss)
+184 http fetch GET 200 https://cdn.npmmirror.com/packages/ansi-regex/5.0.1/ansi-regex-5.0.1.tgz 831ms (cache miss)
+185 http fetch GET 200 https://cdn.npmmirror.com/packages/color-convert/2.0.1/color-convert-2.0.1.tgz 852ms (cache miss)
+186 http fetch GET 200 https://cdn.npmmirror.com/packages/strip-ansi/6.0.1/strip-ansi-6.0.1.tgz 856ms (cache miss)
+187 http fetch GET 200 https://cdn.npmmirror.com/packages/cliui/7.0.4/cliui-7.0.4.tgz 876ms (cache miss)
+188 http fetch GET 200 https://cdn.npmmirror.com/packages/ansi-styles/4.3.0/ansi-styles-4.3.0.tgz 895ms (cache miss)
+189 http fetch GET 200 https://cdn.npmmirror.com/packages/ms/2.1.2/ms-2.1.2.tgz 895ms (cache miss)
+190 http fetch GET 200 https://cdn.npmmirror.com/packages/wrap-ansi/7.0.0/wrap-ansi-7.0.0.tgz 896ms (cache miss)
+191 http fetch GET 200 https://cdn.npmmirror.com/packages/follow-redirects/1.16.1/follow-redirects-1.16.1.tgz 895ms (cache miss)
+192 http fetch GET 200 https://cdn.npmmirror.com/packages/yargs-parser/20.2.9/yargs-parser-20.2.9.tgz 908ms (cache miss)
+193 http fetch GET 200 https://cdn.npmmirror.com/packages/get-caller-file/2.0.5/get-caller-file-2.0.5.tgz 959ms (cache miss)
+194 http fetch GET 200 https://cdn.npmmirror.com/packages/openurl/1.1.1/openurl-1.1.1.tgz 999ms (cache miss)
+195 http fetch GET 200 https://cdn.npmmirror.com/packages/localtunnel/2.0.2/localtunnel-2.0.2.tgz 1021ms (cache miss)
+196 http fetch GET 200 https://cdn.npmmirror.com/packages/debug/4.3.2/debug-4.3.2.tgz 1032ms (cache miss)
+197 http fetch GET 200 https://cdn.npmmirror.com/packages/axios/0.21.4/axios-0.21.4.tgz 1059ms (cache miss)
+198 http fetch GET 200 https://cdn.npmmirror.com/packages/y18n/5.0.8/y18n-5.0.8.tgz 1211ms (cache miss)
+199 http fetch GET 200 https://cdn.npmmirror.com/packages/color-name/1.1.4/color-name-1.1.4.tgz 1310ms (cache miss)
+200 http fetch GET 200 https://cdn.npmmirror.com/packages/require-directory/2.1.1/require-directory-2.1.1.tgz 1389ms (cache miss)
+201 http fetch GET 200 https://cdn.npmmirror.com/packages/is-fullwidth-code-point/3.0.0/is-fullwidth-code-point-3.0.0.tgz 1392ms (cache miss)
+202 http fetch GET 200 https://cdn.npmmirror.com/packages/escalade/3.2.0/escalade-3.2.0.tgz 1399ms (cache miss)
+203 http fetch GET 200 https://cdn.npmmirror.com/packages/string-width/4.2.3/string-width-4.2.3.tgz 1426ms (cache miss)
+204 http fetch GET 200 https://cdn.npmmirror.com/packages/yargs/17.1.1/yargs-17.1.1.tgz 1772ms (cache miss)

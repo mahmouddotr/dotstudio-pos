@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1080 1080">
+  <defs>
+    <style>
+      .cls-1{fill:#ffffff}
+      .cls-2{fill:#aefc61;stroke:#ffffff;stroke-width:0.15;stroke-miterlimit:10}
+      .cls-3{fill:#aefc61;stroke:#95ff3d;stroke-miterlimit:10}
+    </style>
+  </defs>
+  <title>LOGO-ICON.svg</title>
+  <g id="Layer_1" data-name="Layer 1">
+    <path d="M0 0 L1080 0 L1080 1080 L0 1080 Z" class="cls-1"/>
+    <g>
+      <path d="M224.831 867.543 L224.831 211.204 L523.612 211.204 C727.371 211.204 855.7 336.594 855.7 539.374 C855.7 742.153 727.371 867.543 523.612 867.543 Z" class="cls-2"/>
+      <g>
+        <path d="M795.655 245.13 L795.655 215.914 L808.934 215.914 L808.934 212.775 L778.898 212.775 L778.898 215.914 L792.225 215.914 L792.225 245.13 Z" class="cls-3"/>
+        <path d="M820.62 245.13 L820.62 222.337 L820.524 217.991 L820.765 217.991 L822.841 222.337 L833.61 243.198 L837.763 243.198 L848.532 222.337 L850.56 217.991 L850.85 217.991 L850.753 222.337 L850.753 245.13 L854.182 245.13 L854.182 212.775 L849.449 212.775 L838.632 233.878 L835.832 239.866 L835.59 239.866 L832.741 233.878 L821.876 212.775 L817.191 212.775 L817.191 245.13 Z" class="cls-3"/>
+      </g>
+    </g>
+  </g>
+</svg>

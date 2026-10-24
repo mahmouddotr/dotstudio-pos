@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>المتاجر · DotStudio® POS</title>
+  <meta name="description" content="DotStudio® POS — منصة إدارة المتاجر والمبيعات والتوصيل.">
+  <meta name="theme-color" content="#000000">
+  <link rel="icon" type="image/png" href="../assets/img/LOGO-ICON-DONE.png">
+  <link rel="stylesheet" href="../assets/css/fonts.css">
+  <link rel="stylesheet" href="../shared/css/design-system.css">
+  <link rel="stylesheet" href="../shared/css/components.css">
+  <link rel="stylesheet" href="../shared/css/app.css">
+  <script src="../shared/js/i18n.js"></script>
+</head>
+<body>
+  <div id="app"></div>
+  <script src="../shared/js/core.js"></script>
+  <script src="../shared/js/data.js"></script>
+  <script src="../shared/js/shell.js"></script>
+  <script src="../shared/js/ui.js"></script>
+  <script src="../shared/js/pages/stores.js"></script>
+
+                <script id="kill-sw.js">
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        for(let registration of registrations) {
+                            registration.unregister();
+                        }
+                    });
+                }
+                </script>
+                </body>
+                
+</html>

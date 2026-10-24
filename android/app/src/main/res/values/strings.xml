@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">DotStudio POS</string>
+    <string name="title_activity_main">DotStudio POS</string>
+    <string name="package_name">com.dotstudio.pos</string>
+    <string name="custom_url_scheme">com.dotstudio.pos</string>
+</resources>

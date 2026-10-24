@@ -1,0 +1,22 @@
+const { chromium } = require('playwright');
+(async () => {
+  const b = await chromium.launch({ channel: 'chrome' });
+  const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+  const errs=[]; p.on('pageerror',e=>errs.push('PAGEERROR '+e.message)); p.on('console',m=>{if(m.type()==='error')errs.push('CONSOLE '+m.text())});
+  await p.goto('http://127.0.0.1:8000/index.html');
+  await p.waitForTimeout(500);
+  console.log('title', await p.title(), 'dir', await p.getAttribute('html','dir'));
+  console.log('h1', await p.textContent('#loginTitle'));
+  console.log('demo', await p.locator('.demo-chip').count());
+  await p.fill('#loginUser','admin'); await p.fill('#loginPass','admin2026');
+  await p.click('#loginBtn');
+  await p.waitForURL('**/admin/dashboard.html',{timeout:10000});
+  await p.waitForTimeout(1200);
+  console.log('url', p.url());
+  console.log('topbar', await p.locator('.ds-topbar').count(), 'sidebar', await p.locator('.ds-sidebar').count());
+  console.log('bodylen', (await p.textContent('body')).length);
+  console.log('langpill', await p.locator('.ds-lang-pill .opt').allTextContents());
+  console.log('errors', errs.slice(0,10));
+  await p.screenshot({path:'/tmp/smoke.png', fullPage:false});
+  await b.close();
+})().catch(e=>{console.error('FAIL',e);process.exit(1)});

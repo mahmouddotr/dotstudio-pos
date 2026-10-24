@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>DotStudio® POS — منصة إدارة المتاجر</title>
+  <meta name="description" content="DotStudio® POS — نقطة بيع ومتجر إلكتروني وتوصيل وتقارير في منصة واحدة. ابدأ باقة من 299 ج.م.">
+  <meta name="theme-color" content="#000000">
+  <link rel="icon" type="image/png" href="../assets/img/LOGO-ICON-DONE.png">
+  <link rel="stylesheet" href="../assets/css/fonts.css">
+  <link rel="stylesheet" href="../shared/css/design-system.css">
+  <link rel="stylesheet" href="../shared/css/components.css">
+  <link rel="stylesheet" href="../shared/css/app.css">
+  <script src="../shared/js/i18n.js"></script>
+</head>
+<body>
+  <header class="mkt-nav">
+    <a href="index.html" class="ds-brand" aria-label="DotStudio POS"><img src="../assets/img/LOGO-WHAIT.png" alt="DotStudio® POS" style="height:40px!important;width:auto!important"></a>
+    <nav class="mkt-nav-links">
+      <a href="#features" id="navFeatures">المزايا</a>
+      <a href="#pricing" id="navPricing">الأسعار</a>
+      <a href="../auth/jobs/jobs.html" id="navJobs">الوظائف</a>
+      <a href="../auth/public-chat.html" id="navCommunity">المجتمع</a>
+    </nav>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="lang-switch" data-lang-switch><button data-set-lang="ar">العربية</button><button data-set-lang="en">EN</button></div>
+      <a class="btn btn-primary btn-sm" href="../index.html" id="navLogin">دخول</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="mkt-hero">
+      <div class="mkt-kicker" id="mktKicker"><span class="dot" style="width:5px;height:5px;border-radius:50%;background:var(--lime)"></span><span id="kickerText">نظام إدارة متاجر متكامل</span></div>
+      <h1><span id="heroTitle1">كل أدوات التجارة الحديثة</span><br><span class="accent" id="heroTitle2">في منصة واحدة.</span></h1>
+      <p id="heroText">نقطة بيع، متجر إلكتروني، توصيل، محادثات وتقارير — سريعة، آمنة، ومصممة للنمو.</p>
+      <div class="mkt-hero-actions">
+        <a class="btn btn-primary" href="../index.html" id="heroCta">ابدأ الآن</a>
+        <a class="btn btn-secondary" href="../index.html" id="heroDemo">تجربة مباشرة</a>
+      </div>
+    </section>
+
+    <div class="mkt-strip">
+      <span id="strip1">نقطة بيع</span><span>·</span><span id="strip2">متجر إلكتروني</span><span>·</span><span id="strip3">تتبع لحظي</span><span>·</span><span id="strip4">محادثات موحدة</span><span>·</span><span id="strip5">تقارير ذكية</span>
+    </div>
+
+    <section class="mkt-section" id="features">
+      <div class="mkt-section-head"><h2 id="featuresTitle">كل ما تحتاجه، في مكان واحد</h2><p id="featuresSub">من أول بيعة حتى آخر تقرير — منصة واحدة تدير المتجر والفريق والتوصيل.</p></div>
+      <div class="mkt-features" id="featuresGrid"></div>
+
+      <div class="mkt-preview">
+        <div class="mkt-preview-bar"><i></i><i></i><i></i><span class="url">app.dotstudio.pos/admin/dashboard</span></div>
+        <div class="mkt-preview-body">
+          <div class="mkt-preview-kpis">
+            <div class="mkt-preview-kpi lime"><div class="l" id="pk1">إيرادات الشهر</div><div class="v">EGP 184,250</div></div>
+            <div class="mkt-preview-kpi"><div class="l" id="pk2">طلبات اليوم</div><div class="v">42</div></div>
+            <div class="mkt-preview-kpi"><div class="l" id="pk3">متوسط السلة</div><div class="v">EGP 386</div></div>
+            <div class="mkt-preview-kpi"><div class="l" id="pk4">متاجر نشطة</div><div class="v">4</div></div>
+          </div>
+          <div class="mkt-preview-grid">
+            <div class="mkt-preview-chart" id="previewChart"></div>
+            <div class="mkt-preview-list"><div class="r"><i></i><span></span><span></span></div><div class="r"><i></i><span></span><span></span></div><div class="r"><i></i><span></span><span></span></div><div class="r"><i></i><span></span><span></span></div><div class="r"><i></i><span></span><span></span></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mkt-section" id="pricing">
+      <div class="mkt-section-head"><h2 id="pricingTitle">أسعار واضحة، بلا مفاجآت</h2><p id="pricingSub">اختر الباقة المناسبة وابدأ فوراً عبر واتساب.</p></div>
+      <div class="plan-grid" id="plans"></div>
+      <p class="plan-note" id="pricingNote" style="margin-top:16px">كل الأسعار بالجنيه المصري · تفعيل فوري عبر واتساب</p>
+    </section>
+
+    <section class="mkt-cta">
+      <h2 id="ctaTitle">جاهز تنقل متجرك لمستوى تالي؟</h2>
+      <p id="ctaText">جرّب DotStudio® POS الآن بحساب تجريبي — بدون إعداد.</p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <a class="btn btn-primary" href="../index.html" id="ctaBtn">ابدأ الآن</a>
+        <a class="btn btn-secondary" href="../auth/jobs/jobs.html" id="ctaJobs">انضم للفريق</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mkt-footer">
+    <div class="ds-brand"><img src="../assets/img/LOGO-WHAIT.png" alt="DotStudio® POS" style="height:40px!important;width:auto!important"><span class="ds-brand-text" style="margin-inline-start:6px">DotStudio<span class="dot">®</span></span></div>
+    <span id="footerText">© 2026 DotStudio® — جميع الحقوق محفوظة.</span>
+  </footer>
+
+  <script src="../shared/js/core.js"></script>
+  <script src="../shared/js/data.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var DS = window.DS;
+    var t = DS.t, esc = DS.esc, icon = DS.icon, lang = DS.lang();
+    var planText = {
+      monthly: { name: lang === 'en' ? 'Monthly plan' : 'باقة شهرية', period: lang === 'en' ? 'per month' : 'شهرياً', save: '' },
+      sixmonths: { name: lang === 'en' ? '6-month plan' : 'باقة 6 أشهر', period: lang === 'en' ? 'per 6 months' : 'كل 6 أشهر', save: lang === 'en' ? 'Save 20%' : 'وفّر 20%' },
+      yearly: { name: lang === 'en' ? 'Yearly plan' : 'باقة سنوية', period: lang === 'en' ? 'per year' : 'سنوياً', save: lang === 'en' ? 'Save 30%' : 'وفّر 30%' }
+    };
+
+    /* Copy */
+    var copy = lang === 'en' ? {
+      kicker: 'The complete commerce platform', t1: 'Every modern retail tool', t2: 'in one place.',
+      hero: 'POS, storefront, delivery, chats and reports — fast, secure, built to grow.',
+      start: 'Start now', demo: 'Live demo', features: 'Features', pricing: 'Pricing', jobs: 'Jobs', community: 'Community', login: 'Sign in',
+      featuresTitle: 'Everything you need, in one place', featuresSub: 'From first sale to final report — one platform for your store, team and delivery.',
+      pricingTitle: 'Clear pricing, no surprises', pricingSub: 'Pick a plan and activate instantly on WhatsApp.',
+      note: 'All prices in EGP · instant activation on WhatsApp', ctaTitle: 'Ready to take your store to the next level?',
+      ctaText: 'Try DotStudio® POS now with a demo account — no setup required.', ctaBtn: 'Start now', ctaJobs: 'Join the team',
+      footer: '© 2026 DotStudio® — All rights reserved.', planCta: 'Subscribe on WhatsApp',
+      pk: ['Revenue this month', 'Orders today', 'Average basket', 'Active stores']
+    } : {
+      kicker: 'نظام إدارة متاجر متكامل', t1: 'كل أدوات التجارة الحديثة', t2: 'في منصة واحدة.',
+      hero: 'نقطة بيع، متجر إلكتروني، توصيل، محادثات وتقارير — سريعة، آمنة، ومصممة للنمو.',
+      start: 'ابدأ الآن', demo: 'تجربة مباشرة', features: 'المزايا', pricing: 'الأسعار', jobs: 'الوظائف', community: 'المجتمع', login: 'دخول',
+      featuresTitle: 'كل ما تحتاجه، في مكان واحد', featuresSub: 'من أول بيعة حتى آخر تقرير — منصة واحدة تدير المتجر والفريق والتوصيل.',
+      pricingTitle: 'أسعار واضحة، بلا مفاجآت', pricingSub: 'اختر الباقة المناسبة وابدأ فوراً عبر واتساب.',
+      note: 'كل الأسعار بالجنيه المصري · تفعيل فوري عبر واتساب', ctaTitle: 'جاهز تنقل متجرك لمستوى تالي؟',
+      ctaText: 'جرّب DotStudio® POS الآن بحساب تجريبي — بدون إعداد.', ctaBtn: 'ابدأ الآن', ctaJobs: 'انضم للفريق',
+      footer: '© 2026 DotStudio® — جميع الحقوق محفوظة.', planCta: 'اشترك عبر واتساب',
+      pk: ['إيرادات الشهر', 'طلبات اليوم', 'متوسط السلة', 'متاجر نشطة']
+    };
+    var el = function (id) { return document.getElementById(id); };
+    el('kickerText').textContent = copy.kicker;
+    el('heroTitle1').textContent = copy.t1;
+    el('heroTitle2').textContent = copy.t2;
+    el('heroText').textContent = copy.hero;
+    el('heroCta').textContent = copy.start;
+    el('heroDemo').textContent = copy.demo;
+    el('navFeatures').textContent = copy.features;
+    el('navPricing').textContent = copy.pricing;
+    el('navJobs').textContent = copy.jobs;
+    el('navCommunity').textContent = copy.community;
+    el('navLogin').textContent = copy.login;
+    el('featuresTitle').textContent = copy.featuresTitle;
+    el('featuresSub').textContent = copy.featuresSub;
+    el('pricingTitle').textContent = copy.pricingTitle;
+    el('pricingSub').textContent = copy.pricingSub;
+    el('pricingNote').textContent = copy.note;
+    el('ctaTitle').textContent = copy.ctaTitle;
+    el('ctaText').textContent = copy.ctaText;
+    el('ctaBtn').textContent = copy.ctaBtn;
+    el('ctaJobs').textContent = copy.ctaJobs;
+    el('footerText').textContent = copy.footer;
+    ['pk1', 'pk2', 'pk3', 'pk4'].forEach(function (id, i) { el(id).textContent = copy.pk[i]; });
+    el('strip1').textContent = lang === 'en' ? 'POS' : 'نقطة بيع';
+    el('strip2').textContent = lang === 'en' ? 'Storefront' : 'متجر إلكتروني';
+    el('strip3').textContent = lang === 'en' ? 'Live tracking' : 'تتبع لحظي';
+    el('strip4').textContent = lang === 'en' ? 'Unified inbox' : 'محادثات موحدة';
+    el('strip5').textContent = lang === 'en' ? 'Smart reports' : 'تقارير ذكية';
+
+    DS.$$('[data-set-lang]').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-set-lang') === lang);
+      b.addEventListener('click', function () {
+        var next = b.getAttribute('data-set-lang');
+        if (next === lang) return;
+        try { localStorage.setItem('ds_lang', next); } catch (e) {}
+        location.reload();
+      });
+    });
+
+    var FEATURES = [
+      { i: 'cashier', t: t('featurePos'), d: t('featurePosText') },
+      { i: 'store', t: t('featureStore'), d: t('featureStoreText') },
+      { i: 'mapPin', t: t('featureTracking'), d: t('featureTrackingText') },
+      { i: 'chat', t: t('featureChat'), d: t('featureChatText') },
+      { i: 'chart', t: t('featureReports'), d: t('featureReportsText') },
+      { i: 'shield', t: t('featureSecurity'), d: t('featureSecurityText') }
+    ];
+    el('featuresGrid').innerHTML = FEATURES.map(function (f) {
+      return '<article class="mkt-feature"><div class="ic">' + icon(f.i) + '</div><h3>' + esc(f.t) + '</h3><p>' + esc(f.d) + '</p></article>';
+    }).join('');
+
+    /* Preview chart bars */
+    var bars = [42, 58, 46, 72, 64, 88, 76, 94, 82, 100, 90, 96];
+    el('previewChart').innerHTML = '<div class="bars" style="height:100%;padding:8px 4px 0">' + bars.map(function (v, i) {
+      return '<div class="bar-col"><div class="bar-track"><div class="bar-fill" style="height:' + v + '%;opacity:' + (0.45 + i / 24) + '"></div></div></div>';
+    }).join('') + '</div>';
+
+    /* Plans */
+    var plans = DS.data.PLANS;
+    el('plans').innerHTML = plans.map(function (p) {
+      var x = planText[p.id];
+      var msg = lang === 'en'
+        ? 'Hello, I want to subscribe to the ' + x.name + ' for [store name].'
+        : 'مرحباً، أريد الاشتراك في ' + x.name + ' لحساب [اسم المتجر]';
+      var wa = 'https://wa.me/201226770582?text=' + encodeURIComponent(msg);
+      return '<article class="plan-card' + (p.featured ? ' featured' : '') + '">' +
+        (p.featured ? '<span class="plan-badge">' + esc(lang === 'en' ? 'Most popular' : 'الأكثر اختياراً') + '</span>' : (p.best ? '<span class="plan-badge">' + esc(lang === 'en' ? 'Best value' : 'الأفضل قيمة') + '</span>' : '')) +
+        '<div><div class="plan-name">' + esc(x.name) + '</div><div class="plan-price"><span class="amount">' + p.price + '</span><span class="cur">EGP</span><span class="period">' + esc(x.period) + (x.save ? ' · ' + esc(x.save) : '') + '</span></div></div>' +
+        '<ul class="plan-features">' + (lang === 'en' ? p.features_en : p.features).map(function (f) { return '<li>' + icon('check') + esc(f) + '</li>'; }).join('') + '</ul>' +
+        '<a class="btn ' + (p.featured ? 'btn-primary' : 'btn-secondary') + '" href="' + wa + '" target="_blank" rel="noopener" style="justify-content:center">' + icon('whatsapp') + esc(copy.planCta) + '</a>' +
+      '</article>';
+    }).join('');
+
+    /* Session-aware nav */
+    var user = DS.session();
+    if (user) {
+      el('navLogin').textContent = lang === 'en' ? 'Dashboard' : 'لوحة التحكم';
+      el('navLogin').href = DS.url(DS.roleHome(user));
+      el('heroCta').href = DS.url(DS.roleHome(user));
+      el('heroCta').textContent = lang === 'en' ? 'Open dashboard' : 'افتح لوحة التحكم';
+    }
+
+    /* Smooth anchors */
+    DS.$$('.mkt-nav-links a[href^="#"]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        var target = document.querySelector(a.getAttribute('href'));
+        if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      });
+    });
+  })();
+  </script>
+
+                <script id="kill-sw.js">
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        for(let registration of registrations) {
+                            registration.unregister();
+                        }
+                    });
+                }
+                </script>
+                </body>
+                
+</html>

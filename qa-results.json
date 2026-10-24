@@ -1,0 +1,920 @@
+{
+  "at": "2026-10-23T23:06:19.954Z",
+  "base": "http://127.0.0.1:8000",
+  "passed": 182,
+  "failed": 0,
+  "total": 182,
+  "failures": [],
+  "results": [
+    {
+      "name": "login · ar direction",
+      "pass": true,
+      "detail": "rtl/ar"
+    },
+    {
+      "name": "login · title localized",
+      "pass": true,
+      "detail": "مرحباً بك"
+    },
+    {
+      "name": "login · glass card 480px",
+      "pass": true,
+      "detail": "480px"
+    },
+    {
+      "name": "login · logo 60px",
+      "pass": true,
+      "detail": "60px"
+    },
+    {
+      "name": "login · mesh gradient animated 20s",
+      "pass": true,
+      "detail": "20s"
+    },
+    {
+      "name": "login · 8 demo accounts",
+      "pass": true,
+      "detail": "8"
+    },
+    {
+      "name": "login · 2 apple inputs",
+      "pass": true,
+      "detail": "2"
+    },
+    {
+      "name": "login · lime CTA",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "login · AR|EN pill",
+      "pass": true,
+      "detail": "2"
+    },
+    {
+      "name": "login · SF Pro typography",
+      "pass": true,
+      "detail": "\"SF Pro Display\", \"SF Pro Arabic\", sans-serif"
+    },
+    {
+      "name": "login · en direction",
+      "pass": true,
+      "detail": "ltr/en"
+    },
+    {
+      "name": "login · title localized",
+      "pass": true,
+      "detail": "Welcome back"
+    },
+    {
+      "name": "login · glass card 480px",
+      "pass": true,
+      "detail": "480px"
+    },
+    {
+      "name": "login · logo 60px",
+      "pass": true,
+      "detail": "60px"
+    },
+    {
+      "name": "login · mesh gradient animated 20s",
+      "pass": true,
+      "detail": "20s"
+    },
+    {
+      "name": "login · 8 demo accounts",
+      "pass": true,
+      "detail": "8"
+    },
+    {
+      "name": "login · 2 apple inputs",
+      "pass": true,
+      "detail": "2"
+    },
+    {
+      "name": "login · lime CTA",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "login · AR|EN pill",
+      "pass": true,
+      "detail": "2"
+    },
+    {
+      "name": "login · SF Pro typography",
+      "pass": true,
+      "detail": "\"SF Pro Display\", \"SF Pro Arabic\", sans-serif"
+    },
+    {
+      "name": "login · EN has no Arabic",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "account admin → /admin/dashboard.html",
+      "pass": true,
+      "detail": "/admin/dashboard.html"
+    },
+    {
+      "name": "account admin · not redirected to login",
+      "pass": true,
+      "detail": "/admin/dashboard.html"
+    },
+    {
+      "name": "account admin · session role",
+      "pass": true,
+      "detail": "superadmin"
+    },
+    {
+      "name": "account owner → /owner/dashboard.html",
+      "pass": true,
+      "detail": "/owner/dashboard.html"
+    },
+    {
+      "name": "account owner · not redirected to login",
+      "pass": true,
+      "detail": "/owner/dashboard.html"
+    },
+    {
+      "name": "account owner · session role",
+      "pass": true,
+      "detail": "owner"
+    },
+    {
+      "name": "account caznova → /owner/dashboard.html",
+      "pass": true,
+      "detail": "/owner/dashboard.html"
+    },
+    {
+      "name": "account caznova · not redirected to login",
+      "pass": true,
+      "detail": "/owner/dashboard.html"
+    },
+    {
+      "name": "account caznova · session role",
+      "pass": true,
+      "detail": "owner"
+    },
+    {
+      "name": "account smozy → /owner/dashboard.html",
+      "pass": true,
+      "detail": "/owner/dashboard.html"
+    },
+    {
+      "name": "account smozy · not redirected to login",
+      "pass": true,
+      "detail": "/owner/dashboard.html"
+    },
+    {
+      "name": "account smozy · session role",
+      "pass": true,
+      "detail": "owner"
+    },
+    {
+      "name": "account cashier → /cashier/pos.html",
+      "pass": true,
+      "detail": "/cashier/pos.html"
+    },
+    {
+      "name": "account cashier · not redirected to login",
+      "pass": true,
+      "detail": "/cashier/pos.html"
+    },
+    {
+      "name": "account cashier · session role",
+      "pass": true,
+      "detail": "cashier"
+    },
+    {
+      "name": "account delivery → /delivery/dashboard.html",
+      "pass": true,
+      "detail": "/delivery/dashboard.html"
+    },
+    {
+      "name": "account delivery · not redirected to login",
+      "pass": true,
+      "detail": "/delivery/dashboard.html"
+    },
+    {
+      "name": "account delivery · session role",
+      "pass": true,
+      "detail": "delivery"
+    },
+    {
+      "name": "account customer → /customer/storefront.html",
+      "pass": true,
+      "detail": "/customer/storefront.html"
+    },
+    {
+      "name": "account customer · not redirected to login",
+      "pass": true,
+      "detail": "/customer/storefront.html"
+    },
+    {
+      "name": "account customer · session role",
+      "pass": true,
+      "detail": "customer"
+    },
+    {
+      "name": "account dina → /admin/dashboard.html",
+      "pass": true,
+      "detail": "/admin/dashboard.html"
+    },
+    {
+      "name": "account dina · not redirected to login",
+      "pass": true,
+      "detail": "/admin/dashboard.html"
+    },
+    {
+      "name": "account dina · session role",
+      "pass": true,
+      "detail": "subadmin"
+    },
+    {
+      "name": "admin · sidebar has all sections",
+      "pass": true,
+      "detail": "14 links"
+    },
+    {
+      "name": "admin/dashboard · shell rendered",
+      "pass": true,
+      "detail": "topbar=true sidebar=true"
+    },
+    {
+      "name": "admin/dashboard · content rendered",
+      "pass": true,
+      "detail": "chars=2133"
+    },
+    {
+      "name": "admin/dashboard · no JS errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/dashboard · EN has no Arabic",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/dashboard · active nav",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/dashboard · EN dir",
+      "pass": true,
+      "detail": "ltr"
+    },
+    {
+      "name": "admin/orders · shell rendered",
+      "pass": true,
+      "detail": "topbar=true sidebar=true"
+    },
+    {
+      "name": "admin/orders · content rendered",
+      "pass": true,
+      "detail": "chars=4064"
+    },
+    {
+      "name": "admin/orders · no JS errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/orders · EN has no Arabic",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/orders · active nav",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/orders · EN dir",
+      "pass": true,
+      "detail": "ltr"
+    },
+    {
+      "name": "admin/products · shell rendered",
+      "pass": true,
+      "detail": "topbar=true sidebar=true"
+    },
+    {
+      "name": "admin/products · content rendered",
+      "pass": true,
+      "detail": "chars=2616"
+    },
+    {
+      "name": "admin/products · no JS errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/products · EN has no Arabic",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/products · active nav",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/products · EN dir",
+      "pass": true,
+      "detail": "ltr"
+    },
+    {
+      "name": "admin/stores · shell rendered",
+      "pass": true,
+      "detail": "topbar=true sidebar=true"
+    },
+    {
+      "name": "admin/stores · content rendered",
+      "pass": true,
+      "detail": "chars=1074"
+    },
+    {
+      "name": "admin/stores · no JS errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/stores · EN has no Arabic",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/stores · active nav",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/stores · EN dir",
+      "pass": true,
+      "detail": "ltr"
+    },
+    {
+      "name": "admin/customers · shell rendered",
+      "pass": true,
+      "detail": "topbar=true sidebar=true"
+    },
+    {
+      "name": "admin/customers · content rendered",
+      "pass": true,
+      "detail": "chars=1228"
+    },
+    {
+      "name": "admin/customers · no JS errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/customers · EN has no Arabic",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/customers · active nav",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/customers · EN dir",
+      "pass": true,
+      "detail": "ltr"
+    },
+    {
+      "name": "admin/cashiers · shell rendered",
+      "pass": true,
+      "detail": "topbar=true sidebar=true"
+    },
+    {
+      "name": "admin/cashiers · content rendered",
+      "pass": true,
+      "detail": "chars=826"
+    },
+    {
+      "name": "admin/cashiers · no JS errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/cashiers · EN has no Arabic",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/cashiers · active nav",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/cashiers · EN dir",
+      "pass": true,
+      "detail": "ltr"
+    },
+    {
+      "name": "admin/delivery-companies · shell rendered",
+      "pass": true,
+      "detail": "topbar=true sidebar=true"
+    },
+    {
+      "name": "admin/delivery-companies · content rendered",
+      "pass": true,
+      "detail": "chars=901"
+    },
+    {
+      "name": "admin/delivery-companies · no JS errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/delivery-companies · EN has no Arabic",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/delivery-companies · active nav",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/delivery-companies · EN dir",
+      "pass": true,
+      "detail": "ltr"
+    },
+    {
+      "name": "admin/sub-admins · shell rendered",
+      "pass": true,
+      "detail": "topbar=true sidebar=true"
+    },
+    {
+      "name": "admin/sub-admins · content rendered",
+      "pass": true,
+      "detail": "chars=799"
+    },
+    {
+      "name": "admin/sub-admins · no JS errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/sub-admins · EN has no Arabic",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/sub-admins · active nav",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/sub-admins · EN dir",
+      "pass": true,
+      "detail": "ltr"
+    },
+    {
+      "name": "admin/reports · shell rendered",
+      "pass": true,
+      "detail": "topbar=true sidebar=true"
+    },
+    {
+      "name": "admin/reports · content rendered",
+      "pass": true,
+      "detail": "chars=1185"
+    },
+    {
+      "name": "admin/reports · no JS errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/reports · EN has no Arabic",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/reports · active nav",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/reports · EN dir",
+      "pass": true,
+      "detail": "ltr"
+    },
+    {
+      "name": "admin/subscriptions · shell rendered",
+      "pass": true,
+      "detail": "topbar=true sidebar=true"
+    },
+    {
+      "name": "admin/subscriptions · content rendered",
+      "pass": true,
+      "detail": "chars=1690"
+    },
+    {
+      "name": "admin/subscriptions · no JS errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/subscriptions · EN has no Arabic",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/subscriptions · active nav",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/subscriptions · EN dir",
+      "pass": true,
+      "detail": "ltr"
+    },
+    {
+      "name": "admin/jobs · shell rendered",
+      "pass": true,
+      "detail": "topbar=true sidebar=true"
+    },
+    {
+      "name": "admin/jobs · content rendered",
+      "pass": true,
+      "detail": "chars=1043"
+    },
+    {
+      "name": "admin/jobs · no JS errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/jobs · EN has no Arabic",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/jobs · active nav",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/jobs · EN dir",
+      "pass": true,
+      "detail": "ltr"
+    },
+    {
+      "name": "admin/audit · shell rendered",
+      "pass": true,
+      "detail": "topbar=true sidebar=true"
+    },
+    {
+      "name": "admin/audit · content rendered",
+      "pass": true,
+      "detail": "chars=1456"
+    },
+    {
+      "name": "admin/audit · no JS errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/audit · EN has no Arabic",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/audit · active nav",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/audit · EN dir",
+      "pass": true,
+      "detail": "ltr"
+    },
+    {
+      "name": "admin/chats · shell rendered",
+      "pass": true,
+      "detail": "topbar=true sidebar=true"
+    },
+    {
+      "name": "admin/chats · content rendered",
+      "pass": true,
+      "detail": "chars=1094"
+    },
+    {
+      "name": "admin/chats · no JS errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/chats · EN has no Arabic",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/chats · active nav",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/chats · EN dir",
+      "pass": true,
+      "detail": "ltr"
+    },
+    {
+      "name": "admin/settings · shell rendered",
+      "pass": true,
+      "detail": "topbar=true sidebar=true"
+    },
+    {
+      "name": "admin/settings · content rendered",
+      "pass": true,
+      "detail": "chars=512"
+    },
+    {
+      "name": "admin/settings · no JS errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/settings · EN has no Arabic",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/settings · active nav",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "admin/settings · EN dir",
+      "pass": true,
+      "detail": "ltr"
+    },
+    {
+      "name": "toggle EN→AR · rtl",
+      "pass": true,
+      "detail": "{\"dir\":\"rtl\",\"lang\":\"ar\",\"stored\":\"ar\",\"nav\":\"لوحة التحكم\"}"
+    },
+    {
+      "name": "toggle AR→EN · ltr",
+      "pass": true,
+      "detail": "{\"dir\":\"ltr\",\"lang\":\"en\",\"stored\":\"en\"}"
+    },
+    {
+      "name": "toggle · no page errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "subadmin dina · role",
+      "pass": true,
+      "detail": "subadmin"
+    },
+    {
+      "name": "subadmin dina · permission chats",
+      "pass": true,
+      "detail": "chats"
+    },
+    {
+      "name": "subadmin dina · restricted sidebar",
+      "pass": true,
+      "detail": "3 links"
+    },
+    {
+      "name": "subadmin dina · no JS errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "subadmin amal · role",
+      "pass": true,
+      "detail": "subadmin"
+    },
+    {
+      "name": "subadmin amal · permission reports",
+      "pass": true,
+      "detail": "reports"
+    },
+    {
+      "name": "subadmin amal · restricted sidebar",
+      "pass": true,
+      "detail": "3 links"
+    },
+    {
+      "name": "subadmin amal · no JS errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "subadmin fatma · role",
+      "pass": true,
+      "detail": "subadmin"
+    },
+    {
+      "name": "subadmin fatma · permission orders",
+      "pass": true,
+      "detail": "orders,products"
+    },
+    {
+      "name": "subadmin fatma · restricted sidebar",
+      "pass": true,
+      "detail": "4 links"
+    },
+    {
+      "name": "subadmin fatma · no JS errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "subadmin nada · role",
+      "pass": true,
+      "detail": "subadmin"
+    },
+    {
+      "name": "subadmin nada · permission customers",
+      "pass": true,
+      "detail": "customers,delivery-companies"
+    },
+    {
+      "name": "subadmin nada · restricted sidebar",
+      "pass": true,
+      "detail": "4 links"
+    },
+    {
+      "name": "subadmin nada · no JS errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "subadmin basmala · role",
+      "pass": true,
+      "detail": "subadmin"
+    },
+    {
+      "name": "subadmin basmala · permission cashiers",
+      "pass": true,
+      "detail": "cashiers,jobs"
+    },
+    {
+      "name": "subadmin basmala · restricted sidebar",
+      "pass": true,
+      "detail": "4 links"
+    },
+    {
+      "name": "subadmin basmala · no JS errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "isolation caznova · products only own tenant",
+      "pass": true,
+      "detail": "[\"t-caznova\"]"
+    },
+    {
+      "name": "isolation caznova · orders only own tenant",
+      "pass": true,
+      "detail": "[\"t-caznova\"]"
+    },
+    {
+      "name": "isolation caznova · has data",
+      "pass": true,
+      "detail": "9 products / 8 orders"
+    },
+    {
+      "name": "isolation caznova/products · EN clean",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "isolation caznova/orders · EN clean",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "isolation caznova/customers · EN clean",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "isolation smozy · products only own tenant",
+      "pass": true,
+      "detail": "[\"t-smozy\"]"
+    },
+    {
+      "name": "isolation smozy · orders only own tenant",
+      "pass": true,
+      "detail": "[\"t-smozy\"]"
+    },
+    {
+      "name": "isolation smozy · has data",
+      "pass": true,
+      "detail": "9 products / 8 orders"
+    },
+    {
+      "name": "isolation smozy/products · EN clean",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "isolation smozy/orders · EN clean",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "isolation smozy/customers · EN clean",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "customer · add to cart",
+      "pass": true,
+      "detail": "1 lines"
+    },
+    {
+      "name": "customer · green cart bar visible",
+      "pass": true,
+      "detail": "count=1"
+    },
+    {
+      "name": "customer · cart bar opens modal",
+      "pass": true,
+      "detail": "Cart"
+    },
+    {
+      "name": "customer · modal shows cart + total",
+      "pass": true,
+      "detail": "Silver-plated bracelet 320 EGP × 1 320 EGP Subtotal 320 EGP "
+    },
+    {
+      "name": "customer · checkout page opens",
+      "pass": true,
+      "detail": "http://127.0.0.1:8000/customer/checkout.html"
+    },
+    {
+      "name": "customer · order confirmation modal",
+      "pass": true,
+      "detail": "ORD-1033 · delivering"
+    },
+    {
+      "name": "customer · order routed to Talqa",
+      "pass": true,
+      "detail": "dc-talqa"
+    },
+    {
+      "name": "customer · order timeline localized",
+      "pass": true,
+      "detail": "Order created → Order confirmed → Preparing your order → Driver on the way"
+    },
+    {
+      "name": "delivery · company is Talqa",
+      "pass": true,
+      "detail": "dc-talqa"
+    },
+    {
+      "name": "delivery · only Talqa orders",
+      "pass": true,
+      "detail": "[\"dc-talqa\"] · 5 orders"
+    },
+    {
+      "name": "delivery · new customer order visible",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "delivery · EN has no Arabic",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "delivery/dashboard · shell rendered",
+      "pass": true,
+      "detail": "topbar=true sidebar=true"
+    },
+    {
+      "name": "delivery/dashboard · content rendered",
+      "pass": true,
+      "detail": "chars=1202"
+    },
+    {
+      "name": "delivery/dashboard · no JS errors",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "delivery/dashboard · EN has no Arabic",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile · card fits viewport",
+      "pass": true,
+      "detail": "368px · no overflow=true"
+    }
+  ]
+}
