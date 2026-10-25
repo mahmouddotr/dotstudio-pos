@@ -194,6 +194,30 @@
       chatAdminOnly: 'للإدارة فقط', chatOwnersOnly: 'لأصحاب المتاجر فقط', chatLocked: 'هذه المحادثة غير متاحة لدورك',
       chatLockedText: 'يمكنك التواصل عبر القنوات المتاحة لك فقط. هذه القناة مخصصة لدور آخر.',
       sendMessage: 'اكتب رسالة…', send: 'إرسال', you: 'أنت', support: 'الدعم الفني',
+      chatDirect: 'المتجر', chatDirectTitle: 'محادثة المتجر', chatChannels: 'القنوات', chatChannelPick: 'اختر قناة',
+      chatDirectHint: 'محادثة مباشرة مع المتجر', chatSupportHint: 'فريق DotStudio® معك',
+      chatPublicHint: 'الجميع يمكنه المشاركة', chatStoresHint: 'أصحاب المتاجر فقط',
+      chatDeliveryHint: 'شركات التوصيل والمندوبون', chatOnline: 'متصل الآن',
+      chatPick: 'اختر محادثة', chatPickText: 'اختر قناة من القائمة لتبدأ الدردشة.',
+      chatNoRooms: 'لا توجد محادثات هنا بعد', chatStartConversation: 'ابدأ المحادثة',
+      chatEmptyHint: 'لا رسائل بعد — ابدأ الحديث.', chatSendHint: 'Enter للإرسال · Shift+Enter لسطر جديد',
+      chatMessages: 'رسائل', chatWith: 'مع', chatBack: 'المحادثات',
+      storeHeroKicker: 'توصيل سريع · جودة مضمونة', storeHeroTitle: 'كل ما تحبه،',
+      storeHeroTitleAccent: 'في مكان واحد.', storeHeroSub: 'منتجات مختارة بعناية من أفضل المتاجر، تصلك في أسرع وقت.',
+      shopNow: 'تسوق الآن', exploreStore: 'استكشف المتجر', trustedBy: 'يثق بنا أكثر من 12 ألف عميل',
+      freeDelivery: 'توصيل سريع', freeDeliveryText: 'خلال 30–45 دقيقة داخل القاهرة',
+      securePayment: 'دفع آمن', securePaymentText: 'نقدي · بطاقة · محفظة إلكترونية',
+      qualityGuarantee: 'جودة مضمونة', qualityGuaranteeText: 'منتجات أصلية أو استرداد كامل',
+      shopByCategory: 'تسوق حسب الفئة', featuredPicks: 'مختارات المتجر', allProducts: 'كل المنتجات',
+      bestSeller: 'الأكثر مبيعاً', newArrival: 'جديد', quickView: 'نظرة سريعة',
+      addToBag: 'أضف للسلة', inBag: 'في السلة', addedToBag: 'أُضيف إلى سلتك',
+      viewBag: 'عرض السلة', itemsInBag: 'منتج في السلة', yourBag: 'سلة التسوق',
+      keepShopping: 'متابعة التسوق', deliveryIn: 'التوصيل خلال', minutes: 'دقيقة',
+      openNow: 'مفتوح الآن', closedNow: 'مغلق الآن', storeRating: 'تقييم المتجر',
+      seeAll: 'عرض الكل', resultsFor: 'نتائج البحث عن', noItems: 'لا توجد منتجات مطابقة',
+      subtotalLabel: 'المجموع الفرعي', deliveryLabel: 'التوصيل', totalLabel: 'الإجمالي',
+      checkoutNow: 'إتمام الطلب', orderSummaryHint: 'الأسعار تشمل ضريبة القيمة المضافة',
+      profileTitle: 'الملف الشخصي', accountType: 'نوع الحساب', storeLabel: 'المتجر',
       subscriptionTitle: 'اختر الباقة المناسبة', subscriptionSub: 'فعّل اشتراكك عبر واتساب في خطوة واحدة — بدون نماذج داخلية.',
       subscribe: 'اشترك الآن', currentPlan: 'باقتك الحالية', renew: 'تجديد', monthly: 'شهري', sixMonths: '6 أشهر', sixmonths: '6 أشهر', yearly: 'سنوي',
       perMonth: 'شهرياً', perSix: 'كل 6 أشهر', perYear: 'سنوياً', bestValue: 'الأفضل قيمة', mostPopular: 'الأكثر اختياراً',
@@ -320,6 +344,30 @@
       chatAdminOnly: 'Admins only', chatOwnersOnly: 'Store owners only', chatLocked: 'This channel is not available for your role',
       chatLockedText: 'You can use the channels available to you. This one belongs to another role.',
       sendMessage: 'Write a message…', send: 'Send', you: 'You', support: 'Support',
+      chatDirect: 'Store', chatDirectTitle: 'Store chat', chatChannels: 'Channels', chatChannelPick: 'Pick a channel',
+      chatDirectHint: 'Chat directly with the store', chatSupportHint: 'The DotStudio® team is here',
+      chatPublicHint: 'Everyone can join', chatStoresHint: 'Store owners only',
+      chatDeliveryHint: 'Delivery companies & riders', chatOnline: 'Online now',
+      chatPick: 'Pick a conversation', chatPickText: 'Choose a channel from the list to start chatting.',
+      chatNoRooms: 'No conversations here yet', chatStartConversation: 'Start the conversation',
+      chatEmptyHint: 'No messages yet — say hello.', chatSendHint: 'Enter to send · Shift+Enter for a new line',
+      chatMessages: 'messages', chatWith: 'with', chatBack: 'Chats',
+      storeHeroKicker: 'Fast delivery · Guaranteed quality', storeHeroTitle: 'Everything you love,',
+      storeHeroTitleAccent: 'in one place.', storeHeroSub: 'Hand-picked products from the best stores, delivered fast.',
+      shopNow: 'Shop now', exploreStore: 'Explore store', trustedBy: 'Trusted by 12,000+ customers',
+      freeDelivery: 'Fast delivery', freeDeliveryText: 'In 30–45 minutes across Cairo',
+      securePayment: 'Secure payment', securePaymentText: 'Cash · Card · Mobile wallet',
+      qualityGuarantee: 'Quality guaranteed', qualityGuaranteeText: 'Authentic products or full refund',
+      shopByCategory: 'Shop by category', featuredPicks: 'Store picks', allProducts: 'All products',
+      bestSeller: 'Best seller', newArrival: 'New', quickView: 'Quick view',
+      addToBag: 'Add to bag', inBag: 'In bag', addedToBag: 'Added to your bag',
+      viewBag: 'View bag', itemsInBag: 'items in bag', yourBag: 'Your bag',
+      keepShopping: 'Keep shopping', deliveryIn: 'Delivery in', minutes: 'min',
+      openNow: 'Open now', closedNow: 'Closed now', storeRating: 'Store rating',
+      seeAll: 'See all', resultsFor: 'Results for', noItems: 'No matching products',
+      subtotalLabel: 'Subtotal', deliveryLabel: 'Delivery', totalLabel: 'Total',
+      checkoutNow: 'Checkout', orderSummaryHint: 'Prices include VAT',
+      profileTitle: 'Profile', accountType: 'Account type', storeLabel: 'Store',
       subscriptionTitle: 'Choose the right plan', subscriptionSub: 'Activate your plan on WhatsApp in one step — no internal forms.',
       subscribe: 'Subscribe', currentPlan: 'Your current plan', renew: 'Renew', monthly: 'Monthly', sixMonths: '6 months', sixmonths: '6 months', yearly: 'Yearly',
       perMonth: 'per month', perSix: 'per 6 months', perYear: 'per year', bestValue: 'Best value', mostPopular: 'Most popular',
@@ -502,6 +550,22 @@
   function session() {
     try {
       var user = JSON.parse(localStorage.getItem('cz_user') || 'null');
+      if (user && !user.role && user.username && DS.data && DS.data.users) {
+        /* Legacy sessions (old login only stored {username}). Hydrate the full
+           profile from the seeded database so routing, avatars and tenant
+           isolation keep working instead of bouncing the user to the login. */
+        var seeded = DS.data.users.filter(function (u) { return String(u.username).toLowerCase() === String(user.username).toLowerCase(); })[0];
+        if (seeded) {
+          var clean = Object.assign({}, seeded);
+          delete clean.password;
+          user = Object.assign(clean, user, { role: clean.role, name: clean.name, name_en: clean.name_en, tenant_id: clean.tenant_id || user.tenant_id });
+          try {
+            localStorage.setItem('cz_user', JSON.stringify(user));
+            localStorage.setItem('cz_role', user.role);
+            if (user.id) localStorage.setItem('cz_session', user.id);
+          } catch (e) {}
+        }
+      }
       if (user && user.role) {
         if (!user.tenant_id && user.role === 'owner') {
           var tn = (DS.data && DS.data.tenants || []).filter(function (x) { return x.owner_username === user.username; })[0];
@@ -567,6 +631,10 @@
     store: '<path d="m2 7 2-4h16l2 4"/><path d="M2 7h20v3a4 4 0 0 1-4 4 4 4 0 0 1-4-4 4 4 0 0 1-4 4 4 4 0 0 1-4-4 4 4 0 0 1-4 4"/><path d="M4 14v6h16v-6"/>',
     box: '<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>',
     orders: '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/>',
+    cart: '<circle cx="9" cy="20" r="1.6"/><circle cx="18" cy="20" r="1.6"/><path d="M2 3h2.2l2.3 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.55L21 7H6"/>',
+    bag: '<path d="M6 8h12l1.2 12.2a1.5 1.5 0 0 1-1.5 1.8H6.3a1.5 1.5 0 0 1-1.5-1.8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+    heart: '<path d="M20.8 5.6a5.5 5.5 0 0 0-7.8 0L12 6.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 22l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/>',
+    spark: '<path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>',
     users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
     user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
     cashier: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M7 15h2M12 15h5"/>',
@@ -675,6 +743,34 @@
   DS.showToast = toast;
   window.showToast = toast;
 
+  /* Compact Apple-style confirmation pill (used by the storefront add-to-cart). */
+  function pillToast(message, opts) {
+    opts = opts || {};
+    var host = $('.ds-pill-stack');
+    if (!host) {
+      host = document.createElement('div');
+      host.className = 'ds-pill-stack';
+      document.body.appendChild(host);
+    }
+    var el = document.createElement('div');
+    el.className = 'ds-pill-toast';
+    el.innerHTML = (opts.image ? '<img src="' + attr(opts.image) + '" alt="">' : '<span class="pt-ico">' + icon(opts.icon || 'check') + '</span>') +
+      '<span class="pt-text"><b>' + esc(message || t('addedToCart')) + '</b>' + (opts.sub ? '<small>' + esc(opts.sub) + '</small>' : '') + '</span>' +
+      (opts.action ? '<button type="button" class="pt-action">' + esc(opts.action) + '</button>' : '');
+    host.appendChild(el);
+    requestAnimationFrame(function () { el.classList.add('in'); });
+    var remove = function () {
+      el.classList.remove('in');
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 220);
+    };
+    if (opts.action && opts.onAction) {
+      el.querySelector('.pt-action').addEventListener('click', function () { opts.onAction(); remove(); });
+    }
+    setTimeout(remove, opts.duration || 2400);
+    return el;
+  }
+  DS.pillToast = pillToast;
+
   /* ───────────────────────────── MODALS ───────────────────────────── */
   var openModals = [];
 
@@ -687,13 +783,13 @@
     backdrop.setAttribute('role', 'dialog');
     backdrop.setAttribute('aria-modal', 'true');
     var actions = (opts.actions || []).map(function (a, i) {
-      return '<button class="btn ' + (a.variant || 'btn-secondary') + '" data-action="' + i + '"' + (a.disabled ? ' disabled' : '') + '>' + (a.icon || '') + esc(a.label) + '</button>';
+      return '<button type="button" class="btn ' + (a.variant || 'btn-secondary') + '" data-action="' + i + '"' + (a.disabled ? ' disabled' : '') + '>' + (a.icon || '') + esc(a.label) + '</button>';
     }).join('');
     backdrop.innerHTML =
       '<div class="modal' + size + '">' +
         '<div class="modal-head"><div><div class="modal-title">' + (opts.title || '') + '</div>' +
           (opts.sub ? '<div class="modal-sub">' + opts.sub + '</div>' : '') + '</div>' +
-          (dismissible ? '<button class="modal-close" data-close aria-label="close">' + icon('x') + '</button>' : '') +
+          (dismissible ? '<button type="button" class="modal-close" data-close aria-label="close">' + icon('x') + '</button>' : '') +
         '</div>' +
         '<div class="modal-body">' + (opts.body || '') + '</div>' +
         (actions ? '<div class="modal-foot">' + (opts.footLeft || '') + '<div class="spacer"></div>' + actions + '</div>' : (opts.footLeft ? '<div class="modal-foot">' + opts.footLeft + '</div>' : '')) +

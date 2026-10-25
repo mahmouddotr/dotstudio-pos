@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════
-   DotStudio® POS — CHAT
-   One chat engine for Support / Public / Stores / Delivery.
-   Support is visible to admins and the store owner only.
-   Stores is owners + admins. Delivery is drivers + admins.
+   DotStudio® POS — CHAT (Apple Messages / WhatsApp layout)
+   Three panes: channels · conversations · thread.
+   Channels are only rendered when the signed-in role can use them,
+   so there are no "locked" screens anywhere.
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -11,75 +11,161 @@
 
   var t = DS.t, esc = DS.esc, icon = DS.icon;
 
-  var SCOPES = [
-    { key: 'support', labelKey: 'chatSupport', icon: 'lifebuoy' },
-    { key: 'public', labelKey: 'chatPublic', icon: 'globe' },
-    { key: 'stores', labelKey: 'chatStores', icon: 'store' },
-    { key: 'delivery', labelKey: 'chatDelivery', icon: 'truck' }
-  ];
-  /* lifebuoy icon fallback */
   DS.icons.lifebuoy = '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="m4.93 4.93 4.24 4.24M14.83 9.17l4.24-4.24M14.83 14.83l4.24 4.24M9.17 14.83l-4.24 4.24"/>';
+
+  var SCOPES = [
+    { key: 'support', labelKey: 'chatSupport', hintKey: 'chatSupportHint', icon: 'lifebuoy', tone: 'lime' },
+    { key: 'direct', labelKey: 'chatDirect', hintKey: 'chatDirectHint', icon: 'store', tone: 'blue' },
+    { key: 'public', labelKey: 'chatPublic', hintKey: 'chatPublicHint', icon: 'globe', tone: 'purple' },
+    { key: 'stores', labelKey: 'chatStores', hintKey: 'chatStoresHint', icon: 'building', tone: 'orange' },
+    { key: 'delivery', labelKey: 'chatDelivery', hintKey: 'chatDeliveryHint', icon: 'truck', tone: 'teal' }
+  ];
+
+  function isAdmin(user) { return !!user && (user.role === 'superadmin' || user.role === 'subadmin'); }
 
   function canScope(user, scope) {
     if (!user) return false;
-    var admin = user.role === 'superadmin' || user.role === 'subadmin';
-    if (scope === 'support') return admin || user.role === 'owner' || user.role === 'cashier';
+    var admin = isAdmin(user);
+    if (scope === 'support') return true;
     if (scope === 'public') return true;
+    if (scope === 'direct') return user.role === 'customer' || user.role === 'owner' || user.role === 'cashier';
     if (scope === 'stores') return admin || user.role === 'owner';
     if (scope === 'delivery') return admin || user.role === 'delivery' || user.role === 'owner' || user.role === 'cashier';
     return false;
   }
 
+  function meta(scope) {
+    return SCOPES.filter(function (s) { return s.key === scope; })[0] || SCOPES[0];
+  }
+
   function roomsOf(user, scope) {
     if (!canScope(user, scope)) return [];
-    return (DS.data.roomsFor(user) || []).filter(function (r) { return r.scope === scope; });
-  }
-
-  function roomTitle(room) {
-    return DS.lang() === 'en' ? (room.title_en || room.title) : room.title;
-  }
-
-  function roomAvatar(room) {
-    if (room.scope === 'support') {
-      var tn = DS.data.tenantById(room.tenant_id);
-      return tn ? DS.avatarUrl(tn) : DS.url('assets/img/LOGO-WHAIT.png');
+    var rooms = (DS.data.roomsFor(user) || []).filter(function (r) { return r.scope === scope; });
+    /* Support: for customers/drivers hide the other tenants' rooms. */
+    if (scope === 'support' && !isAdmin(user)) {
+      rooms = rooms.filter(function (r) { return r.tenant_id == null || r.tenant_id === (user.tenant_id || DS.data.currentStoreId(user)); });
     }
-    if (room.scope === 'delivery') return '';
-    return '';
+    return rooms;
+  }
+
+  function langText(obj, base) {
+    if (!obj) return '';
+    return DS.lang() === 'en' ? (obj[base + '_en'] || obj[base] || '') : (obj[base] || obj[base + '_en'] || '');
+  }
+
+  function roomTitle(room) { return langText(room, 'title'); }
+
+  function roomHint(room, user) {
+    var m = meta(room.scope);
+    if (room.scope === 'direct') {
+      var tn = DS.data.tenantById(room.tenant_id);
+      if (user.role === 'customer') return tn ? langText(tn, 'industry') : t('chatDirectHint');
+      return t('chatDirectHint');
+    }
+    if (room.scope === 'support') return t('chatSupportHint');
+    return t(m.hintKey);
+  }
+
+  function avatarFor(room, user) {
+    if (room.scope === 'support' || room.scope === 'direct') {
+      var tn = DS.data.tenantById(room.tenant_id);
+      if (tn) return '<img class="avatar sm" src="' + esc(DS.avatarUrl(tn)) + '" alt="">';
+      return '<span class="avatar sm chat-avatar-brand">D</span>';
+    }
+    var m = meta(room.scope);
+    return '<span class="avatar sm chat-avatar-tone ' + m.tone + '">' + icon(m.icon) + '</span>';
+  }
+
+  function lastMessage(room) {
+    var msgs = room.messages || [];
+    return msgs.length ? msgs[msgs.length - 1] : null;
+  }
+
+  function otherParty(room, user) {
+    if (room.scope === 'public') return t('chatPublicHint');
+    if (room.scope === 'stores') return t('chatStoresHint');
+    if (room.scope === 'delivery') return t('chatDeliveryHint');
+    if (room.scope === 'support') return t('chatSupportHint');
+    var tn = DS.data.tenantById(room.tenant_id);
+    return tn ? langText(tn, 'name') : t('chatDirectHint');
+  }
+
+  function dayLabel(iso) {
+    var d = new Date(iso);
+    var today = new Date();
+    var same = d.toDateString() === today.toDateString();
+    if (same) return DS.lang() === 'en' ? 'Today' : 'اليوم';
+    var y = new Date(Date.now() - 86400000);
+    if (d.toDateString() === y.toDateString()) return DS.lang() === 'en' ? 'Yesterday' : 'أمس';
+    return DS.date(iso);
   }
 
   function messagesMarkup(room, user) {
-    if (!room) return '';
-    var lastDay = '';
-    var html = '';
-    var allMessages = Array.isArray(room.messages) ? room.messages : [];
-    var messages = allMessages.slice(Math.max(0, allMessages.length - 20));
-    if (allMessages.length > messages.length) {
-      html += '<div class="chat-day">' + esc(DS.lang() === 'en' ? 'Showing the latest 20 messages' : 'يتم عرض آخر 20 رسالة') + '</div>';
+    var msgs = (room.messages || []).slice(-80);
+    if (!msgs.length) {
+      return '<div class="chat-thread-empty"><div class="cte-icon">' + icon('chat') + '</div>' +
+        '<b>' + esc(t('chatStartConversation')) + '</b><p>' + esc(t('chatEmptyHint')) + '</p></div>';
     }
-    messages.forEach(function (m) {
-      var day = DS.date(m.at);
-      if (day !== lastDay) { html += '<div class="chat-day">' + esc(day) + '</div>'; lastDay = day; }
-      var mine = m.user_id === user.id;
-      var av = '';
-      if (room.scope === 'support' && m.role === 'superadmin') {
-        av = '<span class="avatar sm" style="background:var(--lime);color:var(--on-lime);font-weight:800">D</span>';
-      } else {
-        var u = DS.data.userById(m.user_id);
-        av = '<img class="avatar sm" src="' + esc(DS.avatarUrl(u || { name: m.name })) + '" alt="">';
+    var html = '', lastDay = '';
+    msgs.forEach(function (m, i) {
+      var day = dayLabel(m.at);
+      if (day !== lastDay) {
+        html += '<div class="chat-day"><span>' + esc(day) + '</span></div>';
+        lastDay = day;
       }
-      html += '<div class="chat-msg' + (mine ? ' mine' : '') + '">' + av +
-        '<div><div class="chat-name">' + esc(mine ? t('you') : (function () { var usr = m.user_id && DS.data ? DS.data.userById(m.user_id) : null; return usr ? DS.loc(usr, 'name') : (DS.lang() === 'en' ? (m.name_en || m.name) : m.name); })()) + (room.scope !== 'support' && !mine ? ' · ' + esc(t(m.role === 'superadmin' ? 'admin' : m.role)) : '') + '</div>' +
-        '<div class="chat-bubble">' + esc(DS.lang() === 'en' ? (m.text_en || m.text) : m.text) + '</div>' +
-        '<div class="chat-meta">' + esc(DS.timeShort(m.at)) + '</div></div></div>';
+      var mine = m.user_id === user.id;
+      var prev = msgs[i - 1];
+      var grouped = prev && prev.user_id === m.user_id && (new Date(m.at) - new Date(prev.at)) < 5 * 60000;
+      var name = DS.lang() === 'en' ? (m.name_en || m.name) : (m.name || m.name_en);
+      var u = DS.data.userById(m.user_id);
+      if (u) name = langText(u, 'name');
+      var av = '';
+      if (!mine) {
+        av = grouped ? '<span class="chat-msg-av"></span>' : '<img class="chat-msg-av" src="' + esc(DS.avatarUrl(u || { name: name })) + '" alt="">';
+      }
+      html += '<div class="chat-msg' + (mine ? ' mine' : '') + (grouped ? ' grouped' : '') + '">' + av +
+        '<div class="chat-msg-body">' +
+          (!mine && !grouped ? '<div class="chat-name">' + esc(name) + '</div>' : '') +
+          '<div class="chat-bubble">' + esc(DS.lang() === 'en' ? (m.text_en || m.text) : m.text) + '</div>' +
+          '<div class="chat-meta">' + esc(DS.timeShort(m.at)) + (mine ? '<span class="ticks">' + icon('check') + '</span>' : '') + '</div>' +
+        '</div></div>';
     });
     return html;
   }
 
-  function lockMarkup(scope) {
-    return '<div class="chat-locked"><div class="empty-icon">' + icon('lock') + '</div>' +
-      '<b>' + esc(t('chatLocked')) + '</b><p>' + esc(t('chatLockedText')) + '</p>' +
-      '<span class="badge neutral">' + esc(t(scope === 'stores' ? 'chatOwnersOnly' : scope === 'support' ? 'chatSupport' : 'chatAdminOnly')) + '</span></div>';
+  function roomListMarkup(rooms, activeId, user) {
+    if (!rooms.length) {
+      return '<div class="chat-list-empty"><div class="cte-icon">' + icon('chat') + '</div><b>' + esc(t('chatNoRooms')) + '</b></div>';
+    }
+    return rooms.map(function (r) {
+      var last = lastMessage(r);
+      var preview = last ? (DS.lang() === 'en' ? (last.text_en || last.text) : last.text) : t('chatEmptyHint');
+      var mineLast = last && last.user_id === user.id;
+      return '<button type="button" class="chat-room' + (r.id === activeId ? ' active' : '') + '" data-room="' + esc(r.id) + '">' +
+        avatarFor(r, user) +
+        '<span class="chat-room-info"><span class="chat-room-name">' + esc(roomTitle(r)) + '</span>' +
+        '<span class="chat-room-preview">' + (mineLast ? '<i>' + esc(t('you')) + ':</i> ' : '') + esc(preview) + '</span></span>' +
+        '<span class="chat-room-side"><span class="chat-room-time">' + (last ? esc(DS.timeShort(last.at)) : '') + '</span>' +
+        '<span class="chat-room-count">' + (r.messages || []).length + '</span></span></button>';
+    }).join('');
+  }
+
+  function channelListMarkup(scopes, state, user) {
+    return scopes.map(function (s) {
+      var count = roomsOf(user, s.key).reduce(function (n, r) { return n + (r.messages || []).length; }, 0);
+      return '<button type="button" class="chat-channel' + (state.scope === s.key ? ' active' : '') + '" data-scope="' + s.key + '" title="' + esc(t(s.labelKey)) + '">' +
+        '<span class="cc-ico ' + s.tone + '">' + icon(s.icon) + '</span>' +
+        '<span class="cc-label">' + esc(t(s.labelKey)) + '</span>' +
+        (count ? '<span class="cc-count">' + count + '</span>' : '') +
+        '</button>';
+    }).join('');
+  }
+
+  function meMarkup(user) {
+    return '<div class="chat-me">' +
+      '<img class="avatar" src="' + esc(DS.avatarUrl(user)) + '" alt="">' +
+      '<div class="chat-me-info"><b>' + esc(langText(user, 'name')) + '</b><span>' + esc(t(user.role === 'superadmin' ? 'admin' : user.role)) + '</span></div>' +
+      '<span class="chat-online" title="' + esc(t('chatOnline')) + '"></span></div>';
   }
 
   /* ───────────────────────────── MOUNT ───────────────────────────── */
@@ -88,128 +174,153 @@
     opts = opts || {};
     var user = DS.session();
     if (!user) return null;
+
     var mode = opts.mode || 'full';
+    var scopes = SCOPES.filter(function (s) { return canScope(user, s.key); });
+    if (!scopes.length) scopes = [SCOPES[0]];
+
     var state = {
-      scope: opts.scope || (mode === 'dock' ? 'public' : 'support'),
-      roomId: opts.roomId || null
+      scope: opts.scope && canScope(user, opts.scope) ? opts.scope : scopes[0].key,
+      roomId: opts.roomId || null,
+      mobileConv: false
     };
 
-    function allowedScopes() {
-      return SCOPES.filter(function (s) { return canScope(user, s.key); });
-    }
-    function visibleScopes() {
-      return opts.allTabs ? SCOPES : allowedScopes();
-    }
     function currentRooms() { return roomsOf(user, state.scope); }
     function currentRoom() {
       var rooms = currentRooms();
       if (!rooms.length) return null;
-      return rooms.filter(function (r) { return r.id === state.roomId; })[0] || rooms[0];
+      var found = rooms.filter(function (r) { return r.id === state.roomId; })[0];
+      if (found) return found;
+      state.roomId = rooms[0].id;
+      return rooms[0];
+    }
+
+    function headerMarkup(room) {
+      if (!room) return '';
+      return '<div class="chat-conv-head">' +
+        '<button type="button" class="chat-back" data-chat-back aria-label="back">' + icon('chevronRight') + '</button>' +
+        avatarFor(room, user) +
+        '<div class="chat-conv-id"><b>' + esc(roomTitle(room)) + '</b>' +
+          '<span><i class="chat-live-dot"></i>' + esc(otherParty(room, user)) + '</span></div>' +
+        '<span class="chat-conv-tag">' + icon(meta(room.scope).icon) + esc(t(meta(room.scope).labelKey)) + '</span>' +
+      '</div>';
+    }
+
+    function threadMarkup(room) {
+      return '<div class="chat-thread" data-chat-thread>' + messagesMarkup(room, user) + '</div>' +
+        '<div class="chat-compose">' +
+          '<div class="chat-compose-box"><textarea rows="1" data-chat-input placeholder="' + esc(t('sendMessage')) + '" aria-label="' + esc(t('sendMessage')) + '"></textarea></div>' +
+          '<button type="button" class="chat-send" data-chat-send aria-label="' + esc(t('send')) + '">' + icon('send') + '</button>' +
+        '</div>';
     }
 
     function render() {
-      var tabHtml = visibleScopes().map(function (s) {
-        var allowed = canScope(user, s.key);
-        return '<button class="' + (mode === 'dock' ? 'dock-tab' : 'chat-rail-item') + (state.scope === s.key ? ' active' : '') + '" data-scope="' + s.key + '"' + (allowed ? '' : ' data-locked="1"') + '>' +
-          icon(s.icon) + '<span>' + esc(t(s.labelKey)) + '</span>' + (!allowed ? icon('lock', 'lock') : '') + '</button>';
-      }).join('');
+      var room = currentRoom();
+      var list = currentRooms();
 
       if (mode === 'dock') {
-        var room = currentRoom();
-        var allowed = canScope(user, state.scope);
         el.innerHTML = '<div class="chat-dock">' +
-          '<div class="chat-dock-head"><div class="chat-head-info">' + icon('chat') + '<div><div class="chat-head-name">' + esc(t('deliveryChat')) + '</div><div class="chat-head-sub">' + esc(t('chatPublic') === 'العام' ? 'قنوات التواصل' : 'Communication channels') + '</div></div></div>' +
-            '<span class="badge lime">' + icon('shield') + 'PRO</span></div>' +
-          '<div class="dock-tabs">' + tabHtml + '</div>' +
-          (allowed
-            ? (room
-              ? '<div class="chat-head" style="padding:9px 14px"><div class="chat-head-info"><span class="avatar sm" style="background:var(--surface-3)">' + icon('users') + '</span><div><div class="chat-head-name" style="font-size:12px">' + esc(roomTitle(room)) + '</div><div class="chat-head-sub">' + (room.messages || []).length + ' ' + esc(DS.lang() === 'en' ? 'messages' : 'رسالة') + '</div></div></div></div>' +
-                '<div class="chat-dock-body" data-chat-body>' + messagesMarkup(room, user) + '</div>' +
-                '<div class="chat-composer"><textarea rows="1" data-chat-input placeholder="' + esc(t('sendMessage')) + '"></textarea>' +
-                '<button class="chat-send" data-chat-send aria-label="send">' + icon('send') + '</button></div>'
-              : '<div class="chat-empty">' + esc(t('emptyChats')) + '</div>')
-            : lockMarkup(state.scope)) +
+          '<div class="chat-dock-head">' +
+            '<div class="chat-dock-title">' + icon('chat') + '<div><b>' + esc(t('messages')) + '</b><span>' + esc(t('chatChannels')) + '</span></div></div>' +
+            '<span class="chat-live-pill"><i></i>' + esc(t('live')) + '</span>' +
+          '</div>' +
+          '<div class="dock-tabs">' + channelListMarkup(scopes, state, user) + '</div>' +
+          (room
+            ? '<div class="chat-dock-room">' + avatarFor(room, user) + '<div><b>' + esc(roomTitle(room)) + '</b><span>' + esc(otherParty(room, user)) + '</span></div></div>' +
+              threadMarkup(room)
+            : '<div class="chat-thread-empty"><div class="cte-icon">' + icon('chat') + '</div><b>' + esc(t('chatNoRooms')) + '</b></div>') +
           '</div>';
-      } else {
-        var rooms = currentRooms();
-        var active = currentRoom();
-        var allowedScope = canScope(user, state.scope);
-        var roomsHtml = rooms.map(function (r) {
-          var last = (r.messages || [])[r.messages.length - 1];
-          return '<button class="chat-room' + (active && active.id === r.id ? ' active' : '') + '" data-room="' + esc(r.id) + '">' +
-            (roomAvatar(r) ? '<img class="avatar sm" src="' + esc(roomAvatar(r)) + '" alt="">' : '<span class="avatar sm" style="background:var(--surface-3);color:var(--lime)">' + icon(r.scope === 'delivery' ? 'truck' : r.scope === 'stores' ? 'store' : 'globe') + '</span>') +
-            '<div class="chat-room-info"><div class="chat-room-name">' + esc(roomTitle(r)) + '<span class="chat-room-time">' + (last ? esc(DS.timeShort(last.at)) : '') + '</span></div>' +
-            '<div class="chat-room-preview">' + esc(last ? (DS.lang() === 'en' ? (last.text_en || last.text) : last.text) : t('emptyChats')) + '</div></div></button>';
-        }).join('');
-
-        el.innerHTML = '<div class="chat-shell">' +
-          '<aside class="chat-side"><div class="chat-side-head"><div class="section-title" style="font-size:var(--fs-md)">' + esc(t('messages')) + ' <span class="badge lime">PRO</span></div>' +
-            '<div class="page-sub" style="margin-top:4px;font-size:11px">' + esc(DS.lang() === 'en' ? 'Support, community and operations' : 'الدعم والمجتمع والعمليات') + '</div></div>' +
-            '<div class="chat-tab-rail">' + tabHtml + '</div>' +
-            '<div class="chat-rooms">' + (allowedScope ? (roomsHtml || '<div class="chat-empty" style="min-height:100px">' + esc(t('emptyChats')) + '</div>') : lockMarkup(state.scope)) + '</div></aside>' +
-          '<section class="chat-main">' +
-            (allowedScope && active
-              ? '<div class="chat-head"><div class="chat-head-info">' + (roomAvatar(active) ? '<img class="avatar" src="' + esc(roomAvatar(active)) + '" alt="">' : '<span class="avatar" style="background:var(--surface-3);color:var(--lime)">' + icon('users') + '</span>') +
-                  '<div><div class="chat-head-name">' + esc(roomTitle(active)) + '</div><div class="chat-head-sub">' + esc(actionHint(active, user)) + '</div></div></div>' +
-                  '<span class="badge ' + (active.scope === 'support' ? 'lime' : active.scope === 'public' ? 'info' : active.scope === 'stores' ? 'orange' : 'purple') + '">' + esc(t('chat' + active.scope.charAt(0).toUpperCase() + active.scope.slice(1)) || active.scope) + '</span></div>' +
-                '<div class="chat-body" data-chat-body>' + messagesMarkup(active, user) + '</div>' +
-                '<div class="chat-composer"><textarea rows="1" data-chat-input placeholder="' + esc(t('sendMessage')) + '"></textarea>' +
-                '<button class="chat-send" data-chat-send aria-label="send">' + icon('send') + '</button></div>'
-              : '<div class="chat-empty">' + (allowedScope ? t('emptyChats') : t('chatLocked')) + '</div>') +
-          '</section></div>';
+        bind();
+        return;
       }
+
+      el.innerHTML = '<div class="chat-app" data-view="' + (state.mobileConv ? 'conversation' : 'list') + '">' +
+        '<aside class="chat-channels">' +
+          '<div class="chat-channels-head"><b>' + esc(t('messages')) + '</b><span>' + esc(t('chatChannels')) + '</span></div>' +
+          '<div class="chat-channel-list">' + channelListMarkup(scopes, state, user) + '</div>' +
+          meMarkup(user) +
+        '</aside>' +
+        '<section class="chat-rooms-pane">' +
+          '<div class="chat-pane-head"><div><b>' + esc(t(meta(state.scope).labelKey)) + '</b><span>' + esc(t(meta(state.scope).hintKey)) + '</span></div>' +
+            '<span class="chat-pane-count">' + list.length + '</span></div>' +
+          '<div class="chat-room-list">' + roomListMarkup(list, room && room.id, user) + '</div>' +
+        '</section>' +
+        '<section class="chat-conv">' +
+          (room ? headerMarkup(room) + threadMarkup(room)
+            : '<div class="chat-thread-empty"><div class="cte-icon">' + icon('chat') + '</div><b>' + esc(t('chatPick')) + '</b><p>' + esc(t('chatPickText')) + '</p></div>') +
+        '</section>' +
+        '</div>';
       bind();
     }
 
-    function actionHint(room, user) {
-      if (room.scope === 'support') return t('support');
-      if (room.scope === 'public') return (room.messages || []).length + ' ' + (DS.lang() === 'en' ? 'messages · everyone' : 'رسالة · الجميع');
-      if (room.scope === 'stores') return t('chatOwnersOnly');
-      return t('chatDelivery');
+    function scrollThread() {
+      var th = el.querySelector('[data-chat-thread]');
+      if (th) th.scrollTop = th.scrollHeight;
     }
 
     function bind() {
       DS.$$('[data-scope]', el).forEach(function (b) {
         b.addEventListener('click', function () {
-          var scope = b.getAttribute('data-scope');
-          if (!canScope(user, scope)) { DS.toast(t('chatLockedText'), 'warning'); return; }
-          state.scope = scope;
+          state.scope = b.getAttribute('data-scope');
           state.roomId = null;
+          state.mobileConv = false;
           render();
         });
       });
       DS.$$('[data-room]', el).forEach(function (b) {
         b.addEventListener('click', function () {
           state.roomId = b.getAttribute('data-room');
+          state.mobileConv = true;
           render();
         });
       });
+      var back = el.querySelector('[data-chat-back]');
+      if (back) back.addEventListener('click', function () { state.mobileConv = false; render(); });
+
       var input = el.querySelector('[data-chat-input]');
       var sendBtn = el.querySelector('[data-chat-send]');
-      var body = el.querySelector('[data-chat-body]');
-      if (body) body.scrollTop = body.scrollHeight;
       if (input) {
-        input.addEventListener('input', function () { input.style.height = 'auto'; input.style.height = Math.min(120, input.scrollHeight) + 'px'; });
+        input.addEventListener('input', function () {
+          input.style.height = 'auto';
+          input.style.height = Math.min(120, input.scrollHeight) + 'px';
+          if (sendBtn) sendBtn.classList.toggle('ready', !!input.value.trim());
+        });
         input.addEventListener('keydown', function (e) {
           if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
         });
       }
       if (sendBtn) sendBtn.addEventListener('click', send);
+      scrollThread();
 
       function send() {
         if (!input) return;
         var text = input.value.trim();
         if (!text) return;
         var room = currentRoom();
-        if (!room) { DS.toast(t('emptyChats'), 'error'); return; }
-        DS.data.sendMessage(room.id, text);
+        if (!room) return;
+        var msg = DS.data.sendMessage(room.id, text);
+        if (!msg) { DS.toast(t('noPermission'), 'error'); return; }
         input.value = '';
         input.style.height = 'auto';
-        var newBody = el.querySelector('[data-chat-body]');
-        newBody.innerHTML = messagesMarkup(room, user);
-        newBody.scrollTop = newBody.scrollHeight;
-        if (mode === 'dock') {
-          /* refresh scope counter in head */
+        if (sendBtn) sendBtn.classList.remove('ready');
+        var th = el.querySelector('[data-chat-thread]');
+        if (th) {
+          th.innerHTML = messagesMarkup(room, user);
+          th.scrollTop = th.scrollHeight;
+        } else {
+          render();
+        }
+        /* refresh list previews without losing focus */
+        var listHost = el.querySelector('.chat-room-list');
+        if (listHost) {
+          listHost.innerHTML = roomListMarkup(currentRooms(), room.id, user);
+          DS.$$('[data-room]', listHost).forEach(function (b) {
+            b.addEventListener('click', function () {
+              state.roomId = b.getAttribute('data-room');
+              state.mobileConv = true;
+              render();
+            });
+          });
         }
       }
     }
@@ -219,7 +330,8 @@
     return {
       element: el,
       refresh: render,
-      scope: function (s) { state.scope = s; state.roomId = null; render(); },
+      scope: function (s) { if (canScope(user, s)) { state.scope = s; state.roomId = null; state.mobileConv = false; render(); } },
+      room: function (id) { state.roomId = id; state.mobileConv = true; render(); },
       destroy: function () { el.innerHTML = ''; }
     };
   }

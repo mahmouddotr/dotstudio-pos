@@ -520,4 +520,28 @@
     getEta: getEta, messageDriver: openDriverChat, messageCustomer: openCustomerChat,
     messageStore: openStoreOwnerChat, deliveryActive: deliveryActive
   };
+
+  /* Compatibility adapter — dashboards/tracking pages call DS.gps.mount(host, opts).
+     It renders the live OSM map and returns a small handle with stop(). */
+  if (window.DS) {
+    window.DS.gps = window.DS.gps || {
+      mount: function (host, opts) {
+        if (!host) return null;
+        opts = opts || {};
+        if (opts.height) { host.style.height = opts.height + 'px'; host.style.minHeight = opts.height + 'px'; }
+        host.classList.add('map-card');
+        var user = window.DS.session ? window.DS.session() : null;
+        var role = opts.role || ((user && user.role === 'delivery') ? 'delivery' : 'customer');
+        renderMap(host, role);
+        return {
+          element: host,
+          refresh: function () { renderMap(host, role); },
+          stop: function () {
+            var st = host._dstState;
+            if (st && st.timer) { clearInterval(st.timer); st.timer = null; }
+          }
+        };
+      }
+    };
+  }
 })();

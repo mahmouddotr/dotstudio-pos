@@ -1,27 +1,41 @@
-/* DotStudio® POS — Chat centre */
+/* DotStudio® POS — Chat centre (all roles) */
 (function () {
   'use strict';
   var DS = window.DS;
   var t = DS.t, esc = DS.esc, icon = DS.icon;
   var user = DS.session();
   if (!user) return;
+
   var isAdmin = DS.data.isAdmin(user);
+  var store = user.tenant_id ? DS.data.tenantById(user.tenant_id) : null;
+  var company = user.delivery_company ? (DS.data.companies || []).filter(function (c) { return c.id === user.delivery_company; })[0] : null;
+
+  var defaultScope = isAdmin ? 'support'
+    : user.role === 'delivery' ? 'delivery'
+      : (user.role === 'customer' || user.role === 'owner' || user.role === 'cashier') ? 'direct'
+        : 'public';
+  var qScope = DS.qs('scope');
+  var scope = (qScope && DS.chat && DS.chat.canScope(user, qScope)) ? qScope : defaultScope;
+
   var page = DS.shell.mount({
-    roles: isAdmin ? ['superadmin', 'subadmin'] : (user.role === 'delivery' ? ['delivery'] : ['owner', 'cashier']),
+    roles: null,
     permission: user.role === 'subadmin' ? 'chats' : null,
     active: 'chats',
-    title: t('chats'),
-    eyebrow: isAdmin ? t('admin') : (user.role === 'delivery' ? t('delivery') : (DS.data.tenantById(user.tenant_id) || {}).name),
+    title: t('messages'),
+    eyebrow: isAdmin ? t('admin') : (store ? store.name : (company ? company.name : t('delivery'))),
     icon: 'chat',
-    sub: DS.lang() === 'en' ? 'Support, public, stores and delivery — in one inbox.' : 'الدعم، العام، المتاجر وشركات التوصيل — في صندوق واحد.',
-    actions: '<span class="badge lime">' + icon('shield') + ' ' + esc(t('live')) + '</span>',
-    content: '<div class="skeleton" style="height:560px;border-radius:20px"></div>'
+    sub: DS.lang() === 'en'
+      ? 'Support, community, stores and delivery — one clean inbox.'
+      : 'الدعم، المجتمع، المتاجر والتوصيل — صندوق واحد مرتب.',
+    actions: '<span class="badge lime">' + icon('wifi') + ' ' + esc(t('live')) + '</span>',
+    content: '<div class="chat-page-host"><div class="skeleton" style="height:min(72vh,720px);border-radius:24px"></div></div>'
   });
   if (!page) return;
 
-  setTimeout(function () {
-    page.setContent('<div id="chatHost"></div>');
-    var host = page.body.querySelector('#chatHost');
-    DS.chat.mount(host, { mode: 'full', scope: isAdmin ? 'support' : user.role === 'delivery' ? 'delivery' : 'support' });
-  }, 150);
+  page.setContent('<div class="chat-page-host" data-chat-host></div>');
+  var host = page.body.querySelector('[data-chat-host]');
+  if (!host || !DS.chat) { page.setContent(DS.empty({ icon: 'chat', title: t('noData') })); return; }
+
+  var chat = DS.chat.mount(host, { mode: 'full', scope: scope });
+  document.addEventListener('ds:lang', function () { if (chat) chat.refresh(); });
 })();

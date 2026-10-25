@@ -437,6 +437,7 @@ html[dir="rtl"] .switch input:checked::after { transform: translateX(-18px); }
 .modal.xl { max-width: 980px; }
 .modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px 26px 0; }
 .modal-title { font-size: var(--fs-xl); font-weight: 700; letter-spacing: -0.025em; }
+.modal-title svg { width: 20px; height: 20px; vertical-align: -4px; margin-inline-end: 4px; stroke-width: 2; }
 .modal-sub { font-size: var(--fs-sm); color: var(--text-secondary); margin-top: 5px; }
 .modal-close { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: var(--text-secondary); background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.10); flex-shrink: 0; transition: var(--transition-fast); }
 .modal-close:hover { background: rgba(255, 255, 255, 0.14); color: var(--text-primary); }
@@ -791,3 +792,45 @@ html[dir="rtl"] .chat-room.active { box-shadow: inset -2px 0 0 var(--accent-lime
   .table .actions { justify-content: flex-end; }
   .table-wrap { border-radius: var(--radius-md); }
 }
+
+/* ═══════════════════════ PROFILE SHEET ═══════════════════════ */
+.ds-profile { display: flex; flex-direction: column; gap: 14px; }
+.ds-profile-top {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px; border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+}
+.ds-profile-avatar {
+  width: 54px; height: 54px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+}
+.ds-profile-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ds-profile-id b {
+  font-size: var(--fs-md); font-weight: 700; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ds-profile-id span { font-size: var(--fs-xs); color: var(--text-tertiary); }
+.ds-profile-live {
+  display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
+  padding: 4px 9px; border-radius: var(--radius-full);
+  background: rgba(48, 209, 88, 0.12); color: var(--success);
+  font-size: 9px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+}
+.ds-profile-live i { width: 5px; height: 5px; border-radius: 50%; background: var(--success); }
+.ds-profile-rows { display: flex; flex-direction: column; gap: 2px; }
+.ds-profile-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 9px 4px; border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: var(--fs-sm);
+}
+.ds-profile-row:last-child { border-bottom: 0; }
+.ds-profile-row span { color: var(--text-tertiary); flex-shrink: 0; }
+.ds-profile-row b {
+  color: var(--text-primary); font-weight: 600; text-align: end;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ds-profile-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.ds-profile-actions .btn { flex: 1; min-width: 130px; }

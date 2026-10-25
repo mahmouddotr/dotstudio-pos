@@ -93,7 +93,7 @@
       { key: 'my-orders', href: 'customer/my-orders.html', icon: 'orders' },
       { key: 'tracking', href: 'customer/tracking.html', icon: 'truck' },
       { section: 'community' },
-      { key: 'public-chat', href: 'auth/public-chat.html', icon: 'chat' }
+      { key: 'chats', href: 'auth/public-chat.html', icon: 'chat' }
     ]
   };
 
@@ -147,7 +147,7 @@
     var user = DS.session();
     var all = NAV[user && user.role === 'subadmin' ? 'subadmin' : (user && user.role) || 'superadmin'] || [];
     var found = all.filter(function (n) { return n.key === key; })[0];
-    return found ? url(found.href) : url('index.html');
+    return found ? url(found.href) : url(DS.roleHome(user));
   }
 
   /* ───────────────────────────── BADGES ───────────────────────────── */
@@ -181,21 +181,66 @@
 
   function workspaceMarkup(user) {
     var entity = workspaceEntity(user);
-    var name, sub, avatar;
-    if (user.role === 'superadmin' || user.role === 'subadmin') {
-      name = t('platform') === 'platform' ? 'DotStudio® POS' : 'DotStudio® POS';
-      sub = user.role === 'superadmin' ? t('admin') : (t('subadmin') + ' · ' + (permissionsOf(user).length ? permissionsOf(user).map(function (p) { return t(p); }).slice(0, 2).join(' · ') : t('workspace')));
-      avatar = '<div class="ds-brand-mark" style="width:36px;height:36px;border-radius:10px;background:var(--lime);color:var(--on-lime);display:grid;place-items:center;font-family:var(--font-display);font-weight:700;font-size:16px">D</div>';
-    } else {
-      name = displayName(entity);
-      sub = user.role === 'delivery' ? t('delivery') : user.role === 'cashier' ? t('cashier') : user.role === 'customer' ? t('customer') : t('owner');
-      if (entity && entity.industry) sub = DS.lang() === 'en' ? (entity.industry_en || sub) : entity.industry;
-      avatar = '<img class="avatar" src="' + esc(DS.avatarUrl(entity || user)) + '" alt="">';
+    var name = displayName(user) || displayName(entity) || t('profile');
+    var roleLabel = t(user.role === 'superadmin' ? 'admin' : user.role);
+    var sub = roleLabel;
+    if (entity && entity !== user) {
+      var storeName = displayName(entity);
+      if (storeName && storeName !== name) sub = roleLabel + ' · ' + storeName;
     }
-    return '<button class="ds-workspace" data-workspace>' + avatar +
+    var avatar = '<img class="avatar" src="' + esc(DS.avatarUrl(user)) + '" alt="">';
+    return '<button class="ds-workspace" data-workspace type="button" aria-label="' + esc(t('profileTitle')) + '">' + avatar +
       '<div class="ds-workspace-info"><div class="ds-workspace-name">' + esc(name) + '</div><div class="ds-workspace-role">' + esc(sub) + '</div></div>' +
       icon('chevronDown') + '</button>';
   }
+
+  /* Profile sheet — never logs the user out, never navigates away. */
+  function openProfile() {
+    var user = DS.session();
+    if (!user) return;
+    var entity = workspaceEntity(user);
+    var rows = [];
+    rows.push([t('username'), user.username || '—']);
+    rows.push([t('role'), t(user.role === 'superadmin' ? 'admin' : user.role)]);
+    if (entity && entity !== user) rows.push([user.role === 'delivery' ? t('deliveryCompany') : t('store'), displayName(entity)]);
+    if (user.phone) rows.push([t('phone'), user.phone]);
+    if (user.email) rows.push([t('email'), user.email]);
+    if (user.city) rows.push([t('city'), DS.loc(user, 'city')]);
+
+    var body = '<div class="ds-profile">' +
+      '<div class="ds-profile-top">' +
+        '<img class="ds-profile-avatar" src="' + esc(DS.avatarUrl(user)) + '" alt="">' +
+        '<div class="ds-profile-id"><b>' + esc(displayName(user)) + '</b><span>' + esc(t(user.role === 'superadmin' ? 'admin' : user.role)) + (entity && entity !== user ? ' · ' + esc(displayName(entity)) : '') + '</span></div>' +
+        '<span class="ds-profile-live"><i></i>' + esc(t('online')) + '</span>' +
+      '</div>' +
+      '<div class="ds-profile-rows">' + rows.map(function (r) {
+        return '<div class="ds-profile-row"><span>' + esc(r[0]) + '</span><b>' + esc(r[1]) + '</b></div>';
+      }).join('') + '</div>' +
+      '<div class="ds-profile-actions">' +
+        '<button type="button" class="btn btn-secondary" data-profile-avatar>' + icon('image') + esc(t('changeAvatar')) + '</button>' +
+        '<button type="button" class="btn btn-danger" data-profile-logout>' + icon('logout') + esc(t('logout')) + '</button>' +
+      '</div></div>';
+
+    var m = DS.modal({
+      size: 'sm',
+      title: esc(t('profileTitle')),
+      sub: esc(t('profileSettings')),
+      body: body,
+      actions: [{ label: t('close'), variant: 'btn-secondary' }],
+      onMount: function (root) {
+        var av = root.querySelector('[data-profile-avatar]');
+        if (av) av.addEventListener('click', function () { m.close(); setTimeout(function () { DS.avatarPicker(); }, 160); });
+        var out = root.querySelector('[data-profile-logout]');
+        if (out) out.addEventListener('click', function () {
+          DS.confirm({ title: t('logout'), text: t('confirmDeleteText'), danger: true }).then(function (ok) {
+            if (ok) DS.logout();
+          });
+        });
+      }
+    });
+    return m;
+  }
+  DS.openProfile = openProfile;
 
   function brandMarkup() {
     return '<a class="ds-brand" href="' + url(DS.roleHome()) + '">' +
@@ -256,7 +301,7 @@
         '<div class="dropdown"><button class="ds-top-btn" data-notif title="' + esc(t('notifications')) + '">' + icon('bell') + (unread ? '<span class="dot"></span>' : '') + '</button>' +
           '<div class="dropdown-menu" data-notif-menu hidden style="min-width:300px;max-width:340px"><div class="dropdown-head">' + esc(t('notifications')) + '</div><div data-notif-body></div></div></div>' +
         '<div class="dropdown"><button class="ds-user-btn" data-user>' +
-          '<img class="avatar" src="' + esc(DS.avatarUrl(workspaceEntity(user) || user)) + '" alt=""><span class="u-name">' + esc(DS.lang() === 'en' ? (user.name_en || user.name) : user.name) + '</span>' + icon('chevronDown') +
+          '<img class="avatar" src="' + esc(DS.avatarUrl(user)) + '" alt=""><span class="u-name">' + esc(DS.lang() === 'en' ? (user.name_en || user.name) : user.name) + '</span>' + icon('chevronDown') +
         '</button><div class="dropdown-menu" data-user-menu hidden>' +
           '<div class="dropdown-head">' + esc(DS.loc(user, 'name')) + ' · ' + esc(t(user.role === 'superadmin' ? 'admin' : user.role)) + '</div>' +
           '<button class="dropdown-item" data-profile>' + icon('user') + esc(t('profileSettings')) + '</button>' +
@@ -405,16 +450,12 @@
       });
       if (userMenu) userMenu.addEventListener('click', function (e) { e.stopPropagation(); });
 
-      /* workspace */
+      /* workspace / profile */
       var ws = root.querySelector('[data-workspace]');
-      if (ws) ws.addEventListener('click', function () {
-        if (DS.data && (user.role === 'owner' || user.role === 'customer')) location.href = hrefFor('settings');
-        else if (user.role === 'superadmin' || user.role === 'subadmin' || user.role === 'cashier') location.href = hrefFor('settings');
-        else if (user.role === 'delivery') location.href = hrefFor('dashboard');
-      });
+      if (ws) ws.addEventListener('click', function () { closeMenus(); openProfile(); });
 
       DS.$$('[data-avatar]', root).forEach(function (b) { b.addEventListener('click', function () { closeMenus(); DS.avatarPicker(); }); });
-      DS.$$('[data-profile]', root).forEach(function (b) { b.addEventListener('click', function () { location.href = hrefFor('settings'); }); });
+      DS.$$('[data-profile]', root).forEach(function (b) { b.addEventListener('click', function () { closeMenus(); openProfile(); }); });
       DS.$$('[data-logout]', root).forEach(function (b) { b.addEventListener('click', function () { DS.logout(); }); });
 
       document.addEventListener('click', closeMenus);
@@ -427,7 +468,7 @@
       var wsHost = root.querySelector('[data-workspace]');
       if (wsHost) wsHost.outerHTML = workspaceMarkup(u);
       var av = root.querySelector('[data-user] .avatar');
-      if (av) av.src = DS.avatarUrl(workspaceEntity(u) || u);
+      if (av) av.src = DS.avatarUrl(u);
     };
 
     if (typeof opts.onReady === 'function') {
@@ -469,7 +510,7 @@
       var ws = document.querySelector('[data-workspace]');
       if (ws) ws.outerHTML = workspaceMarkup(u);
       var av = document.querySelector('[data-user] .avatar');
-      if (av) av.src = DS.avatarUrl(workspaceEntity(u) || u);
+      if (av) av.src = DS.avatarUrl(u);
     },
     refresh: refreshContent
   };

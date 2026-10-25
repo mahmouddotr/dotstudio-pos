@@ -1901,51 +1901,73 @@ window.addEventListener('DOMContentLoaded', () => {
   
 
 <script id="absolute-final-login">
-function doLogin() {
+/* Real login: writes the FULL user profile (role, name, tenant, avatar, phone…)
+   so routing, the sidebar, tenant isolation and chats all work immediately. */
+(function () {
+  const PROFILES = {
+    admin:      { id: 'u-admin', username: 'admin', password: 'admin2026', role: 'superadmin', name: 'System Admin', name_en: 'System Admin', email: 'admin@dotstudio.app', phone: '01226770582', avatar_id: 'av9', is_active: true },
+    dina:       { id: 'u-dina', username: 'dina', password: 'dina2026', role: 'subadmin', name: 'دينا', name_en: 'Dina', permissions: ['chats'], avatar_id: 'av5', is_active: true },
+    amal:       { id: 'u-amal', username: 'amal', password: 'amal2026', role: 'subadmin', name: 'أمل', name_en: 'Amal', permissions: ['reports'], avatar_id: 'av6', is_active: true },
+    fatma:      { id: 'u-fatma', username: 'fatma', password: 'fatma2026', role: 'subadmin', name: 'فاطمة', name_en: 'Fatma', permissions: ['orders', 'products'], avatar_id: 'av7', is_active: true },
+    nada:       { id: 'u-nada', username: 'nada', password: 'nada2026', role: 'subadmin', name: 'ندى', name_en: 'Nada', permissions: ['customers', 'delivery-companies'], avatar_id: 'av8', is_active: true },
+    basmala:    { id: 'u-basmala', username: 'basmala', password: 'basmala2026', role: 'subadmin', name: 'بسملة', name_en: 'Basmala', permissions: ['cashiers', 'jobs'], avatar_id: 'av2', is_active: true },
+    caznova:    { id: 'u-owner-caznova', username: 'caznova', password: 'caznova2026', role: 'owner', name: 'أحمد كازنوفا', name_en: 'Ahmed Caznova', tenant_id: 't-caznova', avatar_id: 'av1', is_active: true },
+    smozy:      { id: 'u-owner-smozy', username: 'smozy', password: 'smozy2026', role: 'owner', name: 'سارة سميزي', name_en: 'Sara Smozy', tenant_id: 't-smozy', avatar_id: 'av2', is_active: true },
+    bnsheikh:   { id: 'u-owner-bnsheikh', username: 'bnsheikh', password: 'bnsheikh2026', role: 'owner', name: 'بن الشيخ', name_en: 'Bn Alsheikh', tenant_id: 't-bnsheikh', avatar_id: 'av3', is_active: true },
+    mastore:    { id: 'u-owner-mastore', username: 'mastore', password: 'mastore2026', role: 'owner', name: 'محمود علي', name_en: 'Mahmoud Ali', tenant_id: 't-mastore', avatar_id: 'av4', is_active: true },
+    ca_cashier: { id: 'u-cashier-caznova', username: 'ca_cashier', password: 'ca_cashier2026', role: 'cashier', name: 'كاشير Caznova', name_en: 'Caznova Cashier', tenant_id: 't-caznova', avatar_id: 'av5', is_active: true },
+    sm_cashier: { id: 'u-cashier-smozy', username: 'sm_cashier', password: 'sm_cashier2026', role: 'cashier', name: 'كاشير Smozy', name_en: 'Smozy Cashier', tenant_id: 't-smozy', avatar_id: 'av6', is_active: true },
+    bn_cashier: { id: 'u-cashier-bnsheikh', username: 'bn_cashier', password: 'bn_cashier2026', role: 'cashier', name: 'كاشير Bn Alsheikh', name_en: 'Bn Alsheikh Cashier', tenant_id: 't-bnsheikh', avatar_id: 'av7', is_active: true },
+    ma_cashier: { id: 'u-cashier-mastore', username: 'ma_cashier', password: 'ma_cashier2026', role: 'cashier', name: 'كاشير MA Store', name_en: 'MA Store Cashier', tenant_id: 't-mastore', avatar_id: 'av8', is_active: true },
+    talqa:      { id: 'u-del-talqa', username: 'talqa', password: 'talqa2026', role: 'delivery', name: 'طلقة', name_en: 'Talqa', delivery_company: 'dc-talqa', delivery_company_name: 'طلقة', avatar_id: 'av3', is_active: true },
+    hala:       { id: 'u-del-hala', username: 'hala', password: 'hala2026', role: 'delivery', name: 'حالا', name_en: 'Hala', delivery_company: 'dc-hala', delivery_company_name: 'حالا', avatar_id: 'av6', is_active: true },
+    ahla:       { id: 'u-del-ahla', username: 'ahla', password: 'ahla2026', role: 'delivery', name: 'أهلا', name_en: 'Ahla', delivery_company: 'dc-ahla', delivery_company_name: 'أهلا', avatar_id: 'av9', is_active: true },
+    customer:   { id: 'u-customer', username: 'customer', password: 'customer2026', role: 'customer', name: 'ياسمين محمد', name_en: 'Yasmin Mohamed', tenant_id: 't-caznova', phone: '01123456789', city: 'القاهرة', city_en: 'Cairo', address: 'مدينة نصر · شارع مصطفى النحاس · عمارة 12', address_en: 'Nasr City · Mostafa El Nahas St. · Building 12', avatar_id: 'av5', is_active: true }
+  };
+
+  const ROUTES = {
+    superadmin: 'admin/dashboard.html',
+    subadmin: 'admin/dashboard.html',
+    owner: 'owner/dashboard.html',
+    cashier: 'cashier/pos.html',
+    delivery: 'delivery/dashboard.html',
+    customer: 'customer/storefront.html'
+  };
+
+  window.doLogin = function doLogin() {
     const uEl = document.getElementById('loginUser');
     const pEl = document.getElementById('loginPass');
     const e = document.getElementById('loginErr');
-    
     if (!uEl || !pEl) return;
-    
+
     const u = uEl.value.trim().toLowerCase();
     const p = pEl.value.trim().toLowerCase();
-    
     if (e) e.textContent = '';
 
-    const accounts = {
-        'admin': { pass: 'admin2026', dest: 'admin/dashboard.html' },
-        'dina': { pass: 'dina2026', dest: 'admin/dashboard.html' },
-        'amal': { pass: 'amal2026', dest: 'admin/dashboard.html' },
-        'fatma': { pass: 'fatma2026', dest: 'admin/dashboard.html' },
-        'nada': { pass: 'nada2026', dest: 'admin/dashboard.html' },
-        'basmala': { pass: 'basmala2026', dest: 'admin/dashboard.html' },
-        'caznova': { pass: 'caznova2026', dest: 'owner/dashboard.html' },
-        'smozy': { pass: 'smozy2026', dest: 'owner/dashboard.html' },
-        'bnsheikh': { pass: 'bnsheikh2026', dest: 'owner/dashboard.html' },
-        'mastore': { pass: 'mastore2026', dest: 'owner/dashboard.html' },
-        'ca_cashier': { pass: 'ca_cashier2026', dest: 'cashier/pos.html' },
-        'sm_cashier': { pass: 'sm_cashier2026', dest: 'cashier/pos.html' },
-        'bn_cashier': { pass: 'bn_cashier2026', dest: 'cashier/pos.html' },
-        'ma_cashier': { pass: 'ma_cashier2026', dest: 'cashier/pos.html' },
-        'talqa': { pass: 'talqa2026', dest: 'delivery/dashboard.html' },
-        'hala': { pass: 'hala2026', dest: 'delivery/dashboard.html' },
-        'ahla': { pass: 'ahla2026', dest: 'delivery/dashboard.html' },
-        'customer': { pass: 'customer2026', dest: 'customer/storefront.html' }
-    };
-
-    if (accounts[u] && accounts[u].pass === p) {
-        localStorage.setItem('cz_user', JSON.stringify({ username: u }));
-        window.location.href = accounts[u].dest;
-    } else {
-        if (e) {
-            e.textContent = 'بيانات الدخول غير صحيحة';
-            e.style.color = '#ff453a';
-        } else {
-            alert('بيانات الدخول غير صحيحة');
-        }
+    const profile = PROFILES[u];
+    if (!profile || profile.password !== p) {
+      if (e) { e.textContent = 'بيانات الدخول غير صحيحة'; e.style.color = '#ff453a'; }
+      return;
     }
-}
+
+    const clean = Object.assign({}, profile);
+    delete clean.password;
+
+    try {
+      localStorage.setItem('cz_user', JSON.stringify(clean));
+      localStorage.setItem('cz_session', clean.id);
+      localStorage.setItem('cz_role', clean.role);
+      localStorage.setItem('cz_mock', '1');
+      localStorage.removeItem('ds_preview_mode');
+      if (clean.role === 'subadmin') localStorage.setItem('ds_permissions', JSON.stringify(clean.permissions || []));
+      else localStorage.removeItem('ds_permissions');
+      if (clean.tenant_id) localStorage.setItem('ds_customer_store', clean.tenant_id);
+      localStorage.setItem('cz_login_at', String(Date.now()));
+    } catch (err) {}
+
+    window.location.href = ROUTES[clean.role] || 'customer/storefront.html';
+  };
+})();
 </script>
 </body>
 

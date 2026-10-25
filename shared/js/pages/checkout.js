@@ -38,7 +38,12 @@
   }
 
   function subtotal(items) { return items.reduce(function (s, i) { return s + i.price * i.qty; }, 0); }
-  function fee() { return Number(store.delivery_fee) || 0; }
+  function selectedCompany() { return companies.filter(function (c) { return c.id === state.company; })[0] || null; }
+  function fee() {
+    var c = selectedCompany();
+    if (c) return Number(c.fee) || 0;
+    return Number(store.delivery_fee) || 0;
+  }
 
   function orderItems() {
     return '<div class="order-items">' + cart.items.map(function (l) {
@@ -81,9 +86,10 @@
       '<aside class="checkout-sticky">' +
         '<div class="card"><div class="card-head"><div class="section-title">' + icon('receipt') + esc(t('orderSummary')) + '</div></div><div class="card-body">' +
           '<div class="summary-line"><span>' + esc(t('subtotal')) + '</span><span>' + money(sub) + '</span></div>' +
-          '<div class="summary-line"><span>' + esc(t('delivery')) + '</span><span>' + money(fee()) + '</span></div>' +
-          '<div class="summary-line total"><span>' + esc(t('total')) + '</span><span class="num">' + money(total) + '</span></div>' +
-          '<button class="btn btn-primary" data-place style="width:100%;margin-top:10px;min-height:46px">' + icon('check') + esc(t('confirmOrder')) + '</button>' +
+          '<div class="summary-line"><span>' + esc(t('delivery')) + '</span><span data-sum-fee>' + money(fee()) + '</span></div>' +
+          '<div class="summary-line total"><span>' + esc(t('total')) + '</span><span class="num" data-sum-total>' + money(total) + '</span></div>' +
+          '<div class="checkout-hint">' + icon('shield') + esc(t('orderSummaryHint')) + '</div>' +
+          '<button type="button" class="btn btn-primary" data-place style="width:100%;margin-top:10px;min-height:46px">' + icon('check') + esc(t('confirmOrder')) + '</button>' +
           '<div class="login-trust"><span>' + icon('shield') + esc(t('secure')) + '</span><span>' + icon('truck') + esc(t('delivered')) + '</span></div>' +
         '</div></div>' +
         '<div class="card"><div class="card-body" style="display:flex;gap:10px;align-items:center">' +
@@ -97,7 +103,16 @@
       b.addEventListener('click', function () { state.payment = b.getAttribute('data-pay'); render(); });
     });
     var co = page.body.querySelector('#coCompany');
-    if (co) co.addEventListener('change', function () { state.company = co.value; });
+    if (co) co.addEventListener('change', function () {
+      state.company = co.value;
+      /* Live summary refresh — the delivery fee follows the chosen company. */
+      var items2 = validItems();
+      var sub2 = subtotal(items2);
+      var feeEl = page.body.querySelector('[data-sum-fee]');
+      var totalEl = page.body.querySelector('[data-sum-total]');
+      if (feeEl) feeEl.textContent = money(fee());
+      if (totalEl) totalEl.textContent = money(sub2 + fee());
+    });
     var place = page.body.querySelector('[data-place]');
     if (place) place.addEventListener('click', placeOrder);
   }
@@ -119,7 +134,7 @@
     var total = sub + fee();
     var now = new Date().toISOString();
     var timeline = [
-      { status: 'pending', at: now, label: t('order.created') }
+      { status: 'pending', at: now, label: DS.data.statusLabel('pending') }
     ];
     busy = true;
     var order = DS.data.createOrder({
@@ -137,7 +152,7 @@
       status: 'pending',
       delivery_company_id: company ? company.id : null,
       delivery_company_name: company ? company.name : null,
-      driver_name: company ? (DS.lang() === 'en' ? company.name_en || company.name : company.name) + ' · ' + t('delivery.rider') : null,
+      driver_name: company ? (DS.lang() === 'en' ? company.name_en || company.name : company.name) + ' · ' + (DS.lang() === 'en' ? 'Courier' : 'مندوب') : null,
       timeline: timeline,
       updated_at: now
     });

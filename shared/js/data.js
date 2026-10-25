@@ -347,16 +347,35 @@
     var chats = [];
     TENANTS.forEach(function (tn, i) {
       var owner = USERS.filter(function (u) { return u.role === 'owner' && u.tenant_id === tn.id; })[0];
+      var supportMsgs = [
+        { id: 'm1', user_id: 'u-admin', name: 'DotStudio Support', role: 'superadmin', text: 'أهلاً ' + tn.owner + ' 👋 كيف نقدر نساعدك اليوم؟', text_en: 'Hi ' + tn.owner_en + ' 👋 How can we help you today?', at: hoursAgo(25 + i) },
+        { id: 'm2', user_id: owner.id, name: owner.name, role: 'owner', text: i === 1 ? 'عايزين نفعّل شركة توصيل إضافية للمتجر.' : 'كل حاجة شغالة تمام، شكراً!', text_en: i === 1 ? 'We would like to add another delivery company.' : 'Everything is working great, thanks!', at: hoursAgo(24 + i) },
+        { id: 'm3', user_id: 'u-admin', name: 'DotStudio Support', role: 'superadmin', text: 'تمام، فريقنا جاهز. لو احتجت أي حاجة ابعتلنا هنا في أي وقت.', text_en: 'Done — our team is ready. Message us here any time you need anything.', at: hoursAgo(23 + i) }
+      ];
+      if (tn.id === 't-caznova') {
+        supportMsgs.push({ id: 'm4', user_id: 'u-customer', name: 'ياسمين محمد', role: 'customer', text: 'عندي سؤال بخصوص الشحن، الطلب بيوصل امتى؟', text_en: 'Quick question about shipping — when does my order arrive?', at: hoursAgo(6) });
+        supportMsgs.push({ id: 'm5', user_id: 'u-admin', name: 'DotStudio Support', role: 'superadmin', text: 'أهلاً ياسمين 🌸 التوصيل داخل القاهرة من 30 لـ 45 دقيقة، وتقدري تتابعي الطلب لحظة بلحظة.', text_en: 'Hi Yasmin 🌸 Delivery inside Cairo takes 30–45 minutes, and you can track it live.', at: hoursAgo(5) });
+      }
       chats.push({
         id: 'support-' + tn.id,
         scope: 'support',
         tenant_id: tn.id,
         title: 'دعم · ' + tn.name,
         title_en: 'Support · ' + tn.name,
-        messages: [
-          { id: 'm1', user_id: 'u-admin', name: 'DotStudio Support', role: 'superadmin', text: 'أهلاً ' + tn.owner + ' 👋 كيف نقدر نساعدك اليوم؟', text_en: 'Hi ' + tn.owner_en + ' 👋 How can we help you today?', at: hoursAgo(25 + i) },
-          { id: 'm2', user_id: owner.id, name: owner.name, role: 'owner', text: i === 1 ? 'عايزين نفعّل شركة توصيل إضافية للمتجر.' : 'كل حاجة شغالة تمام، شكراً!', text_en: i === 1 ? 'We would like to add another delivery company.' : 'Everything is working great, thanks!', at: hoursAgo(24 + i) },
-          { id: 'm3', user_id: 'u-admin', name: 'DotStudio Support', role: 'superadmin', text: 'تمام، فريقنا جاهز. لو احتجت أي حاجة ابعتلنا هنا في أي وقت.', text_en: 'Done — our team is ready. Message us here any time you need anything.', at: hoursAgo(23 + i) }
+        messages: supportMsgs
+      });
+      chats.push({
+        id: 'direct-' + tn.id,
+        scope: 'direct',
+        tenant_id: tn.id,
+        title: 'محادثة ' + tn.name,
+        title_en: tn.name + ' chat',
+        messages: tn.id === 't-caznova' ? [
+          { id: 'dm1', user_id: 'u-customer', name: 'ياسمين محمد', role: 'customer', text: 'مساء الخير 👋 عايزة أعرف مقاس الخاتم الفضي متوفر؟', text_en: 'Good evening 👋 Is the silver ring available in my size?', at: hoursAgo(9) },
+          { id: 'dm2', user_id: owner.id, name: owner.name, role: 'owner', text: 'أهلاً بيكي 🌟 متوفر مقاسات 16 و18، وقدرنا نحجزلك المقاس اللي تحبيه.', text_en: 'Welcome 🌟 Sizes 16 and 18 are in stock — we can reserve yours.', at: hoursAgo(8) },
+          { id: 'dm3', user_id: 'u-customer', name: 'ياسمين محمد', role: 'customer', text: 'تمام جداً، هطلبه دلوقتي. شكراً!', text_en: 'Perfect, ordering now. Thank you!', at: hoursAgo(7) }
+        ] : [
+          { id: 'dm1', user_id: owner.id, name: owner.name, role: 'owner', text: 'أهلاً بيك في ' + tn.name + ' 👋 اسألنا عن أي منتج أو مقاس وإحنا هنا.', text_en: 'Welcome to ' + tn.name_en + ' 👋 Ask us about any product or size.', at: hoursAgo(30 + i) }
         ]
       });
     });
@@ -370,7 +389,8 @@
         { id: 'p1', user_id: 'u-admin', name: 'DotStudio', role: 'superadmin', text: 'مرحباً بالجميع في مجتمع DotStudio® 👋 شاركنا أفكارك واقتراحاتك.', text_en: 'Welcome to the DotStudio® community 👋 Share your ideas and suggestions.', at: hoursAgo(30) },
         { id: 'p2', user_id: 'u-owner-caznova', name: 'أحمد كازنوفا', role: 'owner', text: 'تجربة الكاشير الجديدة أسرع بكتير، شكراً للفريق!', text_en: 'The new POS experience is much faster — thanks team!', at: hoursAgo(20) },
         { id: 'p3', user_id: 'u-owner-smozy', name: 'سارة سميزي', role: 'owner', text: 'حد جرب تقارير المخزون الجديدة؟', text_en: 'Has anyone tried the new inventory reports?', at: hoursAgo(8) },
-        { id: 'p4', user_id: 'u-del-hala', name: 'حالا', role: 'delivery', text: 'الخريطة اللحظية بتوفر علينا وقت كبير في التوصيل.', text_en: 'Live maps save us a lot of delivery time.', at: hoursAgo(3) }
+        { id: 'p4', user_id: 'u-del-hala', name: 'حالا', role: 'delivery', text: 'الخريطة اللحظية بتوفر علينا وقت كبير في التوصيل.', text_en: 'Live maps save us a lot of delivery time.', at: hoursAgo(3) },
+        { id: 'p5', user_id: 'u-customer', name: 'ياسمين محمد', role: 'customer', text: 'أول تجربة ليا وكانت ممتازة، الطلب وصل أسرع من المتوقع ✨', text_en: 'My first order and it was great — arrived faster than expected ✨', at: hoursAgo(1) }
       ]
     });
     chats.push({
@@ -398,7 +418,52 @@
         { id: 'd4', user_id: 'u-admin', name: 'DotStudio Ops', role: 'superadmin', text: 'متوقع زيادة بعد الساعة 7 مساءً. جهزوا الفريق.', text_en: 'Expect a surge after 7 PM. Get the team ready.', at: hoursAgo(4) }
       ]
     });
+    chats.push({
+      id: 'support-global',
+      scope: 'support',
+      tenant_id: null,
+      title: 'دعم DotStudio®',
+      title_en: 'DotStudio® support',
+      messages: [
+        { id: 'sg1', user_id: 'u-admin', name: 'DotStudio Support', role: 'superadmin', text: 'أهلاً بيك 👋 فريق الدعم متاح من 9 صباحاً لـ 9 مساءً.', text_en: 'Welcome 👋 Our support team is online 9 AM – 9 PM.', at: hoursAgo(14) },
+        { id: 'sg2', user_id: 'u-del-talqa', name: 'طلقة', role: 'delivery', text: 'عندي استفسار عن إثبات التسليم.', text_en: 'I have a question about delivery proof.', at: hoursAgo(4) },
+        { id: 'sg3', user_id: 'u-admin', name: 'DotStudio Support', role: 'superadmin', text: 'تحت أمرك، ابعت التفاصيل هنا وهنساعدك فوراً.', text_en: 'Sure — send the details here and we will help right away.', at: hoursAgo(3) }
+      ]
+    });
     return chats;
+  }
+
+  /* Migration: make sure every tenant has a support + direct room and that the
+     shared channels exist. Runs on every load so old localStorage DBs upgrade. */
+  function ensureChats(db) {
+    if (!db || !Array.isArray(db.chats)) return;
+    var tenants = Array.isArray(db.tenants) ? db.tenants : [];
+    var has = function (id) { return db.chats.some(function (c) { return c.id === id; }); };
+    tenants.forEach(function (tn) {
+      if (!has('support-' + tn.id)) {
+        db.chats.push({
+          id: 'support-' + tn.id, scope: 'support', tenant_id: tn.id,
+          title: 'دعم · ' + tn.name, title_en: 'Support · ' + tn.name,
+          messages: [{ id: DS.uid('msg'), user_id: 'u-admin', name: 'DotStudio Support', role: 'superadmin', text: 'أهلاً بيك 👋 كيف نقدر نساعدك؟', text_en: 'Welcome 👋 How can we help?', at: nowISO() }]
+        });
+      }
+      if (!has('direct-' + tn.id)) {
+        db.chats.push({
+          id: 'direct-' + tn.id, scope: 'direct', tenant_id: tn.id,
+          title: 'محادثة ' + tn.name, title_en: tn.name + ' chat',
+          messages: [{ id: DS.uid('msg'), user_id: 'u-admin', name: 'DotStudio', role: 'superadmin', text: 'محادثة المتجر جاهزة — اسأل عن أي منتج.', text_en: 'Store chat is ready — ask about any product.', at: nowISO() }]
+        });
+      }
+    });
+    [['public', 'المحادثة العامة', 'Public chat'], ['stores', 'أصحاب المتاجر', 'Store owners'], ['delivery', 'شركات التوصيل', 'Delivery companies'], ['support-global', 'دعم DotStudio®', 'DotStudio® support']].forEach(function (row) {
+      if (has(row[0])) return;
+      db.chats.push({
+        id: row[0], scope: row[0] === 'support-global' ? 'support' : row[0], tenant_id: null,
+        title: row[1], title_en: row[2],
+        messages: [{ id: DS.uid('msg'), user_id: 'u-admin', name: 'DotStudio', role: 'superadmin', text: 'مرحباً 👋', text_en: 'Welcome 👋', at: nowISO() }]
+      });
+    });
+    db.chats.forEach(function (c) { if (!Array.isArray(c.messages)) c.messages = []; });
   }
 
   function buildJobs() {
@@ -470,7 +535,12 @@
     if (!db || db.version !== VERSION || !Array.isArray(db.tenants) || !db.tenants.length) {
       db = seed();
       save(db);
+      return db;
     }
+    var before = (db.chats || []).map(function (c) { return c.id; }).join('|');
+    ensureChats(db);
+    var after = (db.chats || []).map(function (c) { return c.id; }).join('|');
+    if (before !== after) save(db);
     return db;
   }
 
@@ -807,6 +877,14 @@
     }, data);
     order.order_no = orderNo;
     DB.orders.unshift(order);
+    /* Keep stock truthful: every ordered unit leaves inventory. */
+    (order.items || []).forEach(function (it) {
+      var p = DB.products.filter(function (x) { return x.id === it.product_id; })[0];
+      if (!p) return;
+      p.stock = Math.max(0, (Number(p.stock) || 0) - (Number(it.qty) || 0));
+      p.sold = (Number(p.sold) || 0) + (Number(it.qty) || 0);
+      p.updated_at = now;
+    });
     audit('طلب جديد ' + orderNo + ' بقيمة ' + order.total, 'New order ' + orderNo + ' for ' + order.total, 'receipt');
     commit();
     return order;
@@ -816,11 +894,22 @@
     var order = DB.orders.filter(function (o) { return o.id === id; })[0];
     if (!order) return null;
     meta = meta || {};
+    var previous = order.status;
     order.status = status;
     order.updated_at = nowISO();
     if (meta.proof) order.proof = { url: meta.proof, at: nowISO(), by: (DS.session() || {}).name || 'Delivery' };
     if (meta.company_id) { order.delivery_company_id = meta.company_id; order.delivery_company_name = meta.company_name || order.delivery_company_name; }
     if (meta.driver_name) order.driver_name = meta.driver_name;
+    /* Cancelling returns the units to inventory (once). */
+    if (status === 'cancelled' && previous !== 'cancelled') {
+      (order.items || []).forEach(function (it) {
+        var p = DB.products.filter(function (x) { return x.id === it.product_id; })[0];
+        if (!p) return;
+        p.stock = (Number(p.stock) || 0) + (Number(it.qty) || 0);
+        p.sold = Math.max(0, (Number(p.sold) || 0) - (Number(it.qty) || 0));
+        p.updated_at = nowISO();
+      });
+    }
     var labels = { pending: 'تم إنشاء الطلب', confirmed: 'تم تأكيد الطلب', preparing: 'جاري تجهيز الطلب', delivering: 'المندوب في الطريق', delivered: 'تم تسليم الطلب', cancelled: 'تم إلغاء الطلب' };
     if (!order.timeline) order.timeline = [];
     var last = order.timeline[order.timeline.length - 1];
@@ -884,21 +973,28 @@
     if (!user || !text) return null;
     var room = DB.chats.filter(function (c) { return c.id === roomId; })[0];
     if (!room) return null;
-    var msg = { id: DS.uid('msg'), user_id: user.id, name: user.name, role: user.role, text: String(text).slice(0, 2000), at: nowISO() };
+    if (!roomVisible(user, room)) return null;
+    var msg = { id: DS.uid('msg'), user_id: user.id, name: user.name, name_en: user.name_en, role: user.role, text: String(text).slice(0, 2000), at: nowISO() };
     room.messages.push(msg);
     commit();
     return msg;
   }
 
   function roomVisible(user, room) {
-    if (!user) return false;
+    if (!user || !room) return false;
     if (room.scope === 'public') return true;
     if (room.scope === 'stores') return user.role === 'owner' || isAdmin(user);
     if (room.scope === 'delivery') return user.role === 'delivery' || user.role === 'owner' || user.role === 'cashier' || isAdmin(user);
     if (room.scope === 'support') {
       if (isAdmin(user)) return true;
-      if (user.role === 'owner' || user.role === 'cashier') return room.tenant_id === user.tenant_id;
-      return false;
+      if (room.tenant_id == null) return user.role === 'delivery' || user.role === 'customer';
+      if (user.tenant_id) return room.tenant_id === user.tenant_id;
+      return user.role === 'customer' && currentStoreId(user) === room.tenant_id;
+    }
+    if (room.scope === 'direct') {
+      if (isAdmin(user)) return false;                 /* store ↔ customer stays private */
+      var tid = user.tenant_id || (user.role === 'customer' ? currentStoreId(user) : null);
+      return !!tid && room.tenant_id === tid;
     }
     return false;
   }
