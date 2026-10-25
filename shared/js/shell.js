@@ -20,6 +20,7 @@
       { key: 'products', href: 'admin/products.html', icon: 'box' },
       { key: 'stores', href: 'admin/stores.html', icon: 'store' },
       { key: 'customers', href: 'admin/customers.html', icon: 'users' },
+      { key: 'users', href: 'admin/users.html', icon: 'user' },
       { key: 'cashiers', href: 'admin/cashiers.html', icon: 'cashier' },
       { key: 'delivery-companies', href: 'admin/delivery-companies.html', icon: 'truck' },
       { key: 'sub-admins', href: 'admin/sub-admins.html', icon: 'shield' },
@@ -338,6 +339,18 @@
   }
 
   /* ───────────────────────────── MOUNT ────────────────────────────── */
+  function impersonationMarkup(user) {
+    var state = null;
+    try { state = DS.impersonating ? DS.impersonating() : null; } catch (e) {}
+    if (!state) return '';
+    var targetName = DS.lang() === 'en' ? (user.name_en || user.name) : (user.name || user.name_en);
+    return '<div class="ds-impersonation-banner" role="status">' +
+      '<span class="ds-imp-icon">' + icon('shield') + '</span>' +
+      '<span class="ds-imp-text">' + esc(t('impersonatingAs')) + ' <b>' + esc(targetName) + '</b></span>' +
+      '<button type="button" class="ds-imp-btn" data-stop-impersonation>' + icon('logout') + esc(t('backToAdmin')) + '</button>' +
+      '</div>';
+  }
+
   function mount(opts) {
     opts = opts || {};
     var roles = opts.roles || null;
@@ -354,7 +367,10 @@
       document.body.appendChild(root);
     }
 
-    root.innerHTML = '<div class="ds-app">' + sidebarMarkup(user, opts.active) +
+    var imp = impersonationMarkup(user);
+    document.body.classList.toggle('ds-impersonating', !!imp);
+
+    root.innerHTML = imp + '<div class="ds-app">' + sidebarMarkup(user, opts.active) +
       '<div class="ds-main">' + topbarMarkup(user, opts) +
       '<main class="ds-content" id="dsContent"></main></div></div>' +
       '<div class="drawer-scrim" data-scrim></div>';
@@ -407,6 +423,10 @@
     bind();
 
     function bind() {
+      /* impersonation exit */
+      DS.$$('[data-stop-impersonation]', root).forEach(function (b) {
+        b.addEventListener('click', function () { DS.stopImpersonating(); });
+      });
       /* drawer */
       DS.$$('[data-menu]', root).forEach(function (b) { b.addEventListener('click', function () { sidebar.classList.add('open'); scrim.classList.add('open'); }); });
       DS.$$('[data-sidebar-close]', root).forEach(function (b) { b.addEventListener('click', closeDrawer); });

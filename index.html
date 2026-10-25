@@ -1464,9 +1464,9 @@ window.addEventListener('DOMContentLoaded', () => {
   const ADMIN_WA = '201226770582';
 
   const PLANS = [
-    { id:'monthly',  icon:'🥈', name:'Monthly',  name_ar:'شهري',     price:299,  period_ar:'30 يوم',    period_en:'30 days',  tag_ar:'للمتاجر الصغيرة', tag_en:'For small shops', popular:false, color:'#22c55e', features:['Pro Reports','2 Cashiers','Print Invoices'], features_ar:['تقارير احترافية','كاشيران','طباعة الفواتير'] },
-    { id:'yearly',   icon:'🥇', name:'Yearly',   name_ar:'سنوي',     price:2499, period_ar:'سنة كاملة', period_en:'Full Year', tag_ar:'وفر 30%+',        tag_en:'Save 30%+',        popular:true,  color:'#D4FF3F', features:['All Features','Priority Support','Free Updates','Extra Cashier'], features_ar:['كل المميزات','دعم أولوية','تحديثات مجانية','كاشير إضافي'] },
-    { id:'lifetime', icon:'💎', name:'Lifetime', name_ar:'مدى الحياة', price:5999, period_ar:'للأبد',     period_en:'Forever',   tag_ar:'دفعة واحدة',       tag_en:'One time',         popular:false, color:'#a78bfa', features:['Everything Forever','Lifetime Support','VIP Membership','Consulting'], features_ar:['كل شيء مدى الحياة','دعم مدى الحياة','عضوية VIP','استشارات'] }
+    { id:'monthly',  icon:'🥈', name:'Monthly',  name_ar:'باقة شهرية', price:299,  period_ar:'شهرياً',    period_en:'per month',   tag_ar:'للمتاجر الصغيرة', tag_en:'For small shops', popular:false, color:'#22c55e', features:['Full storefront','POS & cashier','Live delivery tracking','Chats & support','Core reports'], features_ar:['متجر إلكتروني كامل','نقطة بيع وكاشير','تتبع توصيل لحظي','محادثات ودعم','تقارير أساسية'] },
+    { id:'sixmonths',icon:'🥇', name:'6-month',  name_ar:'باقة 6 أشهر', price:1499, period_ar:'كل 6 أشهر', period_en:'per 6 months', tag_ar:'وفّر 20%',        tag_en:'Save 20%',        popular:true,  color:'#D4FF3F', features:['Everything in monthly','Advanced reports & export','Unlimited delivery companies','Priority support','Save 20%'], features_ar:['كل مزايا الباقة الشهرية','تقارير متقدمة وتصدير','شركات توصيل غير محدودة','أولوية دعم','خصم 20%'] },
+    { id:'yearly',   icon:'💎', name:'Yearly',   name_ar:'باقة سنوية',  price:2499, period_ar:'سنوياً',     period_en:'per year',    tag_ar:'وفّر 30%',        tag_en:'Save 30%',        popular:false, color:'#a78bfa', features:['Everything in 6-month','Dedicated account manager','Team training','Daily backups','Save 30%'], features_ar:['كل مزايا باقة 6 أشهر','مدير حساب مخصص','تدريب فريقك','نسخ احتياطي يومي','خصم 30%'] }
   ];
 
   function isEn(){
@@ -1944,13 +1944,33 @@ window.addEventListener('DOMContentLoaded', () => {
     const p = pEl.value.trim().toLowerCase();
     if (e) e.textContent = '';
 
+    /* Read the offline DB so admin edits (duplicates, suspensions) apply to login. */
+    let dbUser = null, db = null;
+    try { db = JSON.parse(localStorage.getItem('ds_db_v1') || 'null'); } catch (err) {}
+    if (db && Array.isArray(db.users)) dbUser = db.users.filter(function (x) { return String(x.username).toLowerCase() === u; })[0];
+
     const profile = PROFILES[u];
-    if (!profile || profile.password !== p) {
+    const profileOk = !!profile && profile.password === p;
+    const dbOk = !!dbUser && String(dbUser.password || '').toLowerCase() === p;
+    if (!profileOk && !dbOk) {
       if (e) { e.textContent = 'بيانات الدخول غير صحيحة'; e.style.color = '#ff453a'; }
       return;
     }
 
-    const clean = Object.assign({}, profile);
+    /* Respect suspensions saved by the admin Users page / subscriptions. */
+    if (dbUser && dbUser.is_active === false) {
+      if (e) { e.textContent = 'الحساب موقوف — راجع الإدارة'; e.style.color = '#ff453a'; }
+      return;
+    }
+    if (dbUser && (dbUser.role === 'owner' || dbUser.role === 'cashier') && dbUser.tenant_id) {
+      const tn = (db.tenants || []).filter(function (t) { return t.id === dbUser.tenant_id; })[0];
+      if (tn && tn.status === 'suspended') {
+        if (e) { e.textContent = 'المتجر موقوف — راجع الإدارة'; e.style.color = '#ff453a'; }
+        return;
+      }
+    }
+
+    const clean = Object.assign({}, dbUser || profile);
     delete clean.password;
 
     try {

@@ -7,17 +7,18 @@
   if (!user) { location.replace(url('index.html')); return; }
 
   var qScope = DS.qs('scope');
-  var scope = (qScope && DS.chat && DS.chat.canScope(user, qScope)) ? qScope : 'public';
+  if (qScope === 'direct' || qScope === 'public') qScope = null;
+  var scope = (qScope && DS.chat && DS.chat.canScope(user, qScope)) ? qScope : (user.role === 'delivery' ? 'delivery' : 'support');
 
   var page = DS.shell.mount({
     roles: null,
     active: 'chats',
     title: t('messages'),
-    eyebrow: DS.lang() === 'en' ? 'Community' : 'المجتمع',
+    eyebrow: t('chatSupport'),
     icon: 'chat',
     sub: DS.lang() === 'en'
-      ? 'Talk to stores, drivers and the DotStudio team in real time.'
-      : 'تحدث مع المتاجر والمندوبين وفريق DotStudio في الوقت الحقيقي.',
+      ? 'Choose an agent, a store or a delivery company and start a private chat.'
+      : 'اختر موظف دعم أو متجر أو شركة توصيل وابدأ محادثة خاصة.',
     actions: '<span class="badge lime">' + icon('wifi') + ' ' + esc(t('live')) + '</span>' +
       '<a class="btn btn-secondary" href="' + url(DS.roleHome(user)) + '">' + icon('dashboard') + esc(t('back')) + '</a>',
     content: '<div class="chat-page-host"><div class="skeleton" style="height:min(72vh,720px);border-radius:24px"></div></div>'

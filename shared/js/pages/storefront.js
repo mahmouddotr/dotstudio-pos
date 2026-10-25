@@ -287,7 +287,7 @@
           '<p class="sf-sub">' + esc(DS.loc(store, 'description')) + '</p>' +
           '<div class="sf-hero-cta">' +
             '<button type="button" class="btn btn-primary sf-cta" data-scroll-products>' + icon('bag') + esc(t('shopNow')) + '</button>' +
-            '<a class="btn btn-secondary sf-cta" href="' + url('auth/public-chat.html?scope=direct') + '">' + icon('chat') + esc(t('chatDirectTitle')) + '</a>' +
+            '<a class="btn btn-secondary sf-cta" href="' + url('auth/public-chat.html?scope=stores') + '">' + icon('chat') + esc(t('chatDirectTitle')) + '</a>' +
           '</div>' +
           '<div class="sf-hero-meta">' +
             '<span class="sf-meta-pill">' + icon('star') + (store.rating || '4.8') + ' · ' + esc(t('storeRating')) + '</span>' +

@@ -1,0 +1,338 @@
+{
+  "at": "2026-10-25T12:06:12.724Z",
+  "total": 66,
+  "failed": 0,
+  "results": [
+    {
+      "name": "admin → /admin/dashboard.html",
+      "pass": true,
+      "detail": "/admin/dashboard.html · nav 15"
+    },
+    {
+      "name": "dina → /admin/dashboard.html",
+      "pass": true,
+      "detail": "/admin/dashboard.html · nav 3"
+    },
+    {
+      "name": "amal → /admin/dashboard.html",
+      "pass": true,
+      "detail": "/admin/dashboard.html · nav 3"
+    },
+    {
+      "name": "fatma → /admin/dashboard.html",
+      "pass": true,
+      "detail": "/admin/dashboard.html · nav 4"
+    },
+    {
+      "name": "nada → /admin/dashboard.html",
+      "pass": true,
+      "detail": "/admin/dashboard.html · nav 4"
+    },
+    {
+      "name": "basmala → /admin/dashboard.html",
+      "pass": true,
+      "detail": "/admin/dashboard.html · nav 4"
+    },
+    {
+      "name": "caznova → /owner/dashboard.html",
+      "pass": true,
+      "detail": "/owner/dashboard.html · nav 11"
+    },
+    {
+      "name": "smozy → /owner/dashboard.html",
+      "pass": true,
+      "detail": "/owner/dashboard.html · nav 11"
+    },
+    {
+      "name": "bnsheikh → /owner/dashboard.html",
+      "pass": true,
+      "detail": "/owner/dashboard.html · nav 11"
+    },
+    {
+      "name": "mastore → /owner/dashboard.html",
+      "pass": true,
+      "detail": "/owner/dashboard.html · nav 11"
+    },
+    {
+      "name": "ca_cashier → /cashier/pos.html",
+      "pass": true,
+      "detail": "/cashier/pos.html · nav 5"
+    },
+    {
+      "name": "sm_cashier → /cashier/pos.html",
+      "pass": true,
+      "detail": "/cashier/pos.html · nav 5"
+    },
+    {
+      "name": "bn_cashier → /cashier/pos.html",
+      "pass": true,
+      "detail": "/cashier/pos.html · nav 5"
+    },
+    {
+      "name": "ma_cashier → /cashier/pos.html",
+      "pass": true,
+      "detail": "/cashier/pos.html · nav 5"
+    },
+    {
+      "name": "talqa → /delivery/dashboard.html",
+      "pass": true,
+      "detail": "/delivery/dashboard.html · nav 4"
+    },
+    {
+      "name": "hala → /delivery/dashboard.html",
+      "pass": true,
+      "detail": "/delivery/dashboard.html · nav 4"
+    },
+    {
+      "name": "ahla → /delivery/dashboard.html",
+      "pass": true,
+      "detail": "/delivery/dashboard.html · nav 4"
+    },
+    {
+      "name": "customer → /customer/storefront.html",
+      "pass": true,
+      "detail": "/customer/storefront.html · nav 4"
+    },
+    {
+      "name": "three aligned plans",
+      "pass": true,
+      "detail": "🥈 باقة شهرية للمتاجر الصغيرة 299 ج.م شهرياً ✓ متجر إلكتروني كامل ✓ نقطة بيع وكاشير ✓ تتبع توصيل لحظي ✓ محادثات ودعم ✓ ت"
+    },
+    {
+      "name": "lifetime price removed",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "three plan cards",
+      "pass": true,
+      "detail": "3"
+    },
+    {
+      "name": "three hierarchical channels",
+      "pass": true,
+      "detail": "support,stores,delivery"
+    },
+    {
+      "name": "no General channel",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "support lists people",
+      "pass": true,
+      "detail": "17"
+    },
+    {
+      "name": "1-on-1 send message",
+      "pass": true,
+      "detail": "أمل · 0→1"
+    },
+    {
+      "name": "settings menu opens",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "block user",
+      "pass": true,
+      "detail": "blocks 1"
+    },
+    {
+      "name": "unblock user",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "report form opens",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "report submitted",
+      "pass": true,
+      "detail": "reports 1"
+    },
+    {
+      "name": "stores channel lists stores",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "delivery channel lists companies",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "support shows agents",
+      "pass": true,
+      "detail": "System Admin | أمل | بسملة | دينا | فاطمة | ندى"
+    },
+    {
+      "name": "seeded 1-on-1 thread",
+      "pass": true,
+      "detail": "bubbles 3"
+    },
+    {
+      "name": "customer can reply",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "customer sees stores list",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "store team sees customer threads",
+      "pass": true,
+      "detail": "ياسمين محمد"
+    },
+    {
+      "name": "store team can reply",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "every person gets a private store room",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "other stores cannot read the thread",
+      "pass": true,
+      "detail": "leaked=0"
+    },
+    {
+      "name": "owner reply lands in the customer thread",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "every person gets a private delivery room",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "other stores cannot read the company thread",
+      "pass": true,
+      "detail": "leaked=0"
+    },
+    {
+      "name": "rider sees the company inbox threads",
+      "pass": true,
+      "detail": "System Admin"
+    },
+    {
+      "name": "users directory lists all accounts",
+      "pass": true,
+      "detail": "18"
+    },
+    {
+      "name": "login-as available per user",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "impersonation lands on target dashboard",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "fixed banner names the user",
+      "pass": true,
+      "detail": "أنت الآن تتصفح كـ كاشير Caznova العودة للأدمن"
+    },
+    {
+      "name": "fixed banner offers return",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "return restores admin session",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "duplicate user",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "suspend user",
+      "pass": true,
+      "detail": "is_active=false"
+    },
+    {
+      "name": "delete permanently",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "+7 days extends subscription",
+      "pass": true,
+      "detail": "10 → 17"
+    },
+    {
+      "name": "suspend store immediately",
+      "pass": true,
+      "detail": "suspended"
+    },
+    {
+      "name": "suspended store blocks owner login",
+      "pass": true,
+      "detail": "المتجر موقوف — راجع الإدارة"
+    },
+    {
+      "name": "activate store restores access",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "add to cart",
+      "pass": true,
+      "detail": "count=1 · Silver-plated bracelet"
+    },
+    {
+      "name": "cart modal opens",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "place order",
+      "pass": true,
+      "detail": "ORD-1033"
+    },
+    {
+      "name": "order saved to database",
+      "pass": true,
+      "detail": "items=1"
+    },
+    {
+      "name": "stock decreased by 1",
+      "pass": true,
+      "detail": "24 → 23"
+    },
+    {
+      "name": "order visible in My Orders",
+      "pass": true,
+      "detail": "ORD-1033"
+    },
+    {
+      "name": "marketing page loads",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "jobs page loads",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "zero console errors",
+      "pass": true,
+      "detail": "clean"
+    }
+  ],
+  "consoleErrors": []
+}

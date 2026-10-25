@@ -1,8 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════
-   DotStudio® POS — CHAT (Apple Messages / WhatsApp layout)
-   Three panes: channels · conversations · thread.
-   Channels are only rendered when the signed-in role can use them,
-   so there are no "locked" screens anywhere.
+   DotStudio® POS — CHAT (1-on-1, hierarchical)
+   Three panes: channels · contacts · direct thread.
+   Support → people · Stores → storefronts · Delivery → companies.
+   Every selection opens a focused one-to-one conversation, with a
+   settings menu to block or report the other party.
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -15,22 +16,14 @@
 
   var SCOPES = [
     { key: 'support', labelKey: 'chatSupport', hintKey: 'chatSupportHint', icon: 'lifebuoy', tone: 'lime' },
-    { key: 'direct', labelKey: 'chatDirect', hintKey: 'chatDirectHint', icon: 'store', tone: 'blue' },
-    { key: 'public', labelKey: 'chatPublic', hintKey: 'chatPublicHint', icon: 'globe', tone: 'purple' },
-    { key: 'stores', labelKey: 'chatStores', hintKey: 'chatStoresHint', icon: 'building', tone: 'orange' },
+    { key: 'stores', labelKey: 'chatStores', hintKey: 'chatStoresHint', icon: 'store', tone: 'blue' },
     { key: 'delivery', labelKey: 'chatDelivery', hintKey: 'chatDeliveryHint', icon: 'truck', tone: 'teal' }
   ];
 
   function isAdmin(user) { return !!user && (user.role === 'superadmin' || user.role === 'subadmin'); }
 
   function canScope(user, scope) {
-    if (!user) return false;
-    var admin = isAdmin(user);
-    if (scope === 'support') return true;
-    if (scope === 'public') return true;
-    if (scope === 'direct') return user.role === 'customer' || user.role === 'owner' || user.role === 'cashier';
-    if (scope === 'stores') return admin || user.role === 'owner';
-    if (scope === 'delivery') return admin || user.role === 'delivery' || user.role === 'owner' || user.role === 'cashier';
+    if (DS.data && DS.data.chatCanScope) return DS.data.chatCanScope(user, scope);
     return false;
   }
 
@@ -38,70 +31,61 @@
     return SCOPES.filter(function (s) { return s.key === scope; })[0] || SCOPES[0];
   }
 
-  function roomsOf(user, scope) {
-    if (!canScope(user, scope)) return [];
-    var rooms = (DS.data.roomsFor(user) || []).filter(function (r) { return r.scope === scope; });
-    /* Support: for customers/drivers hide the other tenants' rooms. */
-    if (scope === 'support' && !isAdmin(user)) {
-      rooms = rooms.filter(function (r) { return r.tenant_id == null || r.tenant_id === (user.tenant_id || DS.data.currentStoreId(user)); });
-    }
-    return rooms;
-  }
-
   function langText(obj, base) {
     if (!obj) return '';
     return DS.lang() === 'en' ? (obj[base + '_en'] || obj[base] || '') : (obj[base] || obj[base + '_en'] || '');
   }
 
-  function roomTitle(room) { return langText(room, 'title'); }
-
-  function roomHint(room, user) {
-    var m = meta(room.scope);
-    if (room.scope === 'direct') {
-      var tn = DS.data.tenantById(room.tenant_id);
-      if (user.role === 'customer') return tn ? langText(tn, 'industry') : t('chatDirectHint');
-      return t('chatDirectHint');
-    }
-    if (room.scope === 'support') return t('chatSupportHint');
-    return t(m.hintKey);
+  function contactsOf(user, scope) {
+    if (!canScope(user, scope)) return [];
+    return DS.data.chatContacts(user, scope) || [];
   }
 
-  function avatarFor(room, user) {
-    if (room.scope === 'support' || room.scope === 'direct') {
-      var tn = DS.data.tenantById(room.tenant_id);
-      if (tn) return '<img class="avatar sm" src="' + esc(DS.avatarUrl(tn)) + '" alt="">';
-      return '<span class="avatar sm chat-avatar-brand">D</span>';
+  function contactName(contact) {
+    return DS.lang() === 'en' ? (contact.name_en || contact.name) : (contact.name || contact.name_en);
+  }
+
+  function contactSub(contact) {
+    return DS.lang() === 'en' ? (contact.subtitle_en || contact.subtitle) : (contact.subtitle || contact.subtitle_en);
+  }
+
+  function avatarFor(contact, cls) {
+    cls = cls || 'avatar sm';
+    if (contact.type === 'user') {
+      var u = DS.data.userById(contact.id);
+      if (u) return '<img class="' + cls + '" src="' + esc(DS.avatarUrl(u)) + '" alt="">';
+      return '<span class="' + cls + ' chat-avatar-tone lime">' + esc(DS.initials(contactName(contact))) + '</span>';
     }
-    var m = meta(room.scope);
-    return '<span class="avatar sm chat-avatar-tone ' + m.tone + '">' + icon(m.icon) + '</span>';
+    if (contact.type === 'tenant') {
+      var tn = DS.data.tenantById(contact.id);
+      if (tn) return '<img class="' + cls + '" src="' + esc(DS.avatarUrl(tn)) + '" alt="">';
+      return '<span class="' + cls + ' chat-avatar-tone blue">' + icon('store') + '</span>';
+    }
+    var co = (DS.data.companies || []).filter(function (c) { return c.id === contact.id; })[0];
+    return '<span class="' + cls + ' chat-avatar-tone teal">' + esc((co && co.emoji) || '🛵') + '</span>';
+  }
+
+  function roomOf(user, scope, contact) {
+    if (!contact) return null;
+    return DS.data.chatThread(user, scope, contact.id);
   }
 
   function lastMessage(room) {
-    var msgs = room.messages || [];
+    var msgs = (room && room.messages) || [];
     return msgs.length ? msgs[msgs.length - 1] : null;
-  }
-
-  function otherParty(room, user) {
-    if (room.scope === 'public') return t('chatPublicHint');
-    if (room.scope === 'stores') return t('chatStoresHint');
-    if (room.scope === 'delivery') return t('chatDeliveryHint');
-    if (room.scope === 'support') return t('chatSupportHint');
-    var tn = DS.data.tenantById(room.tenant_id);
-    return tn ? langText(tn, 'name') : t('chatDirectHint');
   }
 
   function dayLabel(iso) {
     var d = new Date(iso);
     var today = new Date();
-    var same = d.toDateString() === today.toDateString();
-    if (same) return DS.lang() === 'en' ? 'Today' : 'اليوم';
+    if (d.toDateString() === today.toDateString()) return DS.lang() === 'en' ? 'Today' : 'اليوم';
     var y = new Date(Date.now() - 86400000);
     if (d.toDateString() === y.toDateString()) return DS.lang() === 'en' ? 'Yesterday' : 'أمس';
     return DS.date(iso);
   }
 
   function messagesMarkup(room, user) {
-    var msgs = (room.messages || []).slice(-80);
+    var msgs = ((room && room.messages) || []).slice(-120);
     if (!msgs.length) {
       return '<div class="chat-thread-empty"><div class="cte-icon">' + icon('chat') + '</div>' +
         '<b>' + esc(t('chatStartConversation')) + '</b><p>' + esc(t('chatEmptyHint')) + '</p></div>';
@@ -121,7 +105,9 @@
       if (u) name = langText(u, 'name');
       var av = '';
       if (!mine) {
-        av = grouped ? '<span class="chat-msg-av"></span>' : '<img class="chat-msg-av" src="' + esc(DS.avatarUrl(u || { name: name })) + '" alt="">';
+        av = grouped
+          ? '<span class="chat-msg-av"></span>'
+          : '<img class="chat-msg-av" src="' + esc(DS.avatarUrl(u || { name: name })) + '" alt="">';
       }
       html += '<div class="chat-msg' + (mine ? ' mine' : '') + (grouped ? ' grouped' : '') + '">' + av +
         '<div class="chat-msg-body">' +
@@ -133,30 +119,40 @@
     return html;
   }
 
-  function roomListMarkup(rooms, activeId, user) {
-    if (!rooms.length) {
+  function contactListMarkup(contacts, activeKey, user, scope) {
+    if (!contacts.length) {
       return '<div class="chat-list-empty"><div class="cte-icon">' + icon('chat') + '</div><b>' + esc(t('chatNoRooms')) + '</b></div>';
     }
-    return rooms.map(function (r) {
-      var last = lastMessage(r);
-      var preview = last ? (DS.lang() === 'en' ? (last.text_en || last.text) : last.text) : t('chatEmptyHint');
+    return contacts.map(function (c) {
+      var room = roomOf(user, scope, c);
+      var last = lastMessage(room);
+      var preview = last
+        ? (DS.lang() === 'en' ? (last.text_en || last.text) : last.text)
+        : (contactSub(c) || t('chatEmptyHint'));
       var mineLast = last && last.user_id === user.id;
-      return '<button type="button" class="chat-room' + (r.id === activeId ? ' active' : '') + '" data-room="' + esc(r.id) + '">' +
-        avatarFor(r, user) +
-        '<span class="chat-room-info"><span class="chat-room-name">' + esc(roomTitle(r)) + '</span>' +
-        '<span class="chat-room-preview">' + (mineLast ? '<i>' + esc(t('you')) + ':</i> ' : '') + esc(preview) + '</span></span>' +
+      var blocked = DS.data.isPeerBlocked(scope, c.id, user);
+      var count = room ? (room.messages || []).length : 0;
+      return '<button type="button" class="chat-room' + (c.key === activeKey ? ' active' : '') + (blocked ? ' is-blocked' : '') + '" data-contact="' + esc(c.key) + '">' +
+        avatarFor(c) +
+        '<span class="chat-room-info"><span class="chat-room-name">' + esc(contactName(c)) +
+          (blocked ? ' <span class="chat-blocked-chip">' + icon('lock') + '</span>' : '') + '</span>' +
+        '<span class="chat-room-preview">' + (mineLast ? '<i>' + esc(t('you')) + ':</i> ' : '') + esc(String(preview).slice(0, 80)) + '</span></span>' +
         '<span class="chat-room-side"><span class="chat-room-time">' + (last ? esc(DS.timeShort(last.at)) : '') + '</span>' +
-        '<span class="chat-room-count">' + (r.messages || []).length + '</span></span></button>';
+        (count ? '<span class="chat-room-count">' + count + '</span>' : '') + '</span></button>';
     }).join('');
   }
 
   function channelListMarkup(scopes, state, user) {
     return scopes.map(function (s) {
-      var count = roomsOf(user, s.key).reduce(function (n, r) { return n + (r.messages || []).length; }, 0);
+      var contacts = contactsOf(user, s.key);
+      var msgs = contacts.reduce(function (n, c) {
+        var room = roomOf(user, s.key, c);
+        return n + ((room && room.messages) || []).length;
+      }, 0);
       return '<button type="button" class="chat-channel' + (state.scope === s.key ? ' active' : '') + '" data-scope="' + s.key + '" title="' + esc(t(s.labelKey)) + '">' +
         '<span class="cc-ico ' + s.tone + '">' + icon(s.icon) + '</span>' +
         '<span class="cc-label">' + esc(t(s.labelKey)) + '</span>' +
-        (count ? '<span class="cc-count">' + count + '</span>' : '') +
+        (msgs ? '<span class="cc-count">' + msgs + '</span>' : '') +
         '</button>';
     }).join('');
   }
@@ -181,32 +177,50 @@
 
     var state = {
       scope: opts.scope && canScope(user, opts.scope) ? opts.scope : scopes[0].key,
-      roomId: opts.roomId || null,
+      contactKey: null,
       mobileConv: false
     };
 
-    function currentRooms() { return roomsOf(user, state.scope); }
-    function currentRoom() {
-      var rooms = currentRooms();
-      if (!rooms.length) return null;
-      var found = rooms.filter(function (r) { return r.id === state.roomId; })[0];
+    function currentContacts() { return contactsOf(user, state.scope); }
+
+    function currentContact() {
+      var list = currentContacts();
+      if (!list.length) return null;
+      var found = list.filter(function (c) { return c.key === state.contactKey; })[0];
       if (found) return found;
-      state.roomId = rooms[0].id;
-      return rooms[0];
+      /* keep a previous selection only if it exists in this scope */
+      if (state.contactKey) {
+        state.contactKey = null;
+      }
+      return list[0];
     }
 
-    function headerMarkup(room) {
-      if (!room) return '';
+    function selectDefault() {
+      var c = currentContact();
+      state.contactKey = c ? c.key : null;
+      return c;
+    }
+
+    function headerMarkup(contact, room, blocked) {
+      if (!contact) return '';
       return '<div class="chat-conv-head">' +
         '<button type="button" class="chat-back" data-chat-back aria-label="back">' + icon('chevronRight') + '</button>' +
-        avatarFor(room, user) +
-        '<div class="chat-conv-id"><b>' + esc(roomTitle(room)) + '</b>' +
-          '<span><i class="chat-live-dot"></i>' + esc(otherParty(room, user)) + '</span></div>' +
-        '<span class="chat-conv-tag">' + icon(meta(room.scope).icon) + esc(t(meta(room.scope).labelKey)) + '</span>' +
+        avatarFor(contact, 'avatar') +
+        '<div class="chat-conv-id"><b>' + esc(contactName(contact)) + '</b>' +
+          '<span><i class="chat-live-dot"></i>' + esc(contactSub(contact) || t(meta(state.scope).hintKey)) + '</span></div>' +
+        '<span class="chat-conv-tag">' + icon(meta(state.scope).icon) + esc(t(meta(state.scope).labelKey)) + '</span>' +
+        '<button type="button" class="chat-settings-btn' + (blocked ? ' is-blocked' : '') + '" data-chat-settings aria-label="' + esc(t('chatSettings')) + '" title="' + esc(t('chatSettings')) + '">' + icon('settings') + '</button>' +
       '</div>';
     }
 
-    function threadMarkup(room) {
+    function threadMarkup(contact, room, blocked) {
+      if (blocked) {
+        return '<div class="chat-thread" data-chat-thread>' + messagesMarkup(room, user) + '</div>' +
+          '<div class="chat-blocked-bar">' + icon('lock') +
+            '<span>' + esc(t('chatBlockedNotice')) + '</span>' +
+            '<button type="button" class="btn btn-secondary btn-sm" data-chat-unblock>' + esc(t('chatUnblock')) + '</button>' +
+          '</div>';
+      }
       return '<div class="chat-thread" data-chat-thread>' + messagesMarkup(room, user) + '</div>' +
         '<div class="chat-compose">' +
           '<div class="chat-compose-box"><textarea rows="1" data-chat-input placeholder="' + esc(t('sendMessage')) + '" aria-label="' + esc(t('sendMessage')) + '"></textarea></div>' +
@@ -215,8 +229,10 @@
     }
 
     function render() {
-      var room = currentRoom();
-      var list = currentRooms();
+      var contact = selectDefault();
+      var room = roomOf(user, state.scope, contact);
+      var blocked = contact ? DS.data.isPeerBlocked(state.scope, contact.id, user) : false;
+      var list = currentContacts();
 
       if (mode === 'dock') {
         el.innerHTML = '<div class="chat-dock">' +
@@ -225,12 +241,12 @@
             '<span class="chat-live-pill"><i></i>' + esc(t('live')) + '</span>' +
           '</div>' +
           '<div class="dock-tabs">' + channelListMarkup(scopes, state, user) + '</div>' +
-          (room
-            ? '<div class="chat-dock-room">' + avatarFor(room, user) + '<div><b>' + esc(roomTitle(room)) + '</b><span>' + esc(otherParty(room, user)) + '</span></div></div>' +
-              threadMarkup(room)
+          (contact
+            ? '<div class="chat-dock-room">' + avatarFor(contact) + '<div><b>' + esc(contactName(contact)) + '</b><span>' + esc(contactSub(contact)) + '</span></div></div>' +
+              threadMarkup(contact, room, blocked)
             : '<div class="chat-thread-empty"><div class="cte-icon">' + icon('chat') + '</div><b>' + esc(t('chatNoRooms')) + '</b></div>') +
           '</div>';
-        bind();
+        bind(contact);
         return;
       }
 
@@ -243,14 +259,15 @@
         '<section class="chat-rooms-pane">' +
           '<div class="chat-pane-head"><div><b>' + esc(t(meta(state.scope).labelKey)) + '</b><span>' + esc(t(meta(state.scope).hintKey)) + '</span></div>' +
             '<span class="chat-pane-count">' + list.length + '</span></div>' +
-          '<div class="chat-room-list">' + roomListMarkup(list, room && room.id, user) + '</div>' +
+          '<div class="chat-room-list">' + contactListMarkup(list, contact && contact.key, user, state.scope) + '</div>' +
         '</section>' +
         '<section class="chat-conv">' +
-          (room ? headerMarkup(room) + threadMarkup(room)
+          (contact
+            ? headerMarkup(contact, room, blocked) + threadMarkup(contact, room, blocked)
             : '<div class="chat-thread-empty"><div class="cte-icon">' + icon('chat') + '</div><b>' + esc(t('chatPick')) + '</b><p>' + esc(t('chatPickText')) + '</p></div>') +
         '</section>' +
         '</div>';
-      bind();
+      bind(contact);
     }
 
     function scrollThread() {
@@ -258,24 +275,34 @@
       if (th) th.scrollTop = th.scrollHeight;
     }
 
-    function bind() {
+    function bind(contact) {
       DS.$$('[data-scope]', el).forEach(function (b) {
         b.addEventListener('click', function () {
           state.scope = b.getAttribute('data-scope');
-          state.roomId = null;
+          state.contactKey = null;
           state.mobileConv = false;
           render();
         });
       });
-      DS.$$('[data-room]', el).forEach(function (b) {
+      DS.$$('[data-contact]', el).forEach(function (b) {
         b.addEventListener('click', function () {
-          state.roomId = b.getAttribute('data-room');
+          state.contactKey = b.getAttribute('data-contact');
           state.mobileConv = true;
           render();
         });
       });
       var back = el.querySelector('[data-chat-back]');
       if (back) back.addEventListener('click', function () { state.mobileConv = false; render(); });
+
+      var gear = el.querySelector('[data-chat-settings]');
+      if (gear && contact) gear.addEventListener('click', function () { openSettings(contact); });
+
+      var unblock = el.querySelector('[data-chat-unblock]');
+      if (unblock && contact) unblock.addEventListener('click', function () {
+        DS.data.togglePeerBlock(state.scope, contact.id, user);
+        DS.toast(t('chatUnblocked'), 'success');
+        render();
+      });
 
       var input = el.querySelector('[data-chat-input]');
       var sendBtn = el.querySelector('[data-chat-send]');
@@ -293,16 +320,19 @@
       scrollThread();
 
       function send() {
-        if (!input) return;
+        if (!input || !contact) return;
         var text = input.value.trim();
         if (!text) return;
-        var room = currentRoom();
-        if (!room) return;
-        var msg = DS.data.sendMessage(room.id, text);
+        if (DS.data.isPeerBlocked(state.scope, contact.id, user)) {
+          DS.toast(t('chatBlockedNotice'), 'error');
+          return;
+        }
+        var msg = DS.data.sendMessageTo(state.scope, contact.id, text);
         if (!msg) { DS.toast(t('noPermission'), 'error'); return; }
         input.value = '';
         input.style.height = 'auto';
         if (sendBtn) sendBtn.classList.remove('ready');
+        var room = roomOf(user, state.scope, contact);
         var th = el.querySelector('[data-chat-thread]');
         if (th) {
           th.innerHTML = messagesMarkup(room, user);
@@ -310,13 +340,13 @@
         } else {
           render();
         }
-        /* refresh list previews without losing focus */
+        /* refresh contact previews without losing focus */
         var listHost = el.querySelector('.chat-room-list');
         if (listHost) {
-          listHost.innerHTML = roomListMarkup(currentRooms(), room.id, user);
-          DS.$$('[data-room]', listHost).forEach(function (b) {
+          listHost.innerHTML = contactListMarkup(currentContacts(), contact.key, user, state.scope);
+          DS.$$('[data-contact]', listHost).forEach(function (b) {
             b.addEventListener('click', function () {
-              state.roomId = b.getAttribute('data-room');
+              state.contactKey = b.getAttribute('data-contact');
               state.mobileConv = true;
               render();
             });
@@ -325,13 +355,89 @@
       }
     }
 
+    function openSettings(contact) {
+      var blocked = DS.data.isPeerBlocked(state.scope, contact.id, user);
+      var body = '<div class="chat-settings">' +
+        '<div class="chat-settings-peer">' + avatarFor(contact, 'avatar') +
+          '<div><b>' + esc(contactName(contact)) + '</b><span>' + esc(contactSub(contact)) + '</span></div>' +
+        '</div>' +
+        '<button type="button" class="chat-settings-row" data-settings-block>' +
+          '<span class="cs-ico">' + icon(blocked ? 'checkCircle' : 'lock') + '</span>' +
+          '<span class="cs-copy"><b>' + esc(blocked ? t('chatUnblock') : t('chatBlock')) + '</b><small>' + esc(t('chatBlockHint')) + '</small></span>' +
+        '</button>' +
+        '<button type="button" class="chat-settings-row danger" data-settings-report>' +
+          '<span class="cs-ico">' + icon('alert') + '</span>' +
+          '<span class="cs-copy"><b>' + esc(t('chatReport')) + '</b><small>' + esc(t('chatReportHint')) + '</small></span>' +
+        '</button>' +
+      '</div>';
+
+      var m = DS.modal({
+        size: 'sm',
+        title: t('chatSettings'),
+        sub: contactName(contact),
+        body: body,
+        actions: [{ label: t('close'), variant: 'btn-secondary' }],
+        onMount: function (root) {
+          var blockBtn = root.querySelector('[data-settings-block]');
+          if (blockBtn) blockBtn.addEventListener('click', function () {
+            var nowBlocked = DS.data.togglePeerBlock(state.scope, contact.id, user);
+            DS.toast(nowBlocked ? t('chatBlockedToast') : t('chatUnblocked'), 'success');
+            m.close();
+            render();
+          });
+          var reportBtn = root.querySelector('[data-settings-report]');
+          if (reportBtn) reportBtn.addEventListener('click', function () {
+            m.close();
+            setTimeout(function () { openReport(contact); }, 140);
+          });
+        }
+      });
+    }
+
+    function openReport(contact) {
+      var reasons = DS.lang() === 'en'
+        ? ['Spam or advertising', 'Harassment or abuse', 'Impersonation', 'Inappropriate content', 'Other']
+        : ['رسائل مزعجة أو إعلانات', 'إساءة أو تحرش', 'انتحال شخصية', 'محتوى غير لائق', 'أخرى'];
+      var body = '<div class="chat-report">' +
+        '<p class="hint">' + esc(t('chatReportText')) + '</p>' +
+        '<div class="chat-report-reasons">' + reasons.map(function (r, i) {
+          return '<label class="check chat-report-reason"><input type="radio" name="chatReason" value="' + esc(r) + '"' + (i === 0 ? ' checked' : '') + '><span>' + esc(r) + '</span></label>';
+        }).join('') + '</div>' +
+        '<div class="field" style="margin-top:12px"><label>' + esc(t('chatReportDetails')) + '</label>' +
+        '<textarea class="input" rows="3" data-report-details placeholder="' + esc(t('chatReportPlaceholder')) + '"></textarea></div>' +
+      '</div>';
+      DS.modal({
+        size: 'sm',
+        title: t('chatReport'),
+        sub: contactName(contact),
+        body: body,
+        actions: [
+          { label: t('cancel'), variant: 'btn-secondary' },
+          { label: t('chatSendReport'), variant: 'btn-primary', onClick: function (root) {
+            var picked = root.querySelector('input[name="chatReason"]:checked');
+            var detail = (root.querySelector('[data-report-details]').value || '').trim();
+            var reason = (picked ? picked.value : '') + (detail ? ' — ' + detail : '');
+            DS.data.reportPeer(state.scope, contact.id, reason, user);
+            DS.toast(t('chatReportSent'), 'success');
+            return true;
+          } }
+        ]
+      });
+    }
+
     render();
 
     return {
       element: el,
       refresh: render,
-      scope: function (s) { if (canScope(user, s)) { state.scope = s; state.roomId = null; state.mobileConv = false; render(); } },
-      room: function (id) { state.roomId = id; state.mobileConv = true; render(); },
+      scope: function (s) { if (canScope(user, s)) { state.scope = s; state.contactKey = null; state.mobileConv = false; render(); } },
+      room: function (id) {
+        /* Accept a room id for backwards compatibility. */
+        var list = currentContacts();
+        var match = list.filter(function (c) { return c.roomId === id; })[0];
+        if (match) { state.contactKey = match.key; state.mobileConv = true; render(); }
+      },
+      disable: function () { el.innerHTML = '<div class="chat-thread-empty"><div class="cte-icon">' + icon('lock') + '</div><b>' + esc(t('chatLocked')) + '</b><p>' + esc(t('chatLockedText')) + '</p></div>'; },
       destroy: function () { el.innerHTML = ''; }
     };
   }
@@ -340,8 +446,11 @@
     mount: mount,
     scopes: SCOPES,
     canScope: canScope,
-    roomsOf: roomsOf
+    contactsOf: contactsOf,
+    roomsOf: function (user, scope) {
+      return scope ? (DS.data.roomsForScope(user || DS.session(), scope) || []) : (DS.data.roomsFor(user || DS.session()) || []);
+    }
   };
 
-  console.log('%cDotStudio® POS · chat ready', 'color:#82FF1F;font-weight:bold');
+  console.log('%cDotStudio® POS · chat ready (1-on-1)', 'color:#82FF1F;font-weight:bold');
 })();

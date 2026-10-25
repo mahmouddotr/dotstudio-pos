@@ -343,127 +343,216 @@
     return out;
   }
 
+  /* ───────────────────────────── CHAT (1-ON-1) ─────────────────────────────
+     Hierarchical inbox: support agents · stores · delivery companies.
+     Every channel opens a focused direct conversation with the chosen peer.
+     The old "General / عام" room is intentionally gone.                       */
+  var CHAT_SCOPES = ['support', 'stores', 'delivery'];
+
+  function pairKey(a, b) { return [String(a), String(b)].sort().join('--'); }
+  function supportRoomId(a, b) { return 'dm-support-' + pairKey(a, b); }
+  /* Store threads are per person: a customer never shares a thread with
+     another customer, while the whole store team answers the same thread. */
+  function storeRoomId(tenantId, personId) { return 'dm-store-' + pairKey('tenant-' + tenantId, personId); }
+  /* Delivery threads are per person too: two stores never share a company thread. */
+  function deliveryRoomId(companyId, personId) { return 'dm-delivery-' + pairKey('company-' + companyId, personId); }
+  function isStoreStaff(user) { return !!user && (user.role === 'owner' || user.role === 'cashier') && !!user.tenant_id; }
+  function isDeliveryStaff(user) { return !!user && user.role === 'delivery' && !!user.delivery_company; }
+  function deliveryPair(user, peerId) {
+    return isDeliveryStaff(user)
+      ? { companyId: user.delivery_company, personId: String(peerId), staff: true }
+      : { companyId: String(peerId), personId: user.id, staff: false };
+  }
+  /* Who talks to whom on a store thread: staff act as the store, everyone
+     else talks to the store as themselves. */
+  function storePair(user, peerId) {
+    return isStoreStaff(user)
+      ? { tenantId: user.tenant_id, personId: String(peerId), staff: true }
+      : { tenantId: String(peerId), personId: user.id, staff: false };
+  }
+
   function buildChats() {
     var chats = [];
+    var ownerOf = function (tid) { return USERS.filter(function (u) { return u.role === 'owner' && u.tenant_id === tid; })[0]; };
+    var caznovaOwner = ownerOf('t-caznova');
+    var smozyOwner = ownerOf('t-smozy');
+
+    /* Support — private pair rooms between a user and a specific agent. */
+    chats.push({
+      id: supportRoomId('u-admin', 'u-customer'),
+      scope: 'support', peer_type: 'user', users: ['u-admin', 'u-customer'].sort(),
+      title: 'دعم DotStudio®', title_en: 'DotStudio® support',
+      messages: [
+        { id: 'sc1', user_id: 'u-customer', name: 'ياسمين محمد', name_en: 'Yasmin Mohamed', role: 'customer', text: 'عندي سؤال بخصوص الشحن، الطلب بيوصل امتى؟', text_en: 'Quick question about shipping — when does my order arrive?', at: hoursAgo(6) },
+        { id: 'sc2', user_id: 'u-admin', name: 'DotStudio Support', name_en: 'DotStudio Support', role: 'superadmin', text: 'أهلاً ياسمين 🌸 التوصيل داخل القاهرة من 30 لـ 45 دقيقة، وتقدري تتابعي الطلب لحظة بلحظة.', text_en: 'Hi Yasmin 🌸 Delivery inside Cairo takes 30–45 minutes, and you can track it live.', at: hoursAgo(5) },
+        { id: 'sc3', user_id: 'u-customer', name: 'ياسمين محمد', name_en: 'Yasmin Mohamed', role: 'customer', text: 'ممتاز، شكراً جداً 🙏', text_en: 'Perfect, thank you so much 🙏', at: hoursAgo(4.5) }
+      ]
+    });
+    chats.push({
+      id: supportRoomId('u-dina', smozyOwner.id),
+      scope: 'support', peer_type: 'user', users: ['u-dina', smozyOwner.id].sort(),
+      title: 'دعم · دينا', title_en: 'Support · Dina',
+      messages: [
+        { id: 'sd1', user_id: smozyOwner.id, name: smozyOwner.name, name_en: smozyOwner.name_en, role: 'owner', text: 'عايزين نفعّل شركة توصيل إضافية للمتجر.', text_en: 'We would like to add another delivery company.', at: hoursAgo(22) },
+        { id: 'sd2', user_id: 'u-dina', name: 'دينا', name_en: 'Dina', role: 'subadmin', text: 'تمام يا فندم ✅ جهزت الطلب وفريق التوصيل هيتواصل معاك.', text_en: 'Done ✅ I prepared the request and the delivery team will contact you.', at: hoursAgo(21) }
+      ]
+    });
+    chats.push({
+      id: supportRoomId('u-amal', caznovaOwner.id),
+      scope: 'support', peer_type: 'user', users: ['u-amal', caznovaOwner.id].sort(),
+      title: 'دعم · أمل', title_en: 'Support · Amal',
+      messages: [
+        { id: 'sa1', user_id: caznovaOwner.id, name: caznovaOwner.name, name_en: caznovaOwner.name_en, role: 'owner', text: 'محتاج تقرير مبيعات الشهر ده.', text_en: 'I need this month’s sales report.', at: hoursAgo(30) },
+        { id: 'sa2', user_id: 'u-amal', name: 'أمل', name_en: 'Amal', role: 'subadmin', text: 'التقرير جاهز في صفحة التقارير، وتقدر تصدره CSV.', text_en: 'The report is ready in the reports page, and you can export it as CSV.', at: hoursAgo(29) }
+      ]
+    });
+
+    /* Stores — one private thread per person, shared with the store team. */
+    var adminUser = USERS.filter(function (u) { return u.role === 'superadmin'; })[0];
     TENANTS.forEach(function (tn, i) {
-      var owner = USERS.filter(function (u) { return u.role === 'owner' && u.tenant_id === tn.id; })[0];
-      var supportMsgs = [
-        { id: 'm1', user_id: 'u-admin', name: 'DotStudio Support', role: 'superadmin', text: 'أهلاً ' + tn.owner + ' 👋 كيف نقدر نساعدك اليوم؟', text_en: 'Hi ' + tn.owner_en + ' 👋 How can we help you today?', at: hoursAgo(25 + i) },
-        { id: 'm2', user_id: owner.id, name: owner.name, role: 'owner', text: i === 1 ? 'عايزين نفعّل شركة توصيل إضافية للمتجر.' : 'كل حاجة شغالة تمام، شكراً!', text_en: i === 1 ? 'We would like to add another delivery company.' : 'Everything is working great, thanks!', at: hoursAgo(24 + i) },
-        { id: 'm3', user_id: 'u-admin', name: 'DotStudio Support', role: 'superadmin', text: 'تمام، فريقنا جاهز. لو احتجت أي حاجة ابعتلنا هنا في أي وقت.', text_en: 'Done — our team is ready. Message us here any time you need anything.', at: hoursAgo(23 + i) }
-      ];
-      if (tn.id === 't-caznova') {
-        supportMsgs.push({ id: 'm4', user_id: 'u-customer', name: 'ياسمين محمد', role: 'customer', text: 'عندي سؤال بخصوص الشحن، الطلب بيوصل امتى؟', text_en: 'Quick question about shipping — when does my order arrive?', at: hoursAgo(6) });
-        supportMsgs.push({ id: 'm5', user_id: 'u-admin', name: 'DotStudio Support', role: 'superadmin', text: 'أهلاً ياسمين 🌸 التوصيل داخل القاهرة من 30 لـ 45 دقيقة، وتقدري تتابعي الطلب لحظة بلحظة.', text_en: 'Hi Yasmin 🌸 Delivery inside Cairo takes 30–45 minutes, and you can track it live.', at: hoursAgo(5) });
-      }
+      var owner = ownerOf(tn.id);
+      var person = tn.id === 't-caznova' ? 'u-customer' : (adminUser ? adminUser.id : owner.id);
       chats.push({
-        id: 'support-' + tn.id,
-        scope: 'support',
-        tenant_id: tn.id,
-        title: 'دعم · ' + tn.name,
-        title_en: 'Support · ' + tn.name,
-        messages: supportMsgs
-      });
-      chats.push({
-        id: 'direct-' + tn.id,
-        scope: 'direct',
-        tenant_id: tn.id,
-        title: 'محادثة ' + tn.name,
-        title_en: tn.name + ' chat',
+        id: storeRoomId(tn.id, person),
+        scope: 'stores', peer_type: 'tenant', peer_id: tn.id, tenant_id: tn.id,
+        person_id: person, users: [person, 'tenant-' + tn.id].sort(),
+        title: tn.name, title_en: tn.name_en,
         messages: tn.id === 't-caznova' ? [
-          { id: 'dm1', user_id: 'u-customer', name: 'ياسمين محمد', role: 'customer', text: 'مساء الخير 👋 عايزة أعرف مقاس الخاتم الفضي متوفر؟', text_en: 'Good evening 👋 Is the silver ring available in my size?', at: hoursAgo(9) },
-          { id: 'dm2', user_id: owner.id, name: owner.name, role: 'owner', text: 'أهلاً بيكي 🌟 متوفر مقاسات 16 و18، وقدرنا نحجزلك المقاس اللي تحبيه.', text_en: 'Welcome 🌟 Sizes 16 and 18 are in stock — we can reserve yours.', at: hoursAgo(8) },
-          { id: 'dm3', user_id: 'u-customer', name: 'ياسمين محمد', role: 'customer', text: 'تمام جداً، هطلبه دلوقتي. شكراً!', text_en: 'Perfect, ordering now. Thank you!', at: hoursAgo(7) }
+          { id: 'st1', user_id: 'u-customer', name: 'ياسمين محمد', name_en: 'Yasmin Mohamed', role: 'customer', text: 'مساء الخير 👋 عايزة أعرف مقاس الخاتم الفضي متوفر؟', text_en: 'Good evening 👋 Is the silver ring available in my size?', at: hoursAgo(9) },
+          { id: 'st2', user_id: owner.id, name: owner.name, name_en: owner.name_en, role: 'owner', text: 'أهلاً بيكي 🌟 متوفر مقاسات 16 و18، وقدرنا نحجزلك المقاس اللي تحبيه.', text_en: 'Welcome 🌟 Sizes 16 and 18 are in stock — we can reserve yours.', at: hoursAgo(8) },
+          { id: 'st3', user_id: 'u-customer', name: 'ياسمين محمد', name_en: 'Yasmin Mohamed', role: 'customer', text: 'تمام جداً، هطلبه دلوقتي. شكراً!', text_en: 'Perfect, ordering now. Thank you!', at: hoursAgo(7) }
         ] : [
-          { id: 'dm1', user_id: owner.id, name: owner.name, role: 'owner', text: 'أهلاً بيك في ' + tn.name + ' 👋 اسألنا عن أي منتج أو مقاس وإحنا هنا.', text_en: 'Welcome to ' + tn.name_en + ' 👋 Ask us about any product or size.', at: hoursAgo(30 + i) }
+          { id: 'st' + i + 'a', user_id: owner.id, name: owner.name, name_en: owner.name_en, role: 'owner', text: 'أهلاً بيك في ' + tn.name + ' 👋 اسألنا عن أي منتج أو مقاس وإحنا هنا.', text_en: 'Welcome to ' + tn.name_en + ' 👋 Ask us about any product or size.', at: hoursAgo(30 + i) },
+          { id: 'st' + i + 'b', user_id: adminUser ? adminUser.id : owner.id, name: 'DotStudio Ops', name_en: 'DotStudio Ops', role: 'superadmin', text: 'تمام، متابعين معاك ✅ أي تحديثات على الباقة أو الطلبات هنبعتلك هنا.', text_en: 'Noted ✅ Any plan or order updates will land here.', at: hoursAgo(28 + i) }
         ]
       });
     });
-    chats.push({
-      id: 'public',
-      scope: 'public',
-      tenant_id: null,
-      title: 'المحادثة العامة',
-      title_en: 'Public chat',
-      messages: [
-        { id: 'p1', user_id: 'u-admin', name: 'DotStudio', role: 'superadmin', text: 'مرحباً بالجميع في مجتمع DotStudio® 👋 شاركنا أفكارك واقتراحاتك.', text_en: 'Welcome to the DotStudio® community 👋 Share your ideas and suggestions.', at: hoursAgo(30) },
-        { id: 'p2', user_id: 'u-owner-caznova', name: 'أحمد كازنوفا', role: 'owner', text: 'تجربة الكاشير الجديدة أسرع بكتير، شكراً للفريق!', text_en: 'The new POS experience is much faster — thanks team!', at: hoursAgo(20) },
-        { id: 'p3', user_id: 'u-owner-smozy', name: 'سارة سميزي', role: 'owner', text: 'حد جرب تقارير المخزون الجديدة؟', text_en: 'Has anyone tried the new inventory reports?', at: hoursAgo(8) },
-        { id: 'p4', user_id: 'u-del-hala', name: 'حالا', role: 'delivery', text: 'الخريطة اللحظية بتوفر علينا وقت كبير في التوصيل.', text_en: 'Live maps save us a lot of delivery time.', at: hoursAgo(3) },
-        { id: 'p5', user_id: 'u-customer', name: 'ياسمين محمد', role: 'customer', text: 'أول تجربة ليا وكانت ممتازة، الطلب وصل أسرع من المتوقع ✨', text_en: 'My first order and it was great — arrived faster than expected ✨', at: hoursAgo(1) }
-      ]
-    });
-    chats.push({
-      id: 'stores',
-      scope: 'stores',
-      tenant_id: null,
-      title: 'أصحاب المتاجر',
-      title_en: 'Store owners',
-      messages: [
-        { id: 's1', user_id: 'u-owner-bnsheikh', name: 'بن الشيخ', role: 'owner', text: 'عندي فكرة نعمل عرض مشترك بين المتاجر الأربعة 😄', text_en: 'I have an idea for a joint campaign across the four stores 😄', at: hoursAgo(12) },
-        { id: 's2', user_id: 'u-owner-mastore', name: 'محمود علي', role: 'owner', text: 'أنا معاك، ممكن نبدأ بعرض نهاية الأسبوع.', text_en: 'I am in — we can start with a weekend offer.', at: hoursAgo(11) },
-        { id: 's3', user_id: 'u-owner-caznova', name: 'أحمد كازنوفا', role: 'owner', text: 'الفكرة ممتازة. خلينا ننسق في المحادثة دي.', text_en: 'Great idea. Let us coordinate in this chat.', at: hoursAgo(10) }
-      ]
-    });
-    chats.push({
-      id: 'delivery',
-      scope: 'delivery',
-      tenant_id: null,
-      title: 'شركات التوصيل',
-      title_en: 'Delivery companies',
-      messages: [
-        { id: 'd1', user_id: 'u-admin', name: 'DotStudio Ops', role: 'superadmin', text: 'تذكير: تأكيد التسليم لازم يكون مع صورة إثبات من اليوم.', text_en: 'Reminder: delivery confirmation now requires a proof photo.', at: hoursAgo(18) },
-        { id: 'd2', user_id: 'u-del-talqa', name: 'طلقة', role: 'delivery', text: 'تمام، تم التطبيق على كل المندوبين ✅', text_en: 'Done — applied to all riders ✅', at: hoursAgo(16) },
-        { id: 'd3', user_id: 'u-del-ahla', name: 'أهلا', role: 'delivery', text: 'هل في طلبات كثيرة متوقعة النهاردة؟', text_en: 'Are we expecting many orders today?', at: hoursAgo(5) },
-        { id: 'd4', user_id: 'u-admin', name: 'DotStudio Ops', role: 'superadmin', text: 'متوقع زيادة بعد الساعة 7 مساءً. جهزوا الفريق.', text_en: 'Expect a surge after 7 PM. Get the team ready.', at: hoursAgo(4) }
-      ]
-    });
-    chats.push({
-      id: 'support-global',
-      scope: 'support',
-      tenant_id: null,
-      title: 'دعم DotStudio®',
-      title_en: 'DotStudio® support',
-      messages: [
-        { id: 'sg1', user_id: 'u-admin', name: 'DotStudio Support', role: 'superadmin', text: 'أهلاً بيك 👋 فريق الدعم متاح من 9 صباحاً لـ 9 مساءً.', text_en: 'Welcome 👋 Our support team is online 9 AM – 9 PM.', at: hoursAgo(14) },
-        { id: 'sg2', user_id: 'u-del-talqa', name: 'طلقة', role: 'delivery', text: 'عندي استفسار عن إثبات التسليم.', text_en: 'I have a question about delivery proof.', at: hoursAgo(4) },
-        { id: 'sg3', user_id: 'u-admin', name: 'DotStudio Support', role: 'superadmin', text: 'تحت أمرك، ابعت التفاصيل هنا وهنساعدك فوراً.', text_en: 'Sure — send the details here and we will help right away.', at: hoursAgo(3) }
-      ]
+
+    /* Delivery — one private thread per person, shared with the company team. */
+    DELIVERY_COMPANIES.forEach(function (dc, i) {
+      var driver = USERS.filter(function (u) { return u.role === 'delivery' && u.delivery_company === dc.id; })[0];
+      var person = adminUser ? adminUser.id : (driver ? driver.id : 'u-admin');
+      chats.push({
+        id: deliveryRoomId(dc.id, person),
+        scope: 'delivery', peer_type: 'company', peer_id: dc.id,
+        person_id: person, users: [person, 'company-' + dc.id].sort(),
+        title: dc.name, title_en: dc.name_en,
+        messages: [
+          { id: 'dc' + i + 'a', user_id: 'u-admin', name: 'DotStudio Ops', name_en: 'DotStudio Ops', role: 'superadmin', text: 'تذكير: تأكيد التسليم لازم يكون مع صورة إثبات من اليوم.', text_en: 'Reminder: delivery confirmation now requires a proof photo.', at: hoursAgo(18 + i) },
+          { id: 'dc' + i + 'b', user_id: driver ? driver.id : 'u-admin', name: driver ? driver.name : 'DotStudio Ops', name_en: driver ? driver.name_en : 'DotStudio Ops', role: driver ? 'delivery' : 'superadmin', text: 'تمام، تم التطبيق على كل المندوبين ✅', text_en: 'Done — applied to all riders ✅', at: hoursAgo(16 + i) }
+        ]
+      });
     });
     return chats;
   }
 
-  /* Migration: make sure every tenant has a support + direct room and that the
-     shared channels exist. Runs on every load so old localStorage DBs upgrade. */
+  /* Migration: strip the retired General/public rooms, unfold old group chats
+     into 1-on-1 rooms, and keep old localStorage databases healthy. */
   function ensureChats(db) {
-    if (!db || !Array.isArray(db.chats)) return;
+    if (!db) return;
+    if (!Array.isArray(db.chats)) db.chats = [];
+    if (!Array.isArray(db.chat_blocks)) db.chat_blocks = [];
+    if (!Array.isArray(db.chat_reports)) db.chat_reports = [];
     var tenants = Array.isArray(db.tenants) ? db.tenants : [];
-    var has = function (id) { return db.chats.some(function (c) { return c.id === id; }); };
-    tenants.forEach(function (tn) {
-      if (!has('support-' + tn.id)) {
-        db.chats.push({
-          id: 'support-' + tn.id, scope: 'support', tenant_id: tn.id,
-          title: 'دعم · ' + tn.name, title_en: 'Support · ' + tn.name,
-          messages: [{ id: DS.uid('msg'), user_id: 'u-admin', name: 'DotStudio Support', role: 'superadmin', text: 'أهلاً بيك 👋 كيف نقدر نساعدك؟', text_en: 'Welcome 👋 How can we help?', at: nowISO() }]
-        });
+    var users = Array.isArray(db.users) ? db.users : [];
+    var out = [], seen = {};
+
+    /* A legacy store room had no person attached; infer it from the thread
+       (first non-employee author) or fall back to the platform admin. */
+    function personFor(room, staffIds) {
+      var guest = (room.messages || []).filter(function (m) {
+        return m && m.user_id && staffIds.indexOf(m.user_id) === -1;
+      })[0];
+      if (guest) return guest.user_id;
+      var admin = users.filter(function (u) { return u.role === 'superadmin'; })[0];
+      return admin ? admin.id : (staffIds[0] || null);
+    }
+    function storePerson(room, tenantId) {
+      return personFor(room, users.filter(function (u) {
+        return u.tenant_id === tenantId && (u.role === 'owner' || u.role === 'cashier');
+      }).map(function (u) { return u.id; }));
+    }
+    function deliveryPerson(room, companyId) {
+      return personFor(room, users.filter(function (u) {
+        return u.role === 'delivery' && u.delivery_company === companyId;
+      }).map(function (u) { return u.id; }));
+    }
+
+    function add(room) {
+      if (!room || !room.id || CHAT_SCOPES.indexOf(room.scope) === -1) return;
+      if (!Array.isArray(room.messages)) room.messages = [];
+      if (seen[room.id]) {
+        var existing = out.filter(function (r) { return r.id === room.id; })[0];
+        if (existing) {
+          room.messages.forEach(function (m) {
+            if (!existing.messages.some(function (x) { return x.id === m.id; })) existing.messages.push(m);
+          });
+        }
+        return;
       }
-      if (!has('direct-' + tn.id)) {
-        db.chats.push({
-          id: 'direct-' + tn.id, scope: 'direct', tenant_id: tn.id,
-          title: 'محادثة ' + tn.name, title_en: tn.name + ' chat',
-          messages: [{ id: DS.uid('msg'), user_id: 'u-admin', name: 'DotStudio', role: 'superadmin', text: 'محادثة المتجر جاهزة — اسأل عن أي منتج.', text_en: 'Store chat is ready — ask about any product.', at: nowISO() }]
-        });
+      seen[room.id] = 1;
+      out.push(room);
+    }
+
+    db.chats.forEach(function (room) {
+      if (!room) return;
+      /* General / public chat is fully retired. */
+      if (room.scope === 'public' || room.id === 'public' || room.id === 'support-global') return;
+      if (room.id === 'stores' || room.id === 'delivery') return;
+
+      if (room.scope === 'direct') {
+        if (room.tenant_id) {
+          var dPerson = storePerson(room, room.tenant_id);
+          if (dPerson) {
+            add({
+              id: storeRoomId(room.tenant_id, dPerson), scope: 'stores', peer_type: 'tenant',
+              peer_id: room.tenant_id, tenant_id: room.tenant_id, person_id: dPerson,
+              users: [dPerson, 'tenant-' + room.tenant_id].sort(),
+              title: room.title, title_en: room.title_en, messages: room.messages
+            });
+          }
+        }
+        return;
       }
+
+      if (/^support-/.test(room.id || '')) {
+        var tid = room.tenant_id || String(room.id).replace(/^support-/, '');
+        var owner = users.filter(function (u) { return u.role === 'owner' && u.tenant_id === tid; })[0];
+        var admin = users.filter(function (u) { return u.role === 'superadmin'; })[0];
+        if (owner && admin) {
+          add({ id: supportRoomId(admin.id, owner.id), scope: 'support', peer_type: 'user', users: [admin.id, owner.id].sort(), title: 'دعم DotStudio®', title_en: 'DotStudio® support', messages: room.messages });
+        }
+        return;
+      }
+
+      if (room.scope === 'support') {
+        if (!Array.isArray(room.users) || room.users.length !== 2) return;
+        room.id = supportRoomId(room.users[0], room.users[1]);
+        room.peer_type = 'user';
+      } else if (room.scope === 'stores') {
+        if (!room.peer_id && room.tenant_id) room.peer_id = room.tenant_id;
+        if (!room.peer_id) return;
+        room.tenant_id = room.peer_id;
+        room.peer_type = 'tenant';
+        if (room.person_id && !users.some(function (u) { return u.id === room.person_id; })) room.person_id = null;
+        if (!room.person_id) room.person_id = storePerson(room, room.peer_id);
+        if (!room.person_id) return;
+        room.person_id = String(room.person_id);
+        room.users = [room.person_id, 'tenant-' + room.peer_id].sort();
+        room.id = storeRoomId(room.peer_id, room.person_id);
+      } else if (room.scope === 'delivery') {
+        if (!room.peer_id) return;
+        room.peer_type = 'company';
+        if (room.person_id && !users.some(function (u) { return u.id === room.person_id; })) room.person_id = null;
+        if (!room.person_id) room.person_id = deliveryPerson(room, room.peer_id);
+        if (!room.person_id) return;
+        room.person_id = String(room.person_id);
+        room.users = [room.person_id, 'company-' + room.peer_id].sort();
+        room.id = deliveryRoomId(room.peer_id, room.person_id);
+      }
+      add(room);
     });
-    [['public', 'المحادثة العامة', 'Public chat'], ['stores', 'أصحاب المتاجر', 'Store owners'], ['delivery', 'شركات التوصيل', 'Delivery companies'], ['support-global', 'دعم DotStudio®', 'DotStudio® support']].forEach(function (row) {
-      if (has(row[0])) return;
-      db.chats.push({
-        id: row[0], scope: row[0] === 'support-global' ? 'support' : row[0], tenant_id: null,
-        title: row[1], title_en: row[2],
-        messages: [{ id: DS.uid('msg'), user_id: 'u-admin', name: 'DotStudio', role: 'superadmin', text: 'مرحباً 👋', text_en: 'Welcome 👋', at: nowISO() }]
-      });
-    });
-    db.chats.forEach(function (c) { if (!Array.isArray(c.messages)) c.messages = []; });
+    db.chats = out;
   }
 
   function buildJobs() {
@@ -583,6 +672,10 @@
     var user = DB.users.filter(function (u) { return String(u.username).toLowerCase() === username; })[0];
     if (!user || (user.password !== password && password !== aliasPassword)) return { ok: false, error: 'invalid' };
     if (user.is_active === false) return { ok: false, error: 'suspended' };
+    if (user.tenant_id && (user.role === 'owner' || user.role === 'cashier')) {
+      var tn = tenantById(user.tenant_id);
+      if (tn && tn.status === 'suspended') return { ok: false, error: 'store_suspended' };
+    }
     var clean = Object.assign({}, user);
     delete clean.password;
     try {
@@ -819,11 +912,106 @@
   function deleteUser(id) {
     var user = userById(id);
     if (!user) return false;
-    if (user.role === 'superadmin') return false;
+    var me = DS.session();
+    if (me && me.id === id) return false;                       /* never delete yourself */
+    if (user.role === 'superadmin') {
+      var supers = DB.users.filter(function (u) { return u.role === 'superadmin'; });
+      if (supers.length <= 1) return false;                     /* keep at least one super admin */
+    }
     DB.users = DB.users.filter(function (u) { return u.id !== id; });
-    audit('حذف مستخدم «' + user.name + '»', 'Deleted user “' + user.name + '”', 'trash');
+    audit('حذف مستخدم «' + user.name + '»', 'Deleted user “' + (user.name_en || user.name) + '”', 'trash');
     commit();
     return true;
+  }
+
+  /* Clone a user with a brand-new id + username, same data and role. */
+  function duplicateUser(id) {
+    var src = userById(id);
+    if (!src) return null;
+    var base = String(src.username || 'user') + '_copy';
+    var username = base, n = 2;
+    while (DB.users.some(function (u) { return u.username === username; })) {
+      username = base + n; n++;
+    }
+    var copy = Object.assign({}, src, {
+      id: DS.uid('u'),
+      username: username,
+      name: src.name + ' (نسخة)',
+      name_en: (src.name_en || src.name) + ' (Copy)',
+      is_active: true,
+      created_at: nowISO()
+    });
+    delete copy.permissions_override;
+    if (src.email) copy.email = String(src.email).replace('@', '+copy@');
+    DB.users.push(copy);
+    audit('نسخ مستخدم «' + src.name + '»', 'Duplicated user “' + (src.name_en || src.name) + '”', 'copy');
+    commit();
+    return copy;
+  }
+
+  function setUserActive(id, active) {
+    var user = userById(id);
+    if (!user) return null;
+    user.is_active = !!active;
+    audit((active ? 'تفعيل' : 'إيقاف') + ' مستخدم «' + user.name + '»', (active ? 'Activated' : 'Suspended') + ' user “' + (user.name_en || user.name) + '”', 'shield');
+    commit();
+    return user;
+  }
+
+  /* ───────────────────── Subscription management ───────────────────── */
+  function manageSubscription(tenantId, patch) {
+    var tn = tenantById(tenantId);
+    if (!tn) return null;
+    patch = patch || {};
+    var changed = [];
+
+    if (patch.plan && PLANS.some(function (p) { return p.id === patch.plan; })) {
+      if (tn.plan !== patch.plan) { tn.plan = patch.plan; changed.push('plan'); }
+    }
+    if (patch.extendDays) {
+      var base = new Date(tn.subscription_end).getTime();
+      if (isNaN(base)) base = Date.now();
+      tn.subscription_end = new Date(base + Number(patch.extendDays) * 86400000).toISOString();
+      changed.push('end');
+    }
+    if (patch.end) {
+      var d = new Date(patch.end);
+      if (!isNaN(d.getTime())) {
+        /* Plain dates pick the end of that day so "active" never flips early. */
+        if (/^\d{4}-\d{2}-\d{2}$/.test(String(patch.end))) d.setHours(23, 59, 59, 999);
+        tn.subscription_end = d.toISOString();
+        changed.push('end');
+      }
+    }
+    if (patch.status && ['active', 'suspended', 'expired'].indexOf(patch.status) > -1) {
+      if (tn.status !== patch.status) { tn.status = patch.status; changed.push('status'); }
+    }
+    if (patch.recordPayment) {
+      DB.payments.unshift({
+        id: DS.uid('pay'), tenant_id: tn.id, plan: tn.plan,
+        amount: patch.amount != null ? Number(patch.amount) : (PLANS.filter(function (p) { return p.id === tn.plan; })[0] || PLANS[0]).price,
+        method: 'manual', status: 'paid', at: nowISO()
+      });
+      changed.push('payment');
+    }
+    if (changed.length) {
+      audit(
+        'تحديث اشتراك «' + tn.name + '» (' + changed.join(' · ') + ')',
+        'Updated subscription of “' + (tn.name_en || tn.name) + '” (' + changed.join(' · ') + ')',
+        'card'
+      );
+      commit();
+    }
+    return tn;
+  }
+
+  function setTenantStatus(tenantId, status) {
+    var tn = tenantById(tenantId);
+    if (!tn) return null;
+    tn.status = status;
+    audit((status === 'active' ? 'تفعيل متجر ' : 'إيقاف متجر ') + tn.name, (status === 'active' ? 'Activated ' : 'Suspended ') + (tn.name_en || tn.name), 'store');
+    commit();
+    return tn;
   }
 
   function addProduct(data) {
@@ -968,6 +1156,249 @@
     return app;
   }
 
+  /* ─────────────── 1-on-1 directory (support · stores · delivery) ───────────────
+     Every scope lists real peers; picking one focuses that direct thread.
+     There is no group / general room any more.                                 */
+
+  var ROLE_LABELS = {
+    superadmin: ['إدارة المنصة', 'Platform admin'],
+    subadmin: ['فريق الدعم', 'Support team'],
+    owner: ['صاحب متجر', 'Store owner'],
+    cashier: ['كاشير', 'Cashier'],
+    delivery: ['مندوب توصيل', 'Delivery rider'],
+    customer: ['عميل', 'Customer']
+  };
+
+  function roleLabel(user, en) {
+    var pair = ROLE_LABELS[user && user.role] || ['مستخدم', 'User'];
+    return en ? pair[1] : pair[0];
+  }
+
+  function chatCanScope(user, scope) {
+    if (!user) return false;
+    if (scope === 'support') return true;
+    if (scope === 'stores') return user.role !== 'delivery';
+    if (scope === 'delivery') return user.role !== 'customer';
+    return false;
+  }
+
+  function chatPeerFor(scope, peerId) {
+    if (scope === 'support') return userById(peerId);
+    /* Store / company peers may be the entity (customer view) or a person
+       (the business team's view); resolve whichever exists. */
+    if (scope === 'stores') return tenantById(peerId) || userById(peerId);
+    if (scope === 'delivery') {
+      return (DB.delivery_companies || []).filter(function (c) { return c.id === peerId; })[0] || userById(peerId);
+    }
+    return null;
+  }
+
+  function chatRoomIdFor(scope, peerId, user) {
+    user = user || DS.session();
+    if (!user) return null;
+    if (scope === 'support') return supportRoomId(user.id, peerId);
+    if (scope === 'stores') {
+      var pair = storePair(user, peerId);
+      return storeRoomId(pair.tenantId, pair.personId);
+    }
+    if (scope === 'delivery') {
+      var dpair = deliveryPair(user, peerId);
+      return deliveryRoomId(dpair.companyId, dpair.personId);
+    }
+    return null;
+  }
+
+  function lastAt(room) {
+    var msgs = (room && room.messages) || [];
+    return msgs.length ? (msgs[msgs.length - 1].at || '') : '';
+  }
+
+  /* Contact list the UI renders for a scope. */
+  function chatContacts(user, scope) {
+    user = user || DS.session();
+    if (!user || !chatCanScope(user, scope)) return [];
+    var en = DS.lang() === 'en';
+    var out = [];
+
+    if (scope === 'support') {
+      var pool;
+      if (isAdmin(user)) {
+        pool = DB.users.filter(function (u) {
+          return u.id !== user.id && u.is_active !== false;
+        });
+      } else {
+        var roomPeers = DB.chats.filter(function (r) {
+          return r.scope === 'support' && Array.isArray(r.users) && r.users.indexOf(user.id) > -1;
+        }).reduce(function (acc, r) {
+          r.users.forEach(function (id) { if (id !== user.id) acc.push(id); });
+          return acc;
+        }, []);
+        pool = DB.users.filter(function (u) {
+          if (u.id === user.id || u.is_active === false) return false;
+          if (u.role === 'superadmin' || u.role === 'subadmin') return true;
+          return roomPeers.indexOf(u.id) > -1;
+        });
+      }
+      pool.forEach(function (u) {
+        out.push({
+          key: u.id, type: 'user', id: u.id,
+          roomId: supportRoomId(user.id, u.id),
+          name: u.name, name_en: u.name_en || u.name,
+          avatar_id: u.avatar_id, avatar: null,
+          subtitle: roleLabel(u, false), subtitle_en: roleLabel(u, true),
+          tone: 'lime'
+        });
+      });
+      out.sort(function (a, b) {
+        var rank = { superadmin: 0, subadmin: 1, owner: 2, cashier: 3, delivery: 4, customer: 5 };
+        var ua = userById(a.id), ub = userById(b.id);
+        var ra = rank[ua && ua.role]; var rb = rank[ub && ub.role];
+        if (ra == null) ra = 9; if (rb == null) rb = 9;
+        return ra - rb || String(en ? a.name_en : a.name).localeCompare(String(en ? b.name_en : b.name));
+      });
+      return out;
+    }
+
+    if (scope === 'stores') {
+      /* Store staff answer the people who wrote to them — never a shared inbox. */
+      if (isStoreStaff(user)) {
+        DB.chats.filter(function (r) {
+          return r && r.scope === 'stores' && r.peer_id === user.tenant_id && r.person_id;
+        }).forEach(function (room) {
+          var person = userById(room.person_id);
+          if (!person || person.id === user.id || person.is_active === false) return;
+          out.push({
+            key: person.id, type: 'user', id: person.id,
+            roomId: room.id,
+            name: person.name, name_en: person.name_en || person.name,
+            avatar_id: person.avatar_id, avatar: null,
+            subtitle: roleLabel(person, false), subtitle_en: roleLabel(person, true),
+            tone: 'blue', last_at: lastAt(room)
+          });
+        });
+        out.sort(function (a, b) { return (b.last_at || '').localeCompare(a.last_at || '') || String(a.name).localeCompare(String(b.name)); });
+        return out;
+      }
+
+      var tenants = DB.tenants.filter(function (t) { return true; });
+      tenants.forEach(function (t) {
+        out.push({
+          key: t.id, type: 'tenant', id: t.id,
+          roomId: storeRoomId(t.id, user.id),
+          name: t.name, name_en: t.name_en || t.name,
+          avatar_id: t.avatar_id, avatar: null, entity: t,
+          subtitle: DS.lang() === 'en' ? (t.industry_en || t.industry) : (t.industry || t.industry_en),
+          subtitle_en: t.industry_en || t.industry || '',
+          tone: 'blue'
+        });
+      });
+      return out;
+    }
+
+    if (scope === 'delivery') {
+      /* Riders answer the people who wrote to their company. */
+      if (isDeliveryStaff(user)) {
+        DB.chats.filter(function (r) {
+          return r && r.scope === 'delivery' && r.peer_id === user.delivery_company && r.person_id;
+        }).forEach(function (room) {
+          var person = userById(room.person_id);
+          if (!person || person.id === user.id || person.is_active === false) return;
+          out.push({
+            key: person.id, type: 'user', id: person.id,
+            roomId: room.id,
+            name: person.name, name_en: person.name_en || person.name,
+            avatar_id: person.avatar_id, avatar: null,
+            subtitle: roleLabel(person, false), subtitle_en: roleLabel(person, true),
+            tone: 'teal', last_at: lastAt(room)
+          });
+        });
+        out.sort(function (a, b) { return (b.last_at || '').localeCompare(a.last_at || '') || String(a.name).localeCompare(String(b.name)); });
+        return out;
+      }
+
+      (DB.delivery_companies || []).forEach(function (c) {
+        out.push({
+          key: c.id, type: 'company', id: c.id,
+          roomId: deliveryRoomId(c.id, user.id),
+          name: c.name, name_en: c.name_en || c.name,
+          avatar_id: null, avatar: null, entity: c,
+          subtitle: (c.avg_time || 30) + (en ? ' min avg' : ' دقيقة متوسط'),
+          subtitle_en: (c.avg_time || 30) + ' min avg',
+          tone: 'teal'
+        });
+      });
+      return out;
+    }
+    return out;
+  }
+
+  /* Get (or lazily create) the direct room for a scope + peer. */
+  function chatRoom(user, scope, peerId, create) {
+    user = user || DS.session();
+    if (!user || !chatCanScope(user, scope) || !peerId) return null;
+    var roomId = chatRoomIdFor(scope, peerId, user);
+    var room = DB.chats.filter(function (c) { return c.id === roomId; })[0];
+    if (room || !create) return room || null;
+
+    if (scope === 'stores') {
+      var pair = storePair(user, peerId);
+      var tn = tenantById(pair.tenantId);
+      var person = userById(pair.personId);
+      if (!tn || !person) return null;
+      room = {
+        id: roomId, scope: 'stores', peer_type: 'tenant',
+        peer_id: tn.id, tenant_id: tn.id, person_id: person.id,
+        users: [person.id, 'tenant-' + tn.id].sort(),
+        title: tn.name, title_en: tn.name_en || tn.name, messages: []
+      };
+    } else if (scope === 'support') {
+      var peer = userById(peerId);
+      if (!peer) return null;
+      room = {
+        id: roomId, scope: 'support', peer_type: 'user',
+        users: [user.id, String(peerId)].sort(),
+        title: 'دعم · ' + (peer.name || ''), title_en: 'Support · ' + (peer.name_en || peer.name || ''),
+        messages: []
+      };
+    } else if (scope === 'delivery') {
+      var dpair = deliveryPair(user, peerId);
+      var company = (DB.delivery_companies || []).filter(function (c) { return c.id === dpair.companyId; })[0];
+      var dperson = userById(dpair.personId);
+      if (!company || !dperson) return null;
+      room = {
+        id: roomId, scope: 'delivery', peer_type: 'company',
+        peer_id: company.id, person_id: dperson.id,
+        users: [dperson.id, 'company-' + company.id].sort(),
+        title: company.name, title_en: company.name_en || company.name, messages: []
+      };
+    }
+    if (!room) return null;
+    DB.chats.push(room);
+    commit();
+    return room;
+  }
+
+  function chatThread(user, scope, peerId) {
+    return chatRoom(user, scope, peerId, false);
+  }
+
+  function sendMessageTo(scope, peerId, text) {
+    var user = DS.session();
+    text = String(text == null ? '' : text).trim();
+    if (!user || !text) return null;
+    if (isPeerBlocked(scope, peerId, user)) return { blocked: true };
+    var room = chatRoom(user, scope, peerId, true);
+    if (!room) return null;
+    var msg = {
+      id: DS.uid('msg'), user_id: user.id, name: user.name, name_en: user.name_en,
+      role: user.role, text: text.slice(0, 2000), at: nowISO()
+    };
+    room.messages.push(msg);
+    commit();
+    return msg;
+  }
+
+  /* Keep the legacy room-id send path working for the dock / future callers. */
   function sendMessage(roomId, text) {
     var user = DS.session();
     if (!user || !text) return null;
@@ -982,19 +1413,20 @@
 
   function roomVisible(user, room) {
     if (!user || !room) return false;
-    if (room.scope === 'public') return true;
-    if (room.scope === 'stores') return user.role === 'owner' || isAdmin(user);
-    if (room.scope === 'delivery') return user.role === 'delivery' || user.role === 'owner' || user.role === 'cashier' || isAdmin(user);
-    if (room.scope === 'support') {
-      if (isAdmin(user)) return true;
-      if (room.tenant_id == null) return user.role === 'delivery' || user.role === 'customer';
-      if (user.tenant_id) return room.tenant_id === user.tenant_id;
-      return user.role === 'customer' && currentStoreId(user) === room.tenant_id;
+    var scope = room.scope;
+    if (scope === 'support') {
+      if (isAdmin(user) && user.role === 'superadmin') return true;
+      return Array.isArray(room.users) && room.users.indexOf(user.id) > -1;
     }
-    if (room.scope === 'direct') {
-      if (isAdmin(user)) return false;                 /* store ↔ customer stays private */
-      var tid = user.tenant_id || (user.role === 'customer' ? currentStoreId(user) : null);
-      return !!tid && room.tenant_id === tid;
+    if (scope === 'stores') {
+      if (Array.isArray(room.users) && room.users.indexOf(user.id) > -1) return true;
+      if (isStoreStaff(user) && room.peer_id === user.tenant_id) return true;
+      return user.role === 'superadmin';
+    }
+    if (scope === 'delivery') {
+      if (Array.isArray(room.users) && room.users.indexOf(user.id) > -1) return true;
+      if (isDeliveryStaff(user) && room.peer_id === user.delivery_company) return true;
+      return user.role === 'superadmin';
     }
     return false;
   }
@@ -1002,6 +1434,69 @@
   function roomsFor(user) {
     user = user || DS.session();
     return DB.chats.filter(function (r) { return roomVisible(user, r); });
+  }
+
+  function roomsForScope(user, scope) {
+    user = user || DS.session();
+    return roomsFor(user).filter(function (r) { return r.scope === scope; });
+  }
+
+  /* ─────────────────────── Blocking & reporting ─────────────────────── */
+  function blockKey(scope, peerId) { return String(scope) + ':' + String(peerId); }
+
+  function isPeerBlocked(scope, peerId, user) {
+    user = user || DS.session();
+    if (!user) return false;
+    return (DB.chat_blocks || []).some(function (b) {
+      return b.user_id === user.id && blockKey(b.scope, b.peer_id) === blockKey(scope, peerId);
+    });
+  }
+
+  function blockedPeers(user) {
+    user = user || DS.session();
+    if (!user) return [];
+    return (DB.chat_blocks || []).filter(function (b) { return b.user_id === user.id; });
+  }
+
+  function togglePeerBlock(scope, peerId, user) {
+    user = user || DS.session();
+    if (!user) return false;
+    if (!Array.isArray(DB.chat_blocks)) DB.chat_blocks = [];
+    var idx = DB.chat_blocks.findIndex(function (b) {
+      return b.user_id === user.id && blockKey(b.scope, b.peer_id) === blockKey(scope, peerId);
+    });
+    if (idx > -1) {
+      DB.chat_blocks.splice(idx, 1);
+      commit();
+      return false;
+    }
+    var peer = chatPeerFor(scope, peerId);
+    DB.chat_blocks.push({
+      id: DS.uid('block'), user_id: user.id, scope: scope, peer_id: peerId,
+      peer_name: peer ? peer.name : String(peerId), at: nowISO()
+    });
+    audit('حظر محادثة «' + (peer ? peer.name : peerId) + '»', 'Blocked chat “' + (peer ? (peer.name_en || peer.name) : peerId) + '”', 'lock');
+    commit();
+    return true;
+  }
+
+  function reportPeer(scope, peerId, reason, user) {
+    user = user || DS.session();
+    if (!user) return null;
+    if (!Array.isArray(DB.chat_reports)) DB.chat_reports = [];
+    var peer = chatPeerFor(scope, peerId);
+    var report = {
+      id: DS.uid('report'), reporter_id: user.id,
+      reporter_name: user.name, reporter_name_en: user.name_en,
+      scope: scope, peer_id: peerId,
+      peer_name: peer ? peer.name : String(peerId),
+      reason: String(reason || '').slice(0, 500),
+      status: 'open', at: nowISO()
+    };
+    DB.chat_reports.unshift(report);
+    audit('بلاغ عن «' + report.peer_name + '»', 'Reported “' + (peer ? (peer.name_en || peer.name) : peerId) + '”', 'alert');
+    commit();
+    return report;
   }
 
   function saveSettings(patch) {
@@ -1120,6 +1615,8 @@
     saveTenant: saveTenant,
     addUser: addUser,
     deleteUser: deleteUser,
+    duplicateUser: duplicateUser,
+    setUserActive: setUserActive,
     addProduct: addProduct,
     updateProduct: updateProduct,
     deleteProduct: deleteProduct,
@@ -1131,8 +1628,23 @@
     saveJob: saveJob,
     applyJob: applyJob,
     sendMessage: sendMessage,
+    sendMessageTo: sendMessageTo,
+    chatContacts: chatContacts,
+    chatCanScope: chatCanScope,
+    chatRoom: chatRoom,
+    chatThread: chatThread,
+    chatRoomIdFor: chatRoomIdFor,
     roomsFor: roomsFor,
+    roomsForScope: roomsForScope,
     roomVisible: roomVisible,
+    isPeerBlocked: isPeerBlocked,
+    blockedPeers: blockedPeers,
+    togglePeerBlock: togglePeerBlock,
+    reportPeer: reportPeer,
+    get chatBlocks() { return DB.chat_blocks || []; },
+    get chatReports() { return DB.chat_reports || []; },
+    manageSubscription: manageSubscription,
+    setTenantStatus: setTenantStatus,
     saveSettings: saveSettings,
     subscriptionPayload: subscriptionPayload,
     activeSubscription: activeSubscription,

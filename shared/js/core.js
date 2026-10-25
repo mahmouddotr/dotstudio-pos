@@ -196,12 +196,29 @@
       sendMessage: 'اكتب رسالة…', send: 'إرسال', you: 'أنت', support: 'الدعم الفني',
       chatDirect: 'المتجر', chatDirectTitle: 'محادثة المتجر', chatChannels: 'القنوات', chatChannelPick: 'اختر قناة',
       chatDirectHint: 'محادثة مباشرة مع المتجر', chatSupportHint: 'فريق DotStudio® معك',
-      chatPublicHint: 'الجميع يمكنه المشاركة', chatStoresHint: 'أصحاب المتاجر فقط',
+      chatPublicHint: 'الجميع يمكنه المشاركة', chatStoresHint: 'تواصل مباشر مع كل متجر',
       chatDeliveryHint: 'شركات التوصيل والمندوبون', chatOnline: 'متصل الآن',
       chatPick: 'اختر محادثة', chatPickText: 'اختر قناة من القائمة لتبدأ الدردشة.',
       chatNoRooms: 'لا توجد محادثات هنا بعد', chatStartConversation: 'ابدأ المحادثة',
       chatEmptyHint: 'لا رسائل بعد — ابدأ الحديث.', chatSendHint: 'Enter للإرسال · Shift+Enter لسطر جديد',
       chatMessages: 'رسائل', chatWith: 'مع', chatBack: 'المحادثات',
+      chatSettings: 'إعدادات المحادثة', chatBlock: 'حظر المستخدم', chatUnblock: 'إلغاء الحظر',
+      chatBlockHint: 'لن تتمكن من إرسال رسائل جديدة لهذه المحادثة.', chatBlockedNotice: 'لقد حظرت هذه المحادثة — ألغِ الحظر للمتابعة.',
+      chatBlockedToast: 'تم حظر المحادثة', chatUnblocked: 'تم إلغاء الحظر',
+      chatReport: 'الإبلاغ عن المستخدم', chatReportHint: 'أبلغ فريق DotStudio® عن أي إساءة.',
+      chatReportText: 'اختر سبب الإبلاغ وسيراجعه فريق الدعم في أسرع وقت.',
+      chatReportDetails: 'تفاصيل إضافية (اختياري)', chatReportPlaceholder: 'اكتب ما حدث…',
+      chatSendReport: 'إرسال البلاغ', chatReportSent: 'تم إرسال البلاغ، شكراً لك',
+      loginAs: 'دخول كـ', backToAdmin: 'العودة للأدمن', impersonatingAs: 'أنت الآن تتصفح كـ',
+      loginAsText: 'سيتم فتح حساب هذا المستخدم مع الاحتفاظ بجلستك كأدمن. يمكنك الرجوع في أي وقت من الشريط العلوي.',
+      duplicate: 'نسخ المستخدم', duplicateHint: 'إنشاء نسخة بنفس البيانات واسم مستخدم جديد.',
+      deleteForever: 'حذف نهائي', suspendUser: 'إيقاف الحساب', activateUser: 'تفعيل الحساب',
+      userDuplicated: 'تم نسخ المستخدم', userSuspended: 'تم إيقاف الحساب', userActivated: 'تم تفعيل الحساب',
+      userDeleted: 'تم حذف المستخدم', allRoles: 'كل الأدوار', manage: 'إدارة',
+      extend7: '+7 أيام', reduce7: '−7 أيام', setExpiry: 'تاريخ الانتهاء', recordPayment: 'تسجيل دفعة',
+      subscriptionUpdated: 'تم تحديث الاشتراك', storeSuspended: 'تم إيقاف المتجر', storeActivated: 'تم تفعيل المتجر',
+      manageSubscription: 'إدارة الاشتراك', subscriptionManageHint: 'عدّل مدة الاشتراك أو أوقف المتجر فوراً.',
+      suspendStore: 'إيقاف المتجر', activateStore: 'تفعيل المتجر',
       storeHeroKicker: 'توصيل سريع · جودة مضمونة', storeHeroTitle: 'كل ما تحبه،',
       storeHeroTitleAccent: 'في مكان واحد.', storeHeroSub: 'منتجات مختارة بعناية من أفضل المتاجر، تصلك في أسرع وقت.',
       shopNow: 'تسوق الآن', exploreStore: 'استكشف المتجر', trustedBy: 'يثق بنا أكثر من 12 ألف عميل',
@@ -227,7 +244,7 @@
       applyNow: 'قدّم الآن', applyFor: 'التقديم على وظيفة', fullTime: 'دوام كامل', partTime: 'دوام جزئي', remote: 'عن بعد',
       department: 'القسم', location: 'الموقع', salary: 'الراتب', experience: 'الخبرة', jobDesc: 'الوصف الوظيفي',
       requirements: 'المتطلبات', applicationSent: 'تم إرسال طلبك بنجاح', applicationSentText: 'سيتواصل معك فريق التوظيف قريباً.',
-      myApplications: 'طلبات التوظيف', noJobs: 'لا توجد وظائف متاحة حالياً', publicChat: 'المحادثة العامة', 'public-chat': 'المحادثة العامة',
+      myApplications: 'طلبات التوظيف', noJobs: 'لا توجد وظائف متاحة حالياً', publicChat: 'الرسائل', 'public-chat': 'الرسائل',
       storeOpen: 'مفتوح الآن', viewStore: 'زيارة المتجر', continueShopping: 'متابعة التسوق', placeOrder: 'تأكيد الطلب',
       orderPlaced: 'تم إنشاء طلبك', orderPlacedText: 'يمكنك تتبع طلبك لحظة بلحظة.', trackOrder: 'تتبع الطلب',
       emptyCart: 'سلتك فارغة', emptyCartText: 'أضف بعض المنتجات لتظهر هنا.', continue: 'متابعة', choosePayment: 'طريقة الدفع',
@@ -346,12 +363,29 @@
       sendMessage: 'Write a message…', send: 'Send', you: 'You', support: 'Support',
       chatDirect: 'Store', chatDirectTitle: 'Store chat', chatChannels: 'Channels', chatChannelPick: 'Pick a channel',
       chatDirectHint: 'Chat directly with the store', chatSupportHint: 'The DotStudio® team is here',
-      chatPublicHint: 'Everyone can join', chatStoresHint: 'Store owners only',
+      chatPublicHint: 'Everyone can join', chatStoresHint: 'Chat directly with each store',
       chatDeliveryHint: 'Delivery companies & riders', chatOnline: 'Online now',
       chatPick: 'Pick a conversation', chatPickText: 'Choose a channel from the list to start chatting.',
       chatNoRooms: 'No conversations here yet', chatStartConversation: 'Start the conversation',
       chatEmptyHint: 'No messages yet — say hello.', chatSendHint: 'Enter to send · Shift+Enter for a new line',
       chatMessages: 'messages', chatWith: 'with', chatBack: 'Chats',
+      chatSettings: 'Chat settings', chatBlock: 'Block user', chatUnblock: 'Unblock user',
+      chatBlockHint: 'You will not be able to send new messages in this chat.', chatBlockedNotice: 'You blocked this conversation — unblock to continue.',
+      chatBlockedToast: 'Conversation blocked', chatUnblocked: 'Conversation unblocked',
+      chatReport: 'Report user', chatReportHint: 'Report abuse to the DotStudio® team.',
+      chatReportText: 'Pick a reason and the support team will review it shortly.',
+      chatReportDetails: 'Extra details (optional)', chatReportPlaceholder: 'Tell us what happened…',
+      chatSendReport: 'Send report', chatReportSent: 'Report sent — thank you',
+      loginAs: 'Login as', backToAdmin: 'Back to admin', impersonatingAs: 'You are browsing as',
+      loginAsText: 'This opens the user account while keeping your admin session. You can return at any time from the top banner.',
+      duplicate: 'Duplicate user', duplicateHint: 'Create a copy with the same data and a new username.',
+      deleteForever: 'Delete permanently', suspendUser: 'Suspend account', activateUser: 'Activate account',
+      userDuplicated: 'User duplicated', userSuspended: 'Account suspended', userActivated: 'Account activated',
+      userDeleted: 'User deleted', allRoles: 'All roles', manage: 'Manage',
+      extend7: '+7 days', reduce7: '−7 days', setExpiry: 'Expiry date', recordPayment: 'Record payment',
+      subscriptionUpdated: 'Subscription updated', storeSuspended: 'Store suspended', storeActivated: 'Store activated',
+      manageSubscription: 'Manage subscription', subscriptionManageHint: 'Adjust the term or suspend the store instantly.',
+      suspendStore: 'Suspend store', activateStore: 'Activate store',
       storeHeroKicker: 'Fast delivery · Guaranteed quality', storeHeroTitle: 'Everything you love,',
       storeHeroTitleAccent: 'in one place.', storeHeroSub: 'Hand-picked products from the best stores, delivered fast.',
       shopNow: 'Shop now', exploreStore: 'Explore store', trustedBy: 'Trusted by 12,000+ customers',
@@ -377,7 +411,7 @@
       applyNow: 'Apply now', applyFor: 'Apply for', fullTime: 'Full-time', partTime: 'Part-time', remote: 'Remote',
       department: 'Department', location: 'Location', salary: 'Salary', experience: 'Experience', jobDesc: 'Job description',
       requirements: 'Requirements', applicationSent: 'Application sent', applicationSentText: 'Our hiring team will contact you soon.',
-      myApplications: 'My applications', noJobs: 'No open positions right now', publicChat: 'Public chat', 'public-chat': 'Public chat',
+      myApplications: 'My applications', noJobs: 'No open positions right now', publicChat: 'Messages', 'public-chat': 'Messages',
       storeOpen: 'Open now', viewStore: 'Visit store', continueShopping: 'Continue shopping', placeOrder: 'Place order',
       orderPlaced: 'Order created', orderPlacedText: 'You can track your order live.', trackOrder: 'Track order',
       emptyCart: 'Your cart is empty', emptyCartText: 'Add a few products and they will appear here.', continue: 'Continue', choosePayment: 'Payment method',
@@ -601,10 +635,66 @@
   DS.requireAuth = requireAuth;
 
   DS.logout = function (silent) {
-    ['cz_session', 'cz_user', 'cz_role', 'cz_mock', 'ds_permissions'].forEach(function (k) {
+    ['cz_session', 'cz_user', 'cz_role', 'cz_mock', 'ds_permissions', 'ds_admin_backup'].forEach(function (k) {
       try { localStorage.removeItem(k); } catch (e) {}
     });
     if (!silent) window.location.href = url('index.html');
+  };
+
+  /* ─────────────────────────── GOD MODE ────────────────────────────
+     Super admins can browse as any user, then jump back to their own
+     session. The admin session is snapshotted in localStorage.        */
+  var IMPERSONATION_KEY = 'ds_admin_backup';
+
+  function impersonating() {
+    var raw = null;
+    try { raw = JSON.parse(localStorage.getItem(IMPERSONATION_KEY) || 'null'); } catch (e) {}
+    if (!raw || !raw.user || raw.user.role !== 'superadmin') return null;
+    var target = session();
+    return { admin: raw.user, target: target, at: raw.at };
+  }
+  DS.impersonating = impersonating;
+
+  DS.impersonate = function (userId) {
+    var admin = session();
+    if (!admin || admin.role !== 'superadmin') return { ok: false, error: 'forbidden' };
+    var target = ((DS.data && DS.data.users) || []).filter(function (u) { return u.id === userId; })[0];
+    if (!target) return { ok: false, error: 'missing' };
+    if (target.id === admin.id) return { ok: false, error: 'self' };
+    if (target.is_active === false) return { ok: false, error: 'suspended' };
+    if (target.tenant_id && (target.role === 'owner' || target.role === 'cashier')) {
+      var tn = DS.data.tenantById(target.tenant_id);
+      if (tn && tn.status === 'suspended') return { ok: false, error: 'store_suspended' };
+    }
+    try {
+      localStorage.setItem(IMPERSONATION_KEY, JSON.stringify({ user: admin, at: Date.now() }));
+      var clean = Object.assign({}, target);
+      delete clean.password;
+      localStorage.setItem('cz_user', JSON.stringify(clean));
+      localStorage.setItem('cz_session', clean.id);
+      localStorage.setItem('cz_role', clean.role);
+      localStorage.setItem('cz_mock', '1');
+      if (clean.role === 'subadmin') localStorage.setItem('ds_permissions', JSON.stringify(clean.permissions || []));
+      else localStorage.removeItem('ds_permissions');
+      if (clean.tenant_id) localStorage.setItem('ds_customer_store', clean.tenant_id);
+    } catch (e) { return { ok: false, error: 'storage' }; }
+    return { ok: true, user: target, redirect: roleHome(target) };
+  };
+
+  DS.stopImpersonating = function () {
+    var state = impersonating();
+    if (!state) return false;
+    try {
+      var admin = state.admin;
+      localStorage.setItem('cz_user', JSON.stringify(admin));
+      localStorage.setItem('cz_session', admin.id);
+      localStorage.setItem('cz_role', admin.role);
+      localStorage.setItem('cz_mock', '1');
+      localStorage.removeItem('ds_permissions');
+      localStorage.removeItem(IMPERSONATION_KEY);
+    } catch (e) { return false; }
+    window.location.href = url('admin/dashboard.html');
+    return true;
   };
 
   /* Apply language/theme immediately */

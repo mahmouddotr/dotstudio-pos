@@ -698,3 +698,44 @@ html[dir="rtl"] .chat-send svg { transform: scaleX(-1); }
   .chat-room,
   .chat-send { transition: none !important; }
 }
+
+/* ─────────────── 1-on-1 settings · block · report ─────────────── */
+.chat-settings-btn{
+  display:grid;place-items:center;width:34px;height:34px;flex-shrink:0;
+  border-radius:10px;border:1px solid transparent;background:transparent;
+  color:var(--text-tertiary);cursor:pointer;transition:all .18s ease;
+}
+.chat-settings-btn svg{width:17px;height:17px}
+.chat-settings-btn:hover{background:rgba(255,255,255,.08);color:var(--text-primary);border-color:var(--border)}
+.chat-settings-btn.is-blocked{color:var(--danger)}
+.chat-blocked-chip{display:inline-flex;align-items:center;color:var(--danger);vertical-align:middle}
+.chat-blocked-chip svg{width:12px;height:12px}
+.chat-room.is-blocked .chat-room-preview{color:var(--danger)}
+.chat-blocked-bar{
+  display:flex;align-items:center;gap:10px;padding:14px 16px;margin:0;
+  border-top:1px solid var(--border);background:var(--danger-soft, rgba(255,69,58,.08));
+  color:var(--text-secondary);font-size:12px;
+}
+.chat-blocked-bar svg{width:16px;height:16px;color:var(--danger);flex-shrink:0}
+.chat-blocked-bar span{flex:1;min-width:0}
+.chat-settings{display:flex;flex-direction:column;gap:10px}
+.chat-settings-peer{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:var(--surface-2);border:1px solid var(--border)}
+.chat-settings-peer .avatar{width:40px;height:40px}
+.chat-settings-peer > div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.chat-settings-peer b{font-size:13px;color:var(--text-primary)}
+.chat-settings-peer span{font-size:11px;color:var(--text-tertiary)}
+.chat-settings-row{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:start;
+  padding:12px;border-radius:14px;border:1px solid var(--border);background:var(--surface);
+  color:var(--text-primary);cursor:pointer;transition:all .18s ease;
+}
+.chat-settings-row:hover{background:var(--surface-2);border-color:var(--border-strong,var(--border))}
+.chat-settings-row.danger:hover{background:var(--danger-soft, rgba(255,69,58,.08));border-color:var(--danger)}
+.cs-ico{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--surface-2);color:var(--text-secondary);flex-shrink:0}
+.cs-ico svg{width:16px;height:16px}
+.chat-settings-row.danger .cs-ico{background:var(--danger-soft, rgba(255,69,58,.1));color:var(--danger)}
+.cs-copy{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cs-copy b{font-size:12.5px;font-weight:700}
+.cs-copy small{font-size:10.5px;color:var(--text-tertiary);line-height:1.5}
+.chat-report-reasons{display:flex;flex-direction:column;gap:6px}
+.chat-report-reason{padding:9px 11px;border:1px solid var(--border);border-radius:10px}

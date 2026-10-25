@@ -1110,3 +1110,62 @@ html[data-theme="light"] .ds-topbar { background: rgba(245, 245, 247, 0.7); }
 .cart-line.modal-cart-line .cart-line-name { font-size: 12.5px; font-weight: 600; }
 .cart-line.modal-cart-line .cart-line-price { font-size: 10.5px; color: var(--text-tertiary); margin-top: 2px; }
 .cart-line.modal-cart-line .cart-line-total { font-size: 12px; font-weight: 700; color: var(--accent-lime); white-space: nowrap; }
+
+/* ─────────────── Admin "God Mode" impersonation banner ─────────────── */
+.ds-impersonation-banner{
+  position:fixed;top:0;left:0;right:0;height:46px;z-index:10000;
+  display:flex;align-items:center;gap:10px;padding:0 16px;
+  background:var(--material-dark);
+  -webkit-backdrop-filter:blur(var(--blur-soft));
+  backdrop-filter:blur(var(--blur-soft));
+  border-bottom:1px solid var(--border);
+  box-shadow:var(--shadow-sm), inset 0 -1px 0 var(--lime-soft-2);
+  color:var(--text-primary);font-size:12px;font-weight:600;letter-spacing:.1px;
+}
+.ds-imp-icon{display:grid;place-items:center;width:26px;height:26px;border-radius:8px;background:var(--lime-soft);border:1px solid var(--lime-soft-2);color:var(--lime);flex-shrink:0}
+.ds-imp-icon svg{width:14px;height:14px;stroke-width:2.2}
+.ds-imp-text{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-secondary)}
+.ds-imp-text b{font-weight:800;color:var(--text-primary)}
+.ds-imp-btn{
+  display:inline-flex;align-items:center;gap:6px;flex-shrink:0;
+  height:30px;padding:0 12px;border-radius:var(--radius-full);border:1px solid var(--lime-soft-2);
+  background:var(--lime-soft);color:var(--lime);font-size:11px;font-weight:700;cursor:pointer;
+  transition:background var(--transition-fast),transform var(--transition-fast);
+}
+.ds-imp-btn:hover{background:var(--lime-soft-2);transform:translateY(-1px)}
+.ds-imp-btn svg{width:13px;height:13px}
+body.ds-impersonating .ds-app{padding-top:46px}
+body.ds-impersonating .ds-sidebar{top:46px;height:calc(100vh - 46px)}
+@media (max-width:640px){
+  .ds-imp-text{font-size:11px}
+  .ds-imp-btn span{display:none}
+}
+
+/* ─────────────── Subscription manage modal ─────────────── */
+.manage-sub{display:flex;flex-direction:column;gap:2px}
+.manage-sub-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.manage-sub-head .avatar{width:42px;height:42px}
+.manage-sub-head > div{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.manage-sub-head b{font-size:14px;color:var(--text-primary)}
+.manage-sub-head span{font-size:11px;color:var(--text-tertiary)}
+.manage-sub-quick{display:flex;align-items:center;gap:8px}
+.manage-sub-quick .input{flex:1;min-width:0}
+.manage-sub-quick .btn{flex-shrink:0;white-space:nowrap}
+.manage-sub-status{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+
+/* ─────────────── Users directory (God mode + CRUD) ─────────────── */
+.user-filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.user-search{position:relative;flex:1;min-width:220px;display:flex;align-items:center}
+.user-search>svg{position:absolute;inset-inline-start:12px;width:15px;height:15px;color:var(--text-tertiary);pointer-events:none}
+.user-search .input{padding-inline-start:36px;width:100%}
+.user-filters .select{max-width:210px}
+.user-row-actions{display:flex;align-items:center;gap:4px;justify-content:flex-end;white-space:nowrap}
+.user-menu-btn{width:34px;height:34px;padding:0!important;display:grid;place-items:center}
+.user-menu-btn svg{width:18px;height:18px}
+.ds-row-menu.dropdown-menu{
+  position:fixed;inset-inline-end:auto;inset-inline-start:auto;
+  top:auto;right:auto;animation:dsSlideDown var(--transition-fast) both;
+}
+.dropdown-item.warn{color:#FFC061}
+.dropdown-item.warn:hover{background:rgba(255,159,10,.12)}
+.dropdown-item:disabled{opacity:.45;pointer-events:none}

@@ -544,7 +544,7 @@ body.modal-open { overflow: hidden; }
 .dropdown-item.danger { color: #FF6B61; }
 .dropdown-item.danger:hover { background: var(--danger-soft); }
 .dropdown-sep { height: 1px; background: rgba(255, 255, 255, 0.07); margin: 5px 4px; }
-.dropdown-head { padding: 8px 11px 6px; font-size: var(--fs-xs); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+.dropdown-head { padding: 8px 11px 6px; font-size: var(--fs-xs); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
 
 /* ═══════════════════════════ TOOLTIP ═══════════════════════════ */
 [data-tip] { position: relative; }

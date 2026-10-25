@@ -12,9 +12,9 @@
 
   var defaultScope = isAdmin ? 'support'
     : user.role === 'delivery' ? 'delivery'
-      : (user.role === 'customer' || user.role === 'owner' || user.role === 'cashier') ? 'direct'
-        : 'public';
+      : 'stores';
   var qScope = DS.qs('scope');
+  if (qScope === 'direct' || qScope === 'public') qScope = 'stores';
   var scope = (qScope && DS.chat && DS.chat.canScope(user, qScope)) ? qScope : defaultScope;
 
   var page = DS.shell.mount({
@@ -25,8 +25,8 @@
     eyebrow: isAdmin ? t('admin') : (store ? store.name : (company ? company.name : t('delivery'))),
     icon: 'chat',
     sub: DS.lang() === 'en'
-      ? 'Support, community, stores and delivery — one clean inbox.'
-      : 'الدعم، المجتمع، المتاجر والتوصيل — صندوق واحد مرتب.',
+      ? 'Support, stores and delivery — one clean inbox.'
+      : 'الدعم والمتاجر والتوصيل — صندوق واحد مرتب.',
     actions: '<span class="badge lime">' + icon('wifi') + ' ' + esc(t('live')) + '</span>',
     content: '<div class="chat-page-host"><div class="skeleton" style="height:min(72vh,720px);border-radius:24px"></div></div>'
   });

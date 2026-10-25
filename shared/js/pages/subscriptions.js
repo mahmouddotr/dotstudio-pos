@@ -20,6 +20,13 @@
 
   var state = { tenantId: isAdmin ? (DS.qs('store') || DS.data.tenants[0].id) : user.tenant_id };
 
+  /* Local calendar date (YYYY-MM-DD) — toISOString() would shift by timezone. */
+  function localDate(d) {
+    var m = String(d.getMonth() + 1);
+    var day = String(d.getDate());
+    return d.getFullYear() + '-' + (m.length < 2 ? '0' + m : m) + '-' + (day.length < 2 ? '0' + day : day);
+  }
+
   function render() {
     var tn = DS.data.tenantById(state.tenantId) || DS.data.tenants[0];
     var sub = DS.data.activeSubscription(tn.id);
@@ -59,13 +66,14 @@
       }).join('') : '<tr><td colspan="6">' + DS.empty({ icon: 'card', title: t('noData'), text: t('subscriptionContact') }) + '</td></tr>') +
       '</tbody></table></div></div>';
 
-    var expiryTable = isAdmin ? '<div class="card"><div class="card-header"><div class="card-title">' + esc(DS.lang() === 'en' ? 'All subscriptions' : 'كل الاشتراكات') + '</div></div><div class="table-wrap flush"><table class="table"><thead><tr><th>' + esc(t('store')) + '</th><th>' + esc(t('plan')) + '</th><th>' + esc(t('expires')) + '</th><th>' + esc(t('daysRemaining')) + '</th><th>' + esc(t('status')) + '</th></tr></thead><tbody>' +
+    var expiryTable = isAdmin ? '<div class="card"><div class="card-header"><div class="card-title">' + esc(DS.lang() === 'en' ? 'All subscriptions' : 'كل الاشتراكات') + '</div><span class="badge lime">' + DS.data.tenants.length + '</span></div><div class="table-wrap flush"><table class="table"><thead><tr><th>' + esc(t('store')) + '</th><th>' + esc(t('plan')) + '</th><th>' + esc(t('expires')) + '</th><th>' + esc(t('daysRemaining')) + '</th><th>' + esc(t('status')) + '</th><th></th></tr></thead><tbody>' +
       DS.data.tenants.map(function (x) {
         var sx = DS.data.activeSubscription(x.id);
-        return '<tr><td><div class="customer-cell"><img class="avatar sm" src="' + esc(DS.avatarUrl(x)) + '" alt=""><b>' + esc(DS.loc(x, 'name')) + '</b></div></td>' +
+        return '<tr><td><div class="customer-cell"><img class="avatar sm" src="' + esc(DS.avatarUrl(x)) + '" alt=""><div><div class="cell-title">' + esc(DS.loc(x, 'name')) + '</div><div class="cell-sub">' + (x.status === 'suspended' ? esc(t('inactive')) : esc(t('active'))) + '</div></div></div></td>' +
           '<td>' + esc(t(x.plan)) + '</td><td>' + esc(DS.date(x.subscription_end)) + '</td>' +
-          '<td><span class="badge ' + (sx.daysLeft <= 15 ? 'warning' : sx.daysLeft <= 0 ? 'danger' : 'success') + '">' + Math.max(0, sx.daysLeft) + '</span></td>' +
-          '<td>' + (sx.expired ? DS.badge('expired', t('expired')) : sx.daysLeft <= 15 ? DS.badge('pending', t('expiringSoon')) : DS.badge('active', t('active'))) + '</td></tr>';
+          '<td><span class="badge ' + (sx.daysLeft <= 15 ? 'warning' : 'success') + '">' + Math.max(0, sx.daysLeft) + '</span></td>' +
+          '<td>' + (x.status === 'suspended' ? DS.badge('suspended', t('inactive')) : sx.expired ? DS.badge('expired', t('expired')) : sx.daysLeft <= 15 ? DS.badge('pending', t('expiringSoon')) : DS.badge('active', t('active'))) + '</td>' +
+          '<td style="text-align:end;white-space:nowrap"><button class="btn btn-secondary btn-sm" data-manage="' + esc(x.id) + '">' + icon('settings') + esc(t('manage')) + '</button></td></tr>';
       }).join('') + '</tbody></table></div></div>' : '';
 
     page.setContent(hero + storePicker + plans + expiryTable + paymentTable);
@@ -75,12 +83,106 @@
   function bind(tn) {
     var store = page.body.querySelector('[data-store]');
     if (store) store.addEventListener('change', function () { state.tenantId = store.value; render(); });
+    DS.$$('[data-manage]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () { manage(b.getAttribute('data-manage')); });
+    });
     DS.$$('[data-renew]', page.body).forEach(function (b) {
       b.addEventListener('click', function () {
         var payload = DS.data.subscriptionPayload(b.getAttribute('data-plan'), tn);
         window.open(payload.url, '_blank', 'noopener');
         DS.toast(t('subscriptionContact'), 'success');
       });
+    });
+  }
+
+  /* ─────────────── Manage one subscription (admin only) ─────────────── */
+  function manage(tenantId) {
+    var tn = DS.data.tenantById(tenantId);
+    if (!tn) return;
+    var end = new Date(tn.subscription_end);
+    if (isNaN(end.getTime())) end = new Date();
+    var dateValue = localDate(end);
+    var suspended = tn.status === 'suspended';
+
+    var body = '<div class="manage-sub">' +
+      '<div class="manage-sub-head">' +
+        '<img class="avatar" src="' + esc(DS.avatarUrl(tn)) + '" alt="">' +
+        '<div><b>' + esc(DS.loc(tn, 'name')) + '</b><span>' + esc(t('manageSubscription')) + '</span></div>' +
+        (suspended ? DS.badge('suspended', t('inactive')) : DS.badge('active', t('active'))) +
+      '</div>' +
+      '<p class="hint" style="margin:2px 0 12px">' + esc(t('subscriptionManageHint')) + '</p>' +
+      '<div class="field"><label>' + esc(t('plan')) + '</label><select class="select" data-sub-plan>' +
+        DS.data.PLANS.map(function (p) {
+          return '<option value="' + p.id + '"' + (p.id === tn.plan ? ' selected' : '') + '>' + esc(DS.loc(p, 'name')) + ' · ' + p.price + ' EGP</option>';
+        }).join('') + '</select></div>' +
+      '<div class="field" style="margin-top:12px"><label>' + esc(t('setExpiry')) + '</label>' +
+        '<div class="manage-sub-quick"><input class="input" type="date" data-sub-date value="' + esc(dateValue) + '">' +
+          '<button type="button" class="btn btn-secondary btn-sm" data-sub-plus dir="ltr">+7</button>' +
+          '<button type="button" class="btn btn-secondary btn-sm" data-sub-minus dir="ltr">−7</button>' +
+        '</div></div>' +
+      '<label class="check" style="margin-top:12px;padding:9px 11px;border:1px solid var(--border);border-radius:10px"><input type="checkbox" data-sub-payment><span>' + esc(t('recordPayment')) + '</span></label>' +
+      '<div class="manage-sub-status">' +
+        '<button type="button" class="btn ' + (suspended ? 'btn-primary' : 'btn-danger') + ' btn-block" data-sub-toggle>' +
+          icon(suspended ? 'play' : 'pause') + esc(suspended ? t('activateStore') : t('suspendStore')) +
+        '</button>' +
+      '</div></div>';
+
+    var m = DS.modal({
+      size: 'sm',
+      title: t('manageSubscription'),
+      sub: DS.loc(tn, 'name'),
+      body: body,
+      actions: [
+        { label: t('cancel'), variant: 'btn-secondary' },
+        { label: t('saveChanges'), variant: 'btn-primary', onClick: function (root) {
+          var nextPlan = root.querySelector('[data-sub-plan]').value;
+          var nextDate = root.querySelector('[data-sub-date]').value;
+          var pay = root.querySelector('[data-sub-payment]').checked;
+          if (!nextDate) { DS.toast(t('required'), 'error'); return false; }
+          /* Keep the original time-of-day so +7/−7 always move exactly 7 days. */
+          var until = new Date(nextDate + 'T00:00:00');
+          if (isNaN(until.getTime())) { DS.toast(t('required'), 'error'); return false; }
+          until.setHours(end.getHours(), end.getMinutes(), end.getSeconds(), end.getMilliseconds());
+          DS.data.manageSubscription(tn.id, {
+            plan: nextPlan,
+            end: until.toISOString(),
+            recordPayment: pay && nextPlan !== tn.plan
+          });
+          DS.toast(t('subscriptionUpdated'), 'success');
+          state.tenantId = tn.id;
+          render();
+          return true;
+        } }
+      ],
+      onMount: function (root) {
+        var dateInput = root.querySelector('[data-sub-date]');
+        var cursor = new Date(end.getTime());
+        var plus = root.querySelector('[data-sub-plus]');
+        var minus = root.querySelector('[data-sub-minus]');
+        if (plus) plus.addEventListener('click', function () {
+          cursor.setDate(cursor.getDate() + 7);
+          dateInput.value = localDate(cursor);
+        });
+        if (minus) minus.addEventListener('click', function () {
+          cursor.setDate(cursor.getDate() - 7);
+          dateInput.value = localDate(cursor);
+        });
+        if (dateInput) dateInput.addEventListener('change', function () {
+          var picked = new Date(dateInput.value + 'T00:00:00');
+          if (!isNaN(picked.getTime())) {
+            cursor.setFullYear(picked.getFullYear(), picked.getMonth(), picked.getDate());
+            dateInput.value = localDate(cursor);
+          }
+        });
+        var toggle = root.querySelector('[data-sub-toggle]');
+        if (toggle) toggle.addEventListener('click', function () {
+          DS.data.setTenantStatus(tn.id, suspended ? 'active' : 'suspended');
+          DS.toast(suspended ? t('storeActivated') : t('storeSuspended'), 'success');
+          m.close();
+          state.tenantId = tn.id;
+          render();
+        });
+      }
     });
   }
 
