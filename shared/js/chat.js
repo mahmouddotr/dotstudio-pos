@@ -17,7 +17,9 @@
   var SCOPES = [
     { key: 'support', labelKey: 'chatSupport', hintKey: 'chatSupportHint', icon: 'lifebuoy', tone: 'lime' },
     { key: 'stores', labelKey: 'chatStores', hintKey: 'chatStoresHint', icon: 'store', tone: 'blue' },
-    { key: 'delivery', labelKey: 'chatDelivery', hintKey: 'chatDeliveryHint', icon: 'truck', tone: 'teal' }
+    { key: 'delivery', labelKey: 'chatDelivery', hintKey: 'chatDeliveryHint', icon: 'truck', tone: 'teal' },
+    /* Customer ↔ assigned rider threads (created from the tracking page). */
+    { key: 'driver', labelKey: 'chatDriver', hintKey: 'chatDriverHint', icon: 'bike', tone: 'orange' }
   ];
 
   function isAdmin(user) { return !!user && (user.role === 'superadmin' || user.role === 'subadmin'); }
@@ -164,6 +166,81 @@
       '<span class="chat-online" title="' + esc(t('chatOnline')) + '"></span></div>';
   }
 
+  /* ─────────────────── Block / report sheets (shared) ─────────────────── */
+  function openSettingsSheet(scope, contact, onChange) {
+    var user = DS.session();
+    if (!user) return;
+    var blocked = DS.data.isPeerBlocked(scope, contact.id, user);
+    var body = '<div class="chat-settings">' +
+      '<div class="chat-settings-peer">' + avatarFor(contact, 'avatar') +
+        '<div><b>' + esc(contactName(contact)) + '</b><span>' + esc(contactSub(contact)) + '</span></div>' +
+      '</div>' +
+      '<button type="button" class="chat-settings-row" data-settings-block>' +
+        '<span class="cs-ico">' + icon(blocked ? 'checkCircle' : 'lock') + '</span>' +
+        '<span class="cs-copy"><b>' + esc(blocked ? t('chatUnblock') : t('chatBlock')) + '</b><small>' + esc(t('chatBlockHint')) + '</small></span>' +
+      '</button>' +
+      '<button type="button" class="chat-settings-row danger" data-settings-report>' +
+        '<span class="cs-ico">' + icon('alert') + '</span>' +
+        '<span class="cs-copy"><b>' + esc(t('chatReport')) + '</b><small>' + esc(t('chatReportHint')) + '</small></span>' +
+      '</button>' +
+    '</div>';
+
+    var m = DS.modal({
+      size: 'sm',
+      title: t('chatSettings'),
+      sub: contactName(contact),
+      body: body,
+      actions: [{ label: t('close'), variant: 'btn-secondary' }],
+      onMount: function (root) {
+        var blockBtn = root.querySelector('[data-settings-block]');
+        if (blockBtn) blockBtn.addEventListener('click', function () {
+          var nowBlocked = DS.data.togglePeerBlock(scope, contact.id, user);
+          DS.toast(nowBlocked ? t('chatBlockedToast') : t('chatUnblocked'), 'success');
+          m.close();
+          if (onChange) onChange();
+        });
+        var reportBtn = root.querySelector('[data-settings-report]');
+        if (reportBtn) reportBtn.addEventListener('click', function () {
+          m.close();
+          setTimeout(function () { openReportSheet(scope, contact); }, 140);
+        });
+      }
+    });
+  }
+
+  function openReportSheet(scope, contact) {
+    var user = DS.session();
+    if (!user) return;
+    var reasons = DS.lang() === 'en'
+      ? ['Spam or advertising', 'Harassment or abuse', 'Impersonation', 'Inappropriate content', 'Other']
+      : ['رسائل مزعجة أو إعلانات', 'إساءة أو تحرش', 'انتحال شخصية', 'محتوى غير لائق', 'أخرى'];
+    var body = '<div class="chat-report">' +
+      '<p class="hint">' + esc(t('chatReportText')) + '</p>' +
+      '<div class="chat-report-reasons">' + reasons.map(function (r, i) {
+        return '<label class="check chat-report-reason"><input type="radio" name="chatReason" value="' + esc(r) + '"' + (i === 0 ? ' checked' : '') + '><span>' + esc(r) + '</span></label>';
+      }).join('') + '</div>' +
+      '<div class="field" style="margin-top:12px"><label>' + esc(t('chatReportDetails')) + '</label>' +
+      '<textarea class="input" rows="3" data-report-details placeholder="' + esc(t('chatReportPlaceholder')) + '"></textarea></div>' +
+    '</div>';
+    DS.modal({
+      size: 'sm',
+      title: t('chatReport'),
+      sub: contactName(contact),
+      body: body,
+      actions: [
+        { label: t('cancel'), variant: 'btn-secondary' },
+        { label: t('chatSendReport'), variant: 'btn-primary', onClick: function (root) {
+          var picked = root.querySelector('input[name="chatReason"]:checked');
+          var detail = (root.querySelector('[data-report-details]').value || '').trim();
+          var reason = (picked ? picked.value : '') + (detail ? ' — ' + detail : '');
+          DS.data.reportPeer(scope, contact.id, reason, user);
+          DS.toast(t('chatReportSent'), 'success');
+          return true;
+        } }
+      ]
+    });
+  }
+
   /* ───────────────────────────── MOUNT ───────────────────────────── */
   function mount(el, opts) {
     if (!el) return null;
@@ -172,7 +249,13 @@
     if (!user) return null;
 
     var mode = opts.mode || 'full';
-    var scopes = SCOPES.filter(function (s) { return canScope(user, s.key); });
+    var scopes = SCOPES.filter(function (s) {
+      if (!canScope(user, s.key)) return false;
+      /* The rider channel is a private thread opened from tracking, so it is
+         only listed for riders themselves (customers use the tracking button). */
+      if (s.key === 'driver') return user.role === 'delivery';
+      return true;
+    });
     if (!scopes.length) scopes = [SCOPES[0]];
 
     var state = {
@@ -295,7 +378,7 @@
       if (back) back.addEventListener('click', function () { state.mobileConv = false; render(); });
 
       var gear = el.querySelector('[data-chat-settings]');
-      if (gear && contact) gear.addEventListener('click', function () { openSettings(contact); });
+      if (gear && contact) gear.addEventListener('click', function () { openSettingsSheet(state.scope, contact, render); });
 
       var unblock = el.querySelector('[data-chat-unblock]');
       if (unblock && contact) unblock.addEventListener('click', function () {
@@ -355,76 +438,6 @@
       }
     }
 
-    function openSettings(contact) {
-      var blocked = DS.data.isPeerBlocked(state.scope, contact.id, user);
-      var body = '<div class="chat-settings">' +
-        '<div class="chat-settings-peer">' + avatarFor(contact, 'avatar') +
-          '<div><b>' + esc(contactName(contact)) + '</b><span>' + esc(contactSub(contact)) + '</span></div>' +
-        '</div>' +
-        '<button type="button" class="chat-settings-row" data-settings-block>' +
-          '<span class="cs-ico">' + icon(blocked ? 'checkCircle' : 'lock') + '</span>' +
-          '<span class="cs-copy"><b>' + esc(blocked ? t('chatUnblock') : t('chatBlock')) + '</b><small>' + esc(t('chatBlockHint')) + '</small></span>' +
-        '</button>' +
-        '<button type="button" class="chat-settings-row danger" data-settings-report>' +
-          '<span class="cs-ico">' + icon('alert') + '</span>' +
-          '<span class="cs-copy"><b>' + esc(t('chatReport')) + '</b><small>' + esc(t('chatReportHint')) + '</small></span>' +
-        '</button>' +
-      '</div>';
-
-      var m = DS.modal({
-        size: 'sm',
-        title: t('chatSettings'),
-        sub: contactName(contact),
-        body: body,
-        actions: [{ label: t('close'), variant: 'btn-secondary' }],
-        onMount: function (root) {
-          var blockBtn = root.querySelector('[data-settings-block]');
-          if (blockBtn) blockBtn.addEventListener('click', function () {
-            var nowBlocked = DS.data.togglePeerBlock(state.scope, contact.id, user);
-            DS.toast(nowBlocked ? t('chatBlockedToast') : t('chatUnblocked'), 'success');
-            m.close();
-            render();
-          });
-          var reportBtn = root.querySelector('[data-settings-report]');
-          if (reportBtn) reportBtn.addEventListener('click', function () {
-            m.close();
-            setTimeout(function () { openReport(contact); }, 140);
-          });
-        }
-      });
-    }
-
-    function openReport(contact) {
-      var reasons = DS.lang() === 'en'
-        ? ['Spam or advertising', 'Harassment or abuse', 'Impersonation', 'Inappropriate content', 'Other']
-        : ['رسائل مزعجة أو إعلانات', 'إساءة أو تحرش', 'انتحال شخصية', 'محتوى غير لائق', 'أخرى'];
-      var body = '<div class="chat-report">' +
-        '<p class="hint">' + esc(t('chatReportText')) + '</p>' +
-        '<div class="chat-report-reasons">' + reasons.map(function (r, i) {
-          return '<label class="check chat-report-reason"><input type="radio" name="chatReason" value="' + esc(r) + '"' + (i === 0 ? ' checked' : '') + '><span>' + esc(r) + '</span></label>';
-        }).join('') + '</div>' +
-        '<div class="field" style="margin-top:12px"><label>' + esc(t('chatReportDetails')) + '</label>' +
-        '<textarea class="input" rows="3" data-report-details placeholder="' + esc(t('chatReportPlaceholder')) + '"></textarea></div>' +
-      '</div>';
-      DS.modal({
-        size: 'sm',
-        title: t('chatReport'),
-        sub: contactName(contact),
-        body: body,
-        actions: [
-          { label: t('cancel'), variant: 'btn-secondary' },
-          { label: t('chatSendReport'), variant: 'btn-primary', onClick: function (root) {
-            var picked = root.querySelector('input[name="chatReason"]:checked');
-            var detail = (root.querySelector('[data-report-details]').value || '').trim();
-            var reason = (picked ? picked.value : '') + (detail ? ' — ' + detail : '');
-            DS.data.reportPeer(state.scope, contact.id, reason, user);
-            DS.toast(t('chatReportSent'), 'success');
-            return true;
-          } }
-        ]
-      });
-    }
-
     render();
 
     return {
@@ -441,6 +454,113 @@
       destroy: function () { el.innerHTML = ''; }
     };
   }
+
+  /* ─────────────── 1-on-1 rider chat, opened from tracking ─────────────── */
+  DS.openDriverChat = function (order) {
+    var user = DS.session();
+    if (!user || !order) return null;
+    var driver = DS.data.driverForOrder ? DS.data.driverForOrder(order) : null;
+    if (!driver) { DS.toast(t('chatDriverNoOrder'), 'warning'); return null; }
+    var scope = 'driver';
+    var contact = {
+      key: driver.id, type: 'user', id: driver.id,
+      name: driver.name, name_en: driver.name_en,
+      subtitle: 'مندوب التوصيل', subtitle_en: 'Delivery rider'
+    };
+
+    function bodyMarkup() {
+      var room = DS.data.chatThread(user, scope, driver.id);
+      var blocked = DS.data.isPeerBlocked(scope, driver.id, user);
+      return '<div class="dsc">' +
+        '<div class="dsc-head">' + avatarFor(contact, 'avatar') +
+          '<div class="dsc-id"><b>' + esc(contactName(contact)) + '</b>' +
+            '<span><i class="chat-live-dot"></i>' + esc(DS.lang() === 'en' ? 'Delivery rider' : 'مندوب التوصيل') + '</span></div>' +
+          '<span class="dsc-order">' + esc(order.order_no || '') + '</span>' +
+          '<button type="button" class="chat-settings-btn" data-dsc-settings aria-label="' + esc(t('chatSettings')) + '">' + icon('settings') + '</button>' +
+        '</div>' +
+        '<div class="chat-thread dsc-thread" data-dsc-thread>' + messagesMarkup(room, user) + '</div>' +
+        (blocked
+          ? '<div class="dsc-blocked">' + icon('lock') + '<span>' + esc(t('chatBlockedNotice')) + '</span>' +
+              '<button type="button" class="btn btn-secondary btn-sm" data-dsc-unblock>' + esc(t('chatUnblock')) + '</button></div>'
+          : '<div class="chat-compose dsc-compose"><div class="chat-compose-box">' +
+              '<textarea rows="1" data-dsc-input placeholder="' + esc(t('sendMessage')) + '" aria-label="' + esc(t('sendMessage')) + '"></textarea></div>' +
+              '<button type="button" class="chat-send" data-dsc-send aria-label="' + esc(t('send')) + '">' + icon('send') + '</button></div>') +
+      '</div>';
+    }
+
+    var m = DS.modal({
+      size: 'sm',
+      title: icon('bike') + ' ' + esc(t('chatWithDriver')),
+      sub: esc(order.order_no || '') + ' · ' + esc(contactName(contact)),
+      body: bodyMarkup(),
+      actions: [
+        { label: t('chatBlock'), variant: 'btn-secondary', close: false, onClick: function () {
+          var nowBlocked = DS.data.togglePeerBlock(scope, driver.id, user);
+          DS.toast(nowBlocked ? t('chatBlockedToast') : t('chatUnblocked'), 'success');
+          rerender();
+          var btn = m.el.querySelector('[data-action="0"]');
+          if (btn) btn.textContent = nowBlocked ? t('chatUnblock') : t('chatBlock');
+          return false;
+        } },
+        { label: t('chatReport'), variant: 'btn-secondary', close: false, onClick: function () {
+          openReportSheet(scope, contact);
+          return false;
+        } },
+        { label: t('close'), variant: 'btn-primary' }
+      ],
+      onMount: function (root) { bind(root); }
+    });
+
+    function scroll(root) {
+      var th = root.querySelector('[data-dsc-thread]');
+      if (th) th.scrollTop = th.scrollHeight;
+    }
+    function rerender() {
+      var body = m.el.querySelector('.modal-body');
+      if (!body) return;
+      body.innerHTML = bodyMarkup();
+      bind(m.el);
+      var btn = m.el.querySelector('[data-action="0"]');
+      if (btn) btn.textContent = DS.data.isPeerBlocked(scope, driver.id, user) ? t('chatUnblock') : t('chatBlock');
+    }
+    function bind(root) {
+      scroll(root);
+      var gear = root.querySelector('[data-dsc-settings]');
+      if (gear) gear.addEventListener('click', function () { openSettingsSheet(scope, contact, rerender); });
+      var unblock = root.querySelector('[data-dsc-unblock]');
+      if (unblock) unblock.addEventListener('click', function () {
+        DS.data.togglePeerBlock(scope, driver.id, user);
+        DS.toast(t('chatUnblocked'), 'success');
+        rerender();
+      });
+      var input = root.querySelector('[data-dsc-input]');
+      var sendBtn = root.querySelector('[data-dsc-send]');
+      function send() {
+        if (!input) return;
+        var text = (input.value || '').trim();
+        if (!text) return;
+        var res = DS.data.sendMessageTo(scope, driver.id, text);
+        if (!res) { DS.toast(t('noPermission'), 'error'); return; }
+        if (res.blocked) { DS.toast(t('chatBlockedNotice'), 'error'); return; }
+        input.value = '';
+        input.style.height = 'auto';
+        rerender();
+      }
+      if (input) {
+        input.addEventListener('input', function () {
+          input.style.height = 'auto';
+          input.style.height = Math.min(110, input.scrollHeight) + 'px';
+          if (sendBtn) sendBtn.classList.toggle('ready', !!input.value.trim());
+        });
+        input.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+        });
+      }
+      if (sendBtn) sendBtn.addEventListener('click', send);
+    }
+
+    return m;
+  };
 
   DS.chat = {
     mount: mount,

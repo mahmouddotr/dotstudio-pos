@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>أدوات النظام · DotStudio® POS</title>
+  <meta name="description" content="DotStudio® POS — الماسح الضوئي ومصمم الاستيكرات وإعدادات الفاتورة الحرارية.">
+  <meta name="theme-color" content="#000000">
+  <link rel="icon" type="image/png" href="../assets/img/LOGO-ICON-DONE.png">
+  <link rel="stylesheet" href="../assets/css/fonts.css">
+  <link rel="stylesheet" href="../shared/css/design-system.css?v=20261026d">
+  <link rel="stylesheet" href="../shared/css/components.css?v=20261026d">
+  <link rel="stylesheet" href="../shared/css/app.css?v=20261026d">
+  <script src="../shared/js/i18n.js?v=20261026d"></script>
+
+  <style>
+    /* ───────────────────────── System tools page ───────────────────────── */
+    .ht-page { display: flex; flex-direction: column; gap: var(--space-6); }
+
+    .ht-tabs {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; width: fit-content; max-width: 100%;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .ht-tabs::-webkit-scrollbar { display: none; }
+    .ht-tab {
+      display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px;
+      border: 1px solid transparent; border-radius: 12px; background: transparent;
+      color: var(--text-secondary); font-family: inherit; font-size: var(--fs-sm); font-weight: 600;
+      cursor: pointer; white-space: nowrap; transition: background .18s ease, color .18s ease, border-color .18s ease;
+    }
+    .ht-tab svg { width: 17px; height: 17px; }
+    .ht-tab:hover { background: rgba(255, 255, 255, .05); color: var(--text-primary); }
+    .ht-tab.active { background: var(--lime); border-color: var(--lime); color: #08090b; }
+    .ht-tab.active svg { color: #08090b; }
+    [data-theme="light"] .ht-tab.active { color: #08090b; }
+
+    .ht-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 22px; padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-5);
+    }
+
+    /* Scanner */
+    .ht-scan { display: flex; flex-direction: column; gap: var(--space-4); }
+    .ht-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px; font-size: var(--fs-xs);
+      font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--lime);
+    }
+    .ht-eyebrow svg { width: 15px; height: 15px; }
+    .ht-scan h2, .ht-label-form h2 { margin: 0; font-size: var(--fs-xl); color: var(--text-primary); }
+    .ht-scan p, .ht-muted { margin: 0; color: var(--text-secondary); font-size: var(--fs-sm); line-height: 1.7; }
+    .ht-scan-box { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+    .ht-scan-input {
+      flex: 1 1 280px; min-height: 54px; font-size: 1.05rem; letter-spacing: .06em;
+      font-family: 'Courier New', monospace; border-color: var(--lime);
+      box-shadow: 0 0 0 3px rgba(190, 255, 60, .10);
+    }
+    .ht-scan-btn { min-height: 54px; padding: 0 22px; flex: 0 0 auto; }
+    .ht-scan-hint {
+      display: inline-flex; align-items: center; gap: 8px; font-size: var(--fs-xs);
+      color: var(--text-tertiary);
+    }
+    .ht-scan-hint svg { width: 14px; height: 14px; }
+
+    .ht-log-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .ht-log { display: flex; flex-direction: column; gap: 8px; }
+    .ht-log-empty {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 34px 18px; border: 1px dashed var(--border); border-radius: 16px;
+      color: var(--text-tertiary); text-align: center;
+    }
+    .ht-log-empty svg { width: 26px; height: 26px; color: var(--text-tertiary); }
+    .ht-log-empty b { color: var(--text-secondary); font-size: var(--fs-sm); }
+    .ht-log-empty span { font-size: var(--fs-xs); }
+    .ht-log-row {
+      display: grid; grid-template-columns: 34px minmax(0, 1fr) auto auto; align-items: center; gap: 12px;
+      padding: 11px 14px; background: var(--surface-2, rgba(255, 255, 255, .03));
+      border: 1px solid var(--border); border-radius: 13px;
+    }
+    .ht-log-row.is-error { border-color: rgba(255, 84, 84, .45); }
+    .ht-log-ico { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; background: rgba(190, 255, 60, .12); color: var(--lime); }
+    .ht-log-row.is-error .ht-log-ico { background: rgba(255, 84, 84, .14); color: var(--danger); }
+    .ht-log-ico svg { width: 16px; height: 16px; }
+    .ht-log-main { display: flex; flex-direction: column; min-width: 0; }
+    .ht-log-main b { font-size: var(--fs-sm); color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ht-log-main span { font-size: var(--fs-xs); color: var(--text-tertiary); font-family: 'Courier New', monospace; direction: ltr; text-align: start; }
+    .ht-log-price { font-weight: 700; color: var(--text-primary); font-size: var(--fs-sm); }
+    .ht-log-time { font-size: var(--fs-xs); color: var(--text-tertiary); font-family: 'Courier New', monospace; direction: ltr; }
+
+    /* Label + settings layout */
+    .ht-label-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-6); align-items: start; }
+    .ht-label-form { display: flex; flex-direction: column; gap: var(--space-4); }
+    .ht-label-stage {
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      padding: var(--space-5); border: 1px dashed var(--border); border-radius: 18px;
+      background: rgba(255, 255, 255, .02);
+    }
+    .ht-label-caption { font-size: var(--fs-xs); letter-spacing: .08em; text-transform: uppercase; color: var(--text-tertiary); }
+
+    /* 60 × 40 mm sticker — white paper, black ink */
+    .label-preview {
+      width: 60mm; height: 40mm; box-sizing: border-box; padding: 3mm 3.5mm;
+      background: #ffffff; color: #000000; border-radius: 4px;
+      display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+      gap: 1mm; overflow: hidden; font-family: 'Courier New', monospace;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, .45);
+    }
+    .label-preview .lp-name {
+      font-size: 12pt; font-weight: 700; line-height: 1.15; text-align: center;
+      max-width: 100%; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+    .label-preview .lp-price { font-size: 15pt; font-weight: 700; letter-spacing: .02em; }
+    .label-preview .lp-barcode { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 1mm; }
+    .label-preview .lp-barcode svg { max-width: 100%; height: auto; }
+    .label-preview .lp-bars { display: flex; align-items: flex-end; gap: 1px; height: 13mm; width: 100%; justify-content: center; }
+    .label-preview .lp-bars i { display: block; height: 100%; background: #000; }
+    .label-preview .lp-bars span { display: block; height: 100%; background: transparent; }
+    .label-preview .lp-code { font-size: 8pt; letter-spacing: .12em; direction: ltr; }
+
+    /* Invoice preview */
+    .ht-invoice-preview {
+      width: 80mm; box-sizing: border-box; padding: 5mm; background: #ffffff; color: #000000;
+      border-radius: 4px; font-family: 'Courier New', monospace; font-size: 8pt;
+      display: flex; flex-direction: column; gap: 2mm; box-shadow: 0 18px 40px rgba(0, 0, 0, .45);
+    }
+    .ht-invoice-preview .hip-logo { display: flex; justify-content: center; }
+    .ht-invoice-preview .hip-logo img { max-height: 12mm; max-width: 45mm; object-fit: contain; }
+    .ht-invoice-preview .hip-name { text-align: center; font-size: 13pt; font-weight: 700; letter-spacing: .02em; }
+    .ht-invoice-preview .hip-meta { text-align: center; font-size: 7pt; letter-spacing: .1em; text-transform: uppercase; }
+    .ht-invoice-preview .hip-rule { border-top: 1px solid #000; }
+    .ht-invoice-preview .hip-rule.dashed { border-top: 1px dashed #000; }
+    .ht-invoice-preview .hip-row { display: flex; justify-content: space-between; gap: 6px; direction: rtl; }
+    .ht-invoice-preview .hip-row.total { font-weight: 700; font-size: 10pt; }
+    .ht-invoice-preview .hip-footer { text-align: center; font-size: 7pt; margin-top: 1mm; }
+
+    .ht-logo-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .ht-logo-preview {
+      width: 52px; height: 52px; border-radius: 12px; border: 1px solid var(--border);
+      display: grid; place-items: center; background: rgba(255, 255, 255, .04); overflow: hidden; color: var(--text-tertiary);
+    }
+    .ht-logo-preview img { width: 100%; height: 100%; object-fit: contain; }
+    .ht-logo-preview svg { width: 20px; height: 20px; }
+    .ht-logo-btn { cursor: pointer; }
+
+    /* ─── Thermal label print: only the 60×40mm sticker reaches the printer ─── */
+    @page { size: 60mm 40mm; margin: 0; }
+
+    @media print {
+      html, body { background: #ffffff !important; }
+      body * { visibility: hidden; }
+      .label-preview, .label-preview * { visibility: visible; }
+      .label-preview {
+        position: absolute; left: 0; top: 0;
+        width: 60mm; height: 40mm; border: none; margin: 0; padding: 3mm 3.5mm;
+        border-radius: 0; box-shadow: none; background: #ffffff; color: #000000;
+      }
+      @page { size: 60mm 40mm; margin: 0; }
+    }
+
+    @media (max-width: 960px) {
+      .ht-label-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .ht-panel { padding: var(--space-4); border-radius: 18px; }
+      .ht-log-row { grid-template-columns: 30px minmax(0, 1fr) auto; }
+      .ht-log-time { display: none; }
+      .ht-tab { padding: 9px 13px; }
+      .ht-scan-btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="../shared/js/core.js?v=20261026d"></script>
+  <script src="../shared/js/data.js?v=20261026d"></script>
+  <script src="../shared/js/shell.js?v=20261026d"></script>
+  <script src="../shared/js/ui.js?v=20261026d"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="../shared/js/pages/hardware-tools.js?v=20261026d"></script>
+
+  <script id="kill-sw.js">
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        for (var i = 0; i < registrations.length; i++) registrations[i].unregister();
+      });
+    }
+  </script>
+</body>
+</html>

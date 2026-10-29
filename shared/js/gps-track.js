@@ -313,16 +313,27 @@
       });
     } catch (e) { return false; }
   }
-  function setMapState(el) {
-    var badge = el && el.parentNode && el.parentNode.querySelector('.dsg-map-badge');
+  function setMapState(el, force) {
+    var badge = el && (el.querySelector('.dsg-map-badge') || (el.parentNode && el.parentNode.querySelector('.dsg-map-badge')));
     if (!badge) return;
-    if (deliveryActive()) {
+    if (force || deliveryActive()) {
       badge.textContent = '📍 موقع المندوب مباشر';
       badge.style.color = '#82FF1F';
     } else {
       badge.textContent = '⏸ بانتظار بدء التوصيل';
       badge.style.color = '#FBBF24';
     }
+  }
+
+  /* Standalone maps (customer / driver tracking) need the live badge too. */
+  function ensureMapBadge(el) {
+    if (!el || el.querySelector('.dsg-map-badge')) return;
+    var badge = document.createElement('div');
+    badge.className = 'dsg-map-badge';
+    badge.setAttribute('role', 'status');
+    badge.setAttribute('aria-live', 'polite');
+    badge.textContent = '📍 موقع المندوب مباشر';
+    el.appendChild(badge);
   }
 
   function ensureLiveUi(el, role) {
@@ -368,13 +379,14 @@
     }, 350);
   }
 
-  function startSim(el, st) {
-    if (st.timer) return;
-    if (!deliveryActive()) { setMapState(el); return; }
-    setMapState(el);
+  function startSim(el, st, force) {
+    if (force) st.force = true;
+    if (st.timer) { setMapState(el, st.force); return; }
+    if (!st.force && !deliveryActive()) { setMapState(el); return; }
+    setMapState(el, st.force);
     st.timer = setInterval(function () {
       if (!el.isConnected) { clearInterval(st.timer); st.timer = null; return; }
-      if (!deliveryActive()) {
+      if (!st.force && !deliveryActive()) {
         clearInterval(st.timer); st.timer = null;
         setMapState(el);
         return;
@@ -404,6 +416,7 @@
     if (!el) return;
     injectCSS();
     if (!el.id) el.id = 'dstMap_' + Math.random().toString(36).slice(2, 7);
+    ensureMapBadge(el);
     if (!el._dsLocationListener) {
       el._dsLocationListener = function () { if (el.isConnected) renderMap(el); };
       window.addEventListener('ds:location-update', el._dsLocationListener);
@@ -521,6 +534,181 @@
     messageStore: openStoreOwnerChat, deliveryActive: deliveryActive
   };
 
+  /* ─── Fleet map — every active rider, moving live (admin) ─── */
+  function fleetMap(host, opts) {
+    if (!host) return null;
+    injectCSS();
+    opts = opts || {};
+    var DSref = window.DS || {};
+    var data = DSref.data || {};
+    var active = (data.orders || []).filter(function (o) {
+      return ['pending', 'confirmed', 'preparing', 'delivering'].indexOf(o.status) > -1;
+    });
+    var drivers = active.map(function (o, i) {
+      var tn = (data.tenantById ? data.tenantById(o.tenant_id) : null) || {};
+      var cust = o.customer || {};
+      var start = [Number(tn.lat) || DST_CENTER[0], Number(tn.lng) || DST_CENTER[1]];
+      var dest = [Number(cust.lat) || start[0] + 0.024, Number(cust.lng) || start[1] + 0.021];
+      var f = 0.12 + (i % 5) * 0.12;
+      return {
+        order: o,
+        start: start,
+        dest: dest,
+        pos: [start[0] + (dest[0] - start[0]) * f, start[1] + (dest[1] - start[1]) * f],
+        rider: o.driver_name || (o.delivery_company_name || 'Rider'),
+        delivered: o.status === 'delivering'
+      };
+    });
+
+    if (opts.height) { host.style.height = opts.height + 'px'; host.style.minHeight = opts.height + 'px'; }
+    host.classList.add('map-card');
+    if (!host.id) host.id = 'dsFleet_' + Math.random().toString(36).slice(2, 7);
+
+    var legend = host.parentNode && host.parentNode.querySelector('[data-fleet-legend]');
+    if (!legend && host.parentNode) {
+      legend = document.createElement('div');
+      legend.className = 'dsf-legend';
+      legend.setAttribute('data-fleet-legend', '');
+      host.parentNode.insertBefore(legend, host);
+    }
+    function legendMarkup() {
+      if (!drivers.length) {
+        return '<span class="dsf-empty">' + (DS.lang() === 'en' ? 'No active riders right now.' : 'لا يوجد مندوبون نشطون الآن.') + '</span>';
+      }
+      return drivers.map(function (d, i) {
+        return '<span class="dsf-chip"><i class="dsf-dot t' + (i % 3) + '"></i>' +
+          esc(d.order.order_no) + ' · ' + esc(DS.data.statusLabel(d.order.status)) +
+          '<b>' + esc(String(d.rider).split('·')[0].trim()) + '</b></span>';
+      }).join('') +
+        '<span class="dsf-live"><i></i>' + (DS.lang() === 'en' ? 'Live' : 'مباشر') + '</span>';
+    }
+    if (legend) legend.innerHTML = legendMarkup();
+
+    var timer = null;
+    var map = null;
+    var markers = [], lines = [];
+
+    function refreshLegend() { if (legend) legend.innerHTML = legendMarkup(); }
+
+    function step() {
+      drivers.forEach(function (d) {
+        var remain = distanceKm(d.pos, d.dest);
+        if (remain <= 0.04) d.pos = d.start.slice();
+        else d.pos = [d.pos[0] + (d.dest[0] - d.pos[0]) * 0.06, d.pos[1] + (d.dest[1] - d.pos[1]) * 0.06];
+      });
+    }
+
+    loadLeaflet(function (ok) {
+      if (ok && window.L) {
+        try {
+          map = maps && maps.get(host);
+          if (!map) {
+            map = L.map(host, { zoomControl: true, attributionControl: true });
+            L.tileLayer(DST_TILE_URL, {
+              maxZoom: 19,
+              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            if (maps) maps.set(host, map);
+            var center = drivers.length ? drivers[0].pos : DST_CENTER;
+            map.setView(center, 12);
+          }
+          markers.forEach(function (m) { m.remove(); });
+          lines.forEach(function (l) { l.remove(); });
+          markers = []; lines = [];
+          var colors = ['#82FF1F', '#60A5FA', '#F59E0B'];
+          drivers.forEach(function (d, i) {
+            var ico = L.divIcon({
+              className: 'dsf-driver',
+              html: '<div class="dst-moto-bubble" style="font-size:18px;line-height:1;border-color:' + colors[i % 3] + '">🛵</div>',
+              iconSize: [38, 38], iconAnchor: [19, 19]
+            });
+            markers.push(L.marker(d.pos, { icon: ico, zIndexOffset: 500 + i })
+              .bindTooltip(d.order.order_no + ' · ' + String(d.rider).split('·')[0].trim(), { direction: 'top', offset: [0, -20] })
+              .addTo(map));
+            lines.push(L.polyline([d.pos, d.dest], {
+              color: colors[i % 3], weight: 3, opacity: 0.75, dashArray: '8 7', lineCap: 'round'
+            }).addTo(map));
+          });
+          if (drivers.length > 1) {
+            try { map.fitBounds(L.latLngBounds(drivers.map(function (d) { return d.pos; })), { padding: [46, 46], maxZoom: 14 }); } catch (e) {}
+          }
+          setTimeout(function () { map.invalidateSize(); }, 120);
+          if (timer) clearInterval(timer);
+          timer = setInterval(function () {
+            if (!host.isConnected) { clearInterval(timer); timer = null; return; }
+            step();
+            drivers.forEach(function (d, i) {
+              if (markers[i]) markers[i].setLatLng(d.pos);
+              if (lines[i]) lines[i].setLatLngs([d.pos, d.dest]);
+            });
+            refreshLegend();
+          }, 2000);
+        } catch (e) {
+          console.warn('[DSFleet] map error', e);
+          mockFleet();
+        }
+        return;
+      }
+      mockFleet();
+    });
+
+    function mockFleet() {
+      host.innerHTML = '';
+      var canvas = document.createElement('canvas');
+      var r = host.getBoundingClientRect();
+      canvas.width = r.width || 520; canvas.height = r.height || 320;
+      host.appendChild(canvas);
+      var ctx = canvas.getContext('2d');
+      function draw() {
+        var W = canvas.width, H = canvas.height;
+        ctx.fillStyle = '#0E0E11'; ctx.fillRect(0, 0, W, H);
+        ctx.strokeStyle = 'rgba(255,255,255,.05)'; ctx.lineWidth = 1;
+        for (var i = 0; i < W; i += 40) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke(); }
+        for (var j = 0; j < H; j += 40) { ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(W, j); ctx.stroke(); }
+        var lats = drivers.map(function (d) { return d.pos[0]; }).concat([DST_CENTER[0]]);
+        var lngs = drivers.map(function (d) { return d.pos[1]; }).concat([DST_CENTER[1]]);
+        var minLat = Math.min.apply(null, lats) - 0.01, maxLat = Math.max.apply(null, lats) + 0.01;
+        var minLng = Math.min.apply(null, lngs) - 0.01, maxLng = Math.max.apply(null, lngs) + 0.01;
+        function pt(p) {
+          return {
+            x: 30 + ((p[1] - minLng) / (maxLng - minLng || 0.01)) * (W - 60),
+            y: H - 30 - ((p[0] - minLat) / (maxLat - minLat || 0.01)) * (H - 60)
+          };
+        }
+        var colors = ['#82FF1F', '#60A5FA', '#F59E0B'];
+        drivers.forEach(function (d, i) {
+          var a = pt(d.pos), b = pt(d.dest);
+          ctx.strokeStyle = colors[i % 3]; ctx.lineWidth = 2; ctx.setLineDash([7, 6]);
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); ctx.setLineDash([]);
+          ctx.fillStyle = colors[i % 3];
+          ctx.beginPath(); ctx.arc(a.x, a.y, 8, 0, 7); ctx.fill();
+          ctx.fillStyle = '#0A0A0B'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText('🛵', a.x, a.y);
+        });
+        if (!drivers.length) {
+          ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.font = 'bold 13px sans-serif';
+          ctx.fillText(DS.lang() === 'en' ? 'No active riders' : 'لا يوجد مندوبون نشطون', W / 2, H / 2);
+        }
+      }
+      draw();
+      if (timer) clearInterval(timer);
+      timer = setInterval(function () {
+        if (!host.isConnected) { clearInterval(timer); timer = null; return; }
+        step(); draw(); refreshLegend();
+      }, 2000);
+    }
+
+    return {
+      element: host,
+      refresh: function () { refreshLegend(); },
+      stop: function () {
+        if (timer) { clearInterval(timer); timer = null; }
+        markers.forEach(function (m) { m.remove(); }); markers = [];
+        lines.forEach(function (l) { l.remove(); }); lines = [];
+      }
+    };
+  }
+
   /* Compatibility adapter — dashboards/tracking pages call DS.gps.mount(host, opts).
      It renders the live OSM map and returns a small handle with stop(). */
   if (window.DS) {
@@ -536,12 +724,30 @@
         return {
           element: host,
           refresh: function () { renderMap(host, role); },
+          simulate: function () {
+            if (!host._dstState) renderMap(host, role);
+            var st = host._dstState;
+            if (!st) return false;
+            startSim(host, st, true);
+            setMapState(host, true);
+            return true;
+          },
           stop: function () {
             var st = host._dstState;
             if (st && st.timer) { clearInterval(st.timer); st.timer = null; }
           }
         };
-      }
+      },
+      simulate: function (host) {
+        if (!host) return false;
+        var st = host._dstState;
+        if (!st) { renderMap(host); st = host._dstState; }
+        if (!st) return false;
+        startSim(host, st, true);
+        setMapState(host, true);
+        return true;
+      },
+      fleet: fleetMap
     };
   }
 })();

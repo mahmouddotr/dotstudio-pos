@@ -340,4 +340,17 @@
   }
 
   render();
+
+  /* ────────────────────── HARDWARE BARCODE SCANNER ────────────────────── */
+  if (DS.mountBarcodeScanner) {
+    DS.mountBarcodeScanner({
+      getProducts: function () { return products(); },
+      onFound: function (p) {
+        addToCart(p.id);
+      },
+      onNotFound: function (code) {
+        DS.toast('Product Not Found', 'danger');
+      }
+    });
+  }
 })();

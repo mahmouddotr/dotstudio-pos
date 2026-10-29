@@ -609,6 +609,7 @@ html[lang="ar"] .mkt-cta h2{letter-spacing:0}
   .ds-sidebar{position:fixed;inset-block:0;inset-inline-start:0;width:min(300px,86vw);transform:translateX(-105%);transition:transform var(--transition-slow);z-index:var(--z-drawer);box-shadow:var(--shadow-xl)}
   html[dir="rtl"] .ds-sidebar{transform:translateX(105%)}
   .ds-sidebar.open{transform:translateX(0)}
+  html[dir="rtl"] .ds-sidebar.open{transform:translateX(0)}
   .ds-sidebar-close{display:grid}
   .ds-menu-btn{display:grid}
   .ds-content{padding:20px 18px 80px}

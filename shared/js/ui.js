@@ -351,25 +351,157 @@
   DS.map = { markup: mapMarkup, mount: mapMount };
 
   /* ──────────────────────────── RECEIPT ──────────────────────────── */
-  function printReceipt(data, kind) {
-    var isOrder = kind !== 'invoice' && !!data.order_no;
+  /* Shared 80 mm thermal receipt. Both the on-screen paper (invoices
+     page / POS) and the standalone print window render the exact same
+     `.invoice-print-area` markup, so what you see is what prints. */
+  function receiptSettings() {
+    function read(k, d) { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }
+    return { name: read('store_name', ''), footer: read('footer_text', ''), logo: read('store_logo', '') };
+  }
+  DS.receiptSettings = receiptSettings;
+
+  function receiptTrackingUrl(no) {
+    try {
+      return new URL(DS.url('customer/tracking.html?order=' + encodeURIComponent(no)), window.location.href).href;
+    } catch (e) {
+      return DS.url('customer/tracking.html?order=' + encodeURIComponent(no));
+    }
+  }
+
+  function thermalInvoice(data) {
+    var EN = DS.lang() === 'en';
+    var settings = receiptSettings();
+    var tenant = (DS.data && DS.data.tenantById) ? (DS.data.tenantById(data.tenant_id) || {}) : {};
+    var storeName = settings.name || DS.loc(tenant, 'name') || tenant.name || 'DotStudio POS';
+    var footer = settings.footer || (EN ? 'Thank you for shopping with us' : 'شكراً لتعاملكم معنا');
     var no = data.order_no || data.invoice_no || '—';
+    var trackingUrl = receiptTrackingUrl(no);
     var items = data.items || [];
+
+    var meta = function (label, value, cls) {
+      return '<div class="ipa-meta-row' + (cls ? ' ' + cls : '') + '"><span>' + esc(label) + '</span><b>' + esc(value) + '</b></div>';
+    };
+
     var rows = items.map(function (it) {
-      return '<tr><td>' + esc(DS.lang() === 'en' ? (it.name_en || it.name) : it.name) + '</td><td style="text-align:center">' + it.qty + '</td><td style="text-align:end">' + money(it.price * it.qty) + '</td></tr>';
+      var name = EN ? (it.name_en || it.name) : it.name;
+      /* Old invoice snapshots only stored the Arabic name — resolve the
+         English product name by id so EN receipts stay fully English. */
+      if (EN && !it.name_en && it.product_id && DS.data && DS.data.products) {
+        var prod = DS.data.products.filter(function (p) { return p.id === it.product_id; })[0];
+        if (prod && prod.name_en) name = prod.name_en;
+      }
+      var vendor = it.tenant_id && it.tenant_id !== data.tenant_id && DS.data.tenantById ? DS.data.tenantById(it.tenant_id) : null;
+      var vendorName = vendor ? DS.loc(vendor, 'name') : '';
+      return '<tr>' +
+        '<td class="ipa-item-name">' + esc(name) + (vendorName ? '<small>' + esc(EN ? 'from ' + vendorName : 'من متجر ' + vendorName) + '</small>' : '') + '</td>' +
+        '<td class="ipa-num">' + (Number(it.qty) || 0) + '</td>' +
+        '<td class="ipa-num">' + money(it.price) + '</td>' +
+        '<td class="ipa-num ipa-line-total">' + money((Number(it.qty) || 0) * (Number(it.price) || 0)) + '</td>' +
+      '</tr>';
     }).join('');
-    var tenant = DS.data.tenantById(data.tenant_id) || {};
-    var html = '<!DOCTYPE html><html lang="' + DS.lang() + '" dir="' + (DS.lang() === 'ar' ? 'rtl' : 'ltr') + '"><head><meta charset="utf-8"><title>' + esc(no) + '</title>' +
-      '<style>body{font-family:Inter,"IBM Plex Sans Arabic",sans-serif;padding:24px;max-width:420px;margin:auto;color:#111}h1{font-size:18px;margin:0 0 2px}.muted{color:#777;font-size:11px}table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}th,td{padding:6px 0;border-bottom:1px dashed #ddd}th{text-align:start;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#777}.total{display:flex;justify-content:space-between;font-size:16px;font-weight:700;padding-top:8px;border-top:2px solid #111}.line{display:flex;justify-content:space-between;font-size:12px;padding:3px 0}.brand{font-family:sans-serif;font-weight:800;letter-spacing:-.03em}@media print{body{padding:0}}</style></head><body>' +
-      '<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div class="brand">DotStudio<span style="color:#4CB800">®</span></div><div class="muted">' + esc(tenant.name || 'POS') + '</div></div><div style="text-align:end"><h1>' + esc(no) + '</h1><div class="muted">' + esc(DS.datetime(data.created_at)) + '</div></div></div>' +
-      '<table><thead><tr><th>' + esc(t('item')) + '</th><th style="text-align:center">' + esc(t('quantity')) + '</th><th style="text-align:end">' + esc(t('total')) + '</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-      '<div class="line"><span>' + esc(t('subtotal')) + '</span><span>' + money(data.subtotal) + '</span></div>' +
-      (data.discount ? '<div class="line"><span>' + esc(t('discount')) + '</span><span>- ' + money(data.discount) + '</span></div>' : '') +
-      (data.delivery_fee ? '<div class="line"><span>' + esc(t('delivery')) + '</span><span>' + money(data.delivery_fee) + '</span></div>' : '') +
-      '<div class="total"><span>' + esc(t('total')) + '</span><span>' + money(data.total) + '</span></div>' +
-      '<div class="muted" style="margin-top:18px;text-align:center">' + esc(t('builtBy')) + ' · ' + esc(t('receipt')) + '</div>' +
-      '<script>window.onload=function(){setTimeout(function(){window.print()},120)}<\/script></body></html>';
-    var w = window.open('', '_blank', 'width=460,height=700');
+
+    var subtotal = data.subtotal != null ? data.subtotal : items.reduce(function (s, it) { return s + (Number(it.qty) || 0) * (Number(it.price) || 0); }, 0);
+    var delivery = Number(data.delivery_fee) || 0;
+    var discount = Number(data.discount) || 0;
+
+    return '<div class="invoice-print-area" id="print-invoice-area" dir="' + (EN ? 'ltr' : 'rtl') + '">' +
+      (settings.logo ? '<div class="ipa-logo"><img src="' + esc(settings.logo) + '" alt=""></div>' : '') +
+      '<div class="ipa-store">' + esc(storeName) + '</div>' +
+      '<div class="ipa-tax">' + esc(EN ? 'TAX INVOICE' : 'فاتورة ضريبية') + '</div>' +
+      '<div class="ipa-sep"></div>' +
+      '<div class="ipa-meta">' +
+        meta(EN ? 'Order' : 'رقم الطلب', no) +
+        (data.invoice_no && data.invoice_no !== no ? meta(EN ? 'Invoice' : 'الفاتورة', data.invoice_no) : '') +
+        meta(t('date'), DS.datetime(data.created_at || Date.now())) +
+        (data.cashier_name ? meta(t('cashier'), data.cashier_name) : '') +
+        (data.customer && data.customer.name ? meta(t('customerLabel'), DS.loc(data.customer, 'name')) : '') +
+        meta(t('paymentMethod'), t(data.payment_method || data.method || 'cash')) +
+      '</div>' +
+      '<div class="ipa-sep dashed"></div>' +
+      '<table class="ipa-items"><thead><tr>' +
+        '<th class="ipa-th-name">' + esc(t('item')) + '</th>' +
+        '<th class="ipa-num">' + esc(t('quantity')) + '</th>' +
+        '<th class="ipa-num">' + esc(t('price')) + '</th>' +
+        '<th class="ipa-num">' + esc(t('total')) + '</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<div class="ipa-sep dashed"></div>' +
+      '<div class="ipa-totals">' +
+        '<div class="ipa-sum"><span>' + esc(t('subtotal')) + '</span><b>' + money(subtotal) + '</b></div>' +
+        (discount ? '<div class="ipa-sum"><span>' + esc(t('discount')) + '</span><b>− ' + money(discount) + '</b></div>' : '') +
+        (delivery ? '<div class="ipa-sum"><span>' + esc(t('delivery')) + '</span><b>' + money(delivery) + '</b></div>' : '') +
+        '<div class="ipa-sum ipa-grand"><span>' + esc(t('total')) + '</span><b>' + money(data.total != null ? data.total : subtotal + delivery - discount) + '</b></div>' +
+      '</div>' +
+      '<div class="ipa-sep dashed"></div>' +
+      '<div class="ipa-qr">' +
+        '<div class="ipa-qr-box" id="invoiceQrBox"></div>' +
+        '<div class="ipa-qr-title">' + esc(EN ? 'Scan to track your order' : 'امسح لمتابعة طلبك') + '</div>' +
+        '<div class="ipa-qr-url">' + esc(trackingUrl) + '</div>' +
+      '</div>' +
+      '<div class="ipa-sep"></div>' +
+      '<div class="ipa-footer">' + esc(footer) + '</div>' +
+    '</div>';
+  }
+  DS.thermalInvoice = thermalInvoice;
+
+  var THERMAL_CSS = [
+    '@page { size: 80mm auto; margin: 0; }',
+    '.invoice-print-area { width: 80mm; box-sizing: border-box; margin: 0 auto; padding: 5mm; background: #ffffff; color: #000000; font-family: "Courier New", Courier, monospace; font-size: 11px; line-height: 1.45; -webkit-print-color-adjust: exact; print-color-adjust: exact; }',
+    '.invoice-print-area .ipa-logo { text-align: center; margin-bottom: 2mm; }',
+    '.invoice-print-area .ipa-logo img { max-height: 12mm; max-width: 46mm; object-fit: contain; }',
+    '.invoice-print-area .ipa-store { text-align: center; font-size: 17px; font-weight: 700; letter-spacing: .04em; line-height: 1.2; word-break: break-word; }',
+    '.invoice-print-area .ipa-tax { text-align: center; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; margin-top: 1mm; }',
+    '.invoice-print-area .ipa-sep { border-top: 1px dashed #000; margin: 2.5mm 0; }',
+    '.invoice-print-area .ipa-sep.dashed { border-top: 1px dashed #000; }',
+    '.invoice-print-area .ipa-meta { display: flex; flex-direction: column; gap: .8mm; font-size: 10px; }',
+    '.invoice-print-area .ipa-meta-row { display: flex; justify-content: space-between; gap: 4mm; }',
+    '.invoice-print-area .ipa-meta-row span { color: #333; }',
+    '.invoice-print-area .ipa-meta-row b { font-weight: 700; text-align: end; word-break: break-word; }',
+    '.invoice-print-area .ipa-items { width: 100%; border-collapse: collapse; font-size: 10px; table-layout: fixed; }',
+    '.invoice-print-area .ipa-items th { font-size: 8.5px; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px dashed #000; padding: 0 0 1.2mm; text-align: start; font-weight: 700; }',
+    '.invoice-print-area .ipa-items td { padding: 1.4mm 0; vertical-align: top; text-align: start; border-bottom: 1px dotted #999; }',
+    '.invoice-print-area .ipa-items tr:last-child td { border-bottom: none; }',
+    '.invoice-print-area .ipa-th-name { width: 46%; }',
+    '.invoice-print-area .ipa-num { text-align: end !important; white-space: nowrap; }',
+    '.invoice-print-area .ipa-item-name { word-break: break-word; }',
+    '.invoice-print-area .ipa-item-name small { display: block; font-size: 8px; color: #444; }',
+    '.invoice-print-area .ipa-line-total { font-weight: 700; }',
+    '.invoice-print-area .ipa-totals { display: flex; flex-direction: column; gap: 1mm; font-size: 10.5px; }',
+    '.invoice-print-area .ipa-sum { display: flex; justify-content: space-between; gap: 4mm; }',
+    '.invoice-print-area .ipa-sum b { font-weight: 700; }',
+    '.invoice-print-area .ipa-grand { font-size: 14px; font-weight: 700; border-top: 1px dashed #000; padding-top: 1.6mm; margin-top: .6mm; }',
+    '.invoice-print-area .ipa-qr { display: flex; flex-direction: column; align-items: center; gap: 1mm; text-align: center; }',
+    '.invoice-print-area .ipa-qr-box { width: 22mm; height: 22mm; display: grid; place-items: center; overflow: hidden; }',
+    '.invoice-print-area .ipa-qr-box img, .invoice-print-area .ipa-qr-box canvas { width: 22mm !important; height: 22mm !important; display: block; }',
+    '.invoice-print-area .ipa-qr-title { font-size: 9px; font-weight: 700; }',
+    '.invoice-print-area .ipa-qr-url { font-size: 7px; color: #333; word-break: break-all; direction: ltr; max-width: 100%; }',
+    '.invoice-print-area .ipa-footer { text-align: center; font-size: 9px; line-height: 1.5; }',
+    '@media print {',
+    '  html, body { margin: 0 !important; padding: 0 !important; background: #ffffff !important; }',
+    '  body * { visibility: hidden !important; }',
+    '  .invoice-print-area, .invoice-print-area * { visibility: visible !important; }',
+    '  .invoice-print-area { position: absolute !important; left: 0 !important; top: 0 !important; width: 80mm !important; margin: 0 !important; padding: 5mm !important; box-sizing: border-box !important; background: #ffffff !important; color: #000000 !important; font-family: "Courier New", Courier, monospace !important; }',
+    '}'
+  ].join('\n');
+  DS.thermalCss = THERMAL_CSS;
+
+  function printReceipt(data, kind) {
+    var no = data.order_no || data.invoice_no || '—';
+    var trackingUrl = receiptTrackingUrl(no);
+    var html = '<!DOCTYPE html><html lang="' + DS.lang() + '" dir="' + (DS.lang() === 'ar' ? 'rtl' : 'ltr') + '">' +
+      '<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">' +
+      '<title>' + esc(no) + '</title>' +
+      '<style>body{margin:0;padding:0;background:#fff;display:flex;justify-content:center}' + THERMAL_CSS + '</style>' +
+      '<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>' +
+      '</head><body>' + thermalInvoice(data) +
+      '<script>' +
+      'function dsThermalPrint(){' +
+      '  var box=document.getElementById("invoiceQrBox");' +
+      '  if(window.QRCode&&box&&!box.firstChild){try{new QRCode(box,{text:' + JSON.stringify(trackingUrl) + ',width:88,height:88,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});}catch(e){}}' +
+      '  setTimeout(function(){try{window.focus();window.print();}catch(e){}},320);' +
+      '}' +
+      'window.onload=dsThermalPrint;' +
+      '<\/script></body></html>';
+    var w = window.open('', '_blank', 'width=460,height=760');
     if (w) { w.document.open(); w.document.write(html); w.document.close(); }
     else DS.toast(t('error'), 'error');
   }

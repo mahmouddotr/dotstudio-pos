@@ -8,22 +8,499 @@
   <meta name="theme-color" content="#000000">
   <link rel="icon" type="image/png" href="../assets/img/LOGO-ICON-DONE.png">
   <link rel="stylesheet" href="../assets/css/fonts.css">
-  <link rel="stylesheet" href="../shared/css/design-system.css?v=20261025k">
-  <link rel="stylesheet" href="../shared/css/components.css?v=20261025k">
-  <link rel="stylesheet" href="../shared/css/app.css?v=20261025k">
-  <link rel="stylesheet" href="../shared/css/storefront.css?v=20261025k">
-  <script src="../shared/js/i18n.js?v=20261025k"></script>
+  <link rel="stylesheet" href="../shared/css/design-system.css?v=20261026e">
+  <link rel="stylesheet" href="../shared/css/components.css?v=20261026e">
+  <link rel="stylesheet" href="../shared/css/app.css?v=20261026e">
+  <link rel="stylesheet" href="../shared/css/storefront.css?v=20261026e">
+  <script src="../shared/js/i18n.js?v=20261026e"></script>
 
-</head>
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       BLAZITY / APPLE MINIMAL OVERRIDE — storefront only.
+       Pure presentation: no markup or JS behaviour is changed.
+       ═══════════════════════════════════════════════════════════════ */
+    .sf-page {
+      gap: clamp(28px, 3.6vw, 56px);
+      padding-bottom: 40px;
+    }
+
+    /* ───────────────────────── HERO: FULL BLEED ───────────────────────── */
+    .sf-page .sf-hero {
+      width: calc(100% + (var(--sf-bleed, 28px) * 2));
+      margin-inline: calc(var(--sf-bleed, 28px) * -1);
+      margin-top: calc(var(--sf-bleed-top, 26px) * -1);
+      min-height: clamp(500px, 76vh, 780px);
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      background: #000;
+    }
+    .sf-page .sf-preview-note + .sf-hero { margin-top: 0; }
+
+    .sf-page .sf-hero-bg img {
+      opacity: 1;
+      transform: scale(1.02);
+      filter: saturate(1.02) contrast(1.02);
+    }
+    .sf-page .sf-hero-bg::after,
+    html[dir="rtl"] .sf-page .sf-hero-bg::after {
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.34) 0%, rgba(0, 0, 0, 0.12) 34%, rgba(0, 0, 0, 0.70) 76%, rgba(0, 0, 0, 0.94) 100%),
+        linear-gradient(0deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0) 45%);
+    }
+
+    .sf-page .sf-hero-inner {
+      grid-template-columns: minmax(0, 1fr) minmax(240px, 330px);
+      align-items: end;
+      gap: clamp(26px, 4vw, 64px);
+      min-height: inherit;
+      padding: clamp(28px, 5vw, 84px);
+    }
+    .sf-page .sf-hero-copy { max-width: min(760px, 100%); }
+
+    /* Floating glass product cards (right rail on desktop, swipe row on mobile). */
+    .sf-page .sf-hero-cards {
+      display: flex;
+      align-self: center;
+      width: 100%;
+      gap: 10px;
+    }
+    .sf-page .sf-float-card,
+    .sf-page .sf-float-card:nth-child(n) {
+      width: 100%;
+      transform: none;
+      padding: 10px 14px 10px 10px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      -webkit-backdrop-filter: blur(26px) saturate(150%);
+      backdrop-filter: blur(26px) saturate(150%);
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+    }
+    html[dir="rtl"] .sf-page .sf-float-card { padding: 10px 10px 10px 14px; }
+    .sf-page .sf-float-card:hover,
+    .sf-page .sf-float-card:nth-child(n):hover {
+      transform: translateY(-3px);
+      background: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.32);
+    }
+    .sf-page .sf-float-card img { width: 50px; height: 50px; border-radius: 12px; }
+    .sf-page .sf-float-card b { color: #fff; font-weight: 600; }
+    .sf-page .sf-float-card i { color: rgba(255, 255, 255, 0.66); font-weight: 500; }
+
+    .sf-page .sf-kicker {
+      background: rgba(255, 255, 255, 0.10);
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      color: #fff;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 8px 14px;
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+    }
+
+    .sf-page .sf-title {
+      margin-top: 20px;
+      font-size: clamp(42px, 5.4vw, 82px);
+      line-height: 0.96;
+      letter-spacing: -0.05em;
+      font-weight: 800;
+      color: #fff;
+      text-wrap: balance;
+    }
+    html[lang="ar"] .sf-page .sf-title {
+      font-size: clamp(34px, 4.4vw, 66px);
+      line-height: 1.06;
+      letter-spacing: -0.01em;
+    }
+    .sf-page .sf-title span { color: #fff; opacity: 0.5; }
+
+    .sf-page .sf-sub {
+      max-width: 620px;
+      margin-top: 20px;
+      font-size: clamp(15px, 1.25vw, 19px);
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.80);
+    }
+
+    .sf-page .sf-hero-cta { margin-top: 28px; gap: 10px; }
+    .sf-page .sf-hero .sf-cta {
+      height: 52px;
+      padding: 0 28px;
+      border-radius: var(--radius-full);
+      font-weight: 600;
+      font-size: var(--fs-sm);
+      transition: transform 240ms var(--ease-out), background 240ms, color 240ms, border-color 240ms;
+    }
+    .sf-page .sf-hero .sf-cta:hover { transform: translateY(-2px); }
+    .sf-page .sf-hero .sf-cta.btn-primary {
+      background: #fff;
+      border-color: #fff;
+      color: #0A0A0B;
+      box-shadow: none;
+    }
+    .sf-page .sf-hero .sf-cta.btn-secondary {
+      background: rgba(255, 255, 255, 0.10);
+      border-color: rgba(255, 255, 255, 0.30);
+      color: #fff;
+      -webkit-backdrop-filter: blur(18px);
+      backdrop-filter: blur(18px);
+    }
+
+    .sf-page .sf-hero-meta { margin-top: 30px; gap: 8px; }
+    .sf-page .sf-meta-pill {
+      background: rgba(255, 255, 255, 0.09);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: rgba(255, 255, 255, 0.92);
+      font-weight: 500;
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+    }
+    .sf-page .sf-offline-note { border-color: rgba(255, 255, 255, 0.24); }
+
+    /* ───────────────────── STORE DIRECTORY / TOOLBAR ──────────────────── */
+    .sf-page .sf-store-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      box-shadow: none;
+      transition: border-color 200ms var(--ease-out), transform 200ms var(--ease-out);
+    }
+    .sf-page .sf-store-card:hover { transform: translateY(-2px); }
+    .sf-page .sf-store-card.active { border-color: var(--text-primary); box-shadow: none; }
+    .sf-page .sf-store-card.is-offline { opacity: 0.7; }
+    .sf-page .sf-store-logo { border-radius: 12px; }
+    .sf-page .sf-store-all .sf-store-logo-all {
+      background: var(--surface-2);
+      color: var(--text-secondary);
+      border-radius: 12px;
+    }
+    .sf-page .sf-store-open { color: var(--success); }
+
+    .sf-page .sf-toolbar { gap: 18px; }
+    .sf-page .sf-toolbar-head { align-items: flex-end; }
+    .sf-page .sf-eyebrow {
+      color: var(--text-tertiary);
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .sf-page .sf-section-title {
+      font-size: clamp(26px, 2.8vw, 42px);
+      font-weight: 700;
+      letter-spacing: -0.035em;
+      line-height: 1.1;
+    }
+    html[lang="ar"] .sf-page .sf-section-title { letter-spacing: 0; }
+
+    .sf-page .sf-search {
+      height: 48px;
+      padding-inline: 18px;
+      gap: 10px;
+      border-radius: var(--radius-full);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-tertiary);
+    }
+    .sf-page .sf-search input {
+      background: transparent;
+      border: 0;
+      height: 100%;
+      font-size: var(--fs-sm);
+      color: var(--text-primary);
+      box-shadow: none;
+      outline: none;
+    }
+    .sf-page .sf-search:focus-within { border-color: var(--text-secondary); }
+
+    .sf-page .sf-rail { gap: 8px; }
+    .sf-page .sf-cat {
+      height: 42px;
+      padding: 0 18px;
+      border-radius: var(--radius-full);
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: var(--fs-sm);
+      font-weight: 500;
+      transition: background 180ms, color 180ms, border-color 180ms;
+    }
+    .sf-page .sf-cat:hover { background: var(--surface-2); color: var(--text-primary); }
+    .sf-page .sf-cat.active {
+      background: var(--text-primary);
+      border-color: var(--text-primary);
+      color: var(--bg);
+      font-weight: 600;
+    }
+    .sf-page .sf-result-line {
+      font-size: var(--fs-xs);
+      color: var(--text-tertiary);
+      letter-spacing: 0.02em;
+    }
+
+    /* ────────────────────────── PRODUCT GRID ─────────────────────────── */
+    .sf-page .sf-groups { gap: clamp(34px, 4vw, 60px); }
+    .sf-page .sf-group-head {
+      padding-bottom: 14px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sf-page .sf-group-title {
+      font-size: clamp(20px, 1.9vw, 28px);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    html[lang="ar"] .sf-page .sf-group-title { letter-spacing: 0; }
+    .sf-page .sf-group-count {
+      font-size: var(--fs-2xs);
+      color: var(--text-tertiary);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* The product grid is declared once, in shared/css/storefront.css
+       (#products-grid). Do not override its columns here. */
+
+    .sf-page .sf-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      box-shadow: none;
+      transition: transform 260ms var(--ease-out), border-color 260ms var(--ease-out), box-shadow 260ms var(--ease-out);
+    }
+    .sf-page .sf-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--text-tertiary);
+      box-shadow: 0 22px 48px rgba(0, 0, 0, 0.22);
+    }
+    .sf-page .sf-card.just-added {
+      border-color: var(--text-primary);
+      box-shadow: none;
+    }
+    .sf-page .sf-card.is-out { opacity: 0.55; }
+
+    .sf-page .sf-card-media {
+      aspect-ratio: 1 / 1;
+      background: var(--surface-2);
+      box-shadow: none;
+    }
+    .sf-page .sf-card-media img { transition: transform 700ms var(--ease-out); }
+    .sf-page .sf-card:hover .sf-card-media img { transform: scale(1.035); }
+
+    .sf-page .sf-badge {
+      background: rgba(10, 10, 11, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 9.5px;
+      padding: 5px 9px;
+    }
+    .sf-page .sf-badge.lime { background: #fff; color: #0A0A0B; border-color: transparent; }
+    .sf-page .sf-badge.danger { background: rgba(255, 69, 58, 0.92); color: #fff; }
+
+    .sf-page .sf-quick {
+      background: rgba(10, 10, 11, 0.62);
+      border-color: rgba(255, 255, 255, 0.18);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    .sf-page .sf-card-body {
+      padding: 18px 20px 20px;
+      gap: 6px;
+    }
+    .sf-page .sf-card-cat {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      opacity: 1;
+    }
+    .sf-page .sf-card-name {
+      font-size: clamp(15px, 1.05vw, 17px);
+      font-weight: 600;
+      line-height: 1.35;
+      letter-spacing: -0.01em;
+      min-height: 0;
+      -webkit-line-clamp: 2;
+    }
+    /* Store name right under the product name — small, gray, no prefix. */
+    .sf-page .sf-card-store {
+      margin-top: 2px;
+      font-size: 0;
+      gap: 0;
+      color: var(--text-tertiary);
+    }
+    .sf-page .sf-card-store svg { display: none; }
+    .sf-page .sf-card-store span { font-size: 0; }
+    .sf-page .sf-card-store b {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      color: var(--text-secondary);
+      opacity: 0.9;
+    }
+    .sf-page .sf-card-store:hover b { color: var(--text-primary); }
+
+    .sf-page .sf-card-meta {
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+    .sf-page .sf-card-foot {
+      margin-top: auto;
+      padding-top: 16px;
+    }
+    .sf-page .sf-price {
+      font-size: clamp(16px, 1.2vw, 19px);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    /* Minimal circular "+" */
+    .sf-page .sf-add {
+      width: 44px;
+      height: 44px;
+      min-height: 44px;
+      border-radius: 50%;
+      background: transparent;
+      border: 1px solid var(--border-strong, var(--border));
+      color: var(--text-primary);
+      transition: transform 200ms var(--ease-out), background 200ms, color 200ms, border-color 200ms;
+    }
+    .sf-page .sf-add svg { width: 18px; height: 18px; stroke-width: 1.8; }
+    .sf-page .sf-add:hover {
+      background: var(--text-primary);
+      border-color: var(--text-primary);
+      color: var(--bg);
+      transform: scale(1.07);
+    }
+    .sf-page .sf-add.in-bag {
+      background: var(--text-primary);
+      border-color: var(--text-primary);
+      color: var(--bg);
+    }
+    .sf-page .sf-add:disabled { opacity: 0.3; }
+
+    .sf-page .sf-trust {
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: var(--surface);
+    }
+    .sf-page .sf-trust-ico {
+      background: var(--surface-2);
+      color: var(--text-secondary);
+      border-radius: 50%;
+    }
+
+    /* ─────────────────────────── RESPONSIVE ──────────────────────────── */
+    @media (max-width: 1280px) {
+      .sf-page .sf-hero { min-height: clamp(460px, 70vh, 680px); }
+    }
+    @media (max-width: 1080px) {
+      .sf-page .sf-hero { min-height: clamp(440px, 68vh, 620px); }
+      .sf-page .sf-hero-inner { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+      .sf-page .sf-hero-cards {
+        flex-direction: row;
+        align-self: stretch;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        scrollbar-width: none;
+      }
+      .sf-page .sf-hero-cards::-webkit-scrollbar { display: none; }
+      .sf-page .sf-float-card,
+      .sf-page .sf-float-card:nth-child(n) { width: 232px; flex: 0 0 232px; }
+    }
+    @media (max-width: 640px) {
+      .sf-page { gap: 26px; }
+      .sf-page .sf-hero { min-height: auto; }
+      .sf-page .sf-hero-inner { padding: 30px 20px 28px; }
+      .sf-page .sf-title { font-size: clamp(34px, 11vw, 46px); }
+      html[lang="ar"] .sf-page .sf-title { font-size: clamp(30px, 9vw, 40px); }
+      .sf-page .sf-sub { font-size: 14px; }
+      .sf-page .sf-hero-meta { margin-top: 22px; }
+      .sf-page .sf-card-media { aspect-ratio: 4 / 3; }
+      .sf-page .sf-card-body { padding: 14px 14px 16px; }
+      .sf-page .sf-toolbar-head { align-items: flex-start; }
+      .sf-page .sf-search { width: 100%; }
+    }
+  </style>
+
+  <script>
+    /* Keeps the hero edge-to-edge by matching the shell's real content padding. */
+    (function () {
+      function sync() {
+        var host = document.querySelector('.ds-content');
+        if (!host) return;
+        var cs = window.getComputedStyle(host);
+        host.style.setProperty('--sf-bleed', cs.paddingLeft || '28px');
+        host.style.setProperty('--sf-bleed-top', cs.paddingTop || '26px');
+      }
+      var raf = 0;
+      function schedule() { cancelAnimationFrame(raf); raf = requestAnimationFrame(sync); }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sync);
+      else sync();
+      window.addEventListener('load', sync);
+      window.addEventListener('resize', schedule);
+    })();
+  </script>
+
+
+    <style id="force-white-blazity">
+        body, html, .main-content, .content-area, #app { background-color: #FFFFFF !important; color: #000000 !important; }
+        .sidebar, .navbar, .header, .topbar { background-color: #FFFFFF !important; border-bottom: 1px solid #EAEAEA !important; color: #000 !important; }
+        .sidebar a, .navbar a { color: #000 !important; }
+        
+        /* تنسيق الهيرو سيكشن */
+        .hero-section, .hero, .banner { background: #F9F9F9 !important; border-radius: 20px; margin: 20px; }
+        
+        /* إجبار شبكة المنتجات */
+        .products-grid, #products-grid, .grid, .product-grid, .store-products {
+            display: grid !important;
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 25px !important;
+            padding: 20px !important;
+            background: #FFFFFF !important;
+        }
+        
+        /* كروت المنتجات */
+        .product-card, .card, .product-item {
+            background: #FFFFFF !important;
+            border: 1px solid #F0F0F0 !important;
+            border-radius: 16px !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
+            overflow: hidden !important;
+        }
+        
+        /* النصوص */
+        .product-card h3, .card h3, .product-name { color: #111 !important; font-weight: bold !important; }
+        .product-price, .price { color: #000 !important; font-weight: 900 !important; }
+        .store-name, .vendor { color: #777 !important; font-size: 12px !important; }
+        
+        /* شاشة الموبايل */
+        @media (max-width: 1024px) { .products-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+        @media (max-width: 600px) { .products-grid { grid-template-columns: 1fr !important; } }
+    </style>
+    </head>
+    
 
 <body>
   <div id="app"></div>
-  <script src="../shared/js/preview-session.js?v=20261025k"></script>
-  <script src="../shared/js/core.js?v=20261025k"></script>
-  <script src="../shared/js/data.js?v=20261025k"></script>
-  <script src="../shared/js/shell.js?v=20261025k"></script>
-  <script src="../shared/js/ui.js?v=20261025k"></script>
-  <script src="../shared/js/pages/storefront.js?v=20261025k"></script>
+  <script src="../shared/js/preview-session.js?v=20261026e"></script>
+  <script src="../shared/js/core.js?v=20261026e"></script>
+  <script src="../shared/js/data.js?v=20261026e"></script>
+  <script src="../shared/js/shell.js?v=20261026e"></script>
+  <script src="../shared/js/ui.js?v=20261026e"></script>
+  <script src="../shared/js/scanner.js?v=20261026e"></script>
+  <script src="../shared/js/pages/storefront.js?v=20261026e"></script>
 </body>
 
                 

@@ -1,0 +1,270 @@
+{
+  "results": [
+    {
+      "name": "1a hero renders",
+      "pass": true,
+      "detail": "hero 1160×684"
+    },
+    {
+      "name": "1b 4-column product grid on desktop",
+      "pass": true,
+      "detail": "columns=4"
+    },
+    {
+      "name": "1c floating hero product cards visible",
+      "pass": true,
+      "detail": "cards=3 visible=true"
+    },
+    {
+      "name": "1d no horizontal overflow (desktop)",
+      "pass": true,
+      "detail": "overflow=0px"
+    },
+    {
+      "name": "1e catalogue renders",
+      "pass": true,
+      "detail": "36 products"
+    },
+    {
+      "name": "1f mobile: 2-column grid",
+      "pass": true,
+      "detail": "columns=2"
+    },
+    {
+      "name": "1g mobile: no horizontal overflow",
+      "pass": true,
+      "detail": "overflow=0px"
+    },
+    {
+      "name": "1h mobile: hero + product cards usable",
+      "pass": true,
+      "detail": "hero=390 cards=flex"
+    },
+    {
+      "name": "2a add-to-cart persists to localStorage",
+      "pass": true,
+      "detail": "1 line(s)"
+    },
+    {
+      "name": "2b add-to-cart shows toast + cart badge",
+      "pass": true,
+      "detail": "toast=true badge=1"
+    },
+    {
+      "name": "2c floating cart pill appears",
+      "pass": true,
+      "detail": "sf-float-cart is-on"
+    },
+    {
+      "name": "3a switching store keeps existing cart",
+      "pass": true,
+      "detail": "2 lines"
+    },
+    {
+      "name": "3b multi-vendor cart (Caznova + Smozy)",
+      "pass": true,
+      "detail": "t-caznova, t-smozy"
+    },
+    {
+      "name": "2d cart drawer opens with both vendors",
+      "pass": true,
+      "detail": "{\"open\":true,\"groups\":2,\"lines\":2,\"checkout\":true}"
+    },
+    {
+      "name": "4a hidden scanner input exists",
+      "pass": true,
+      "detail": "{\"has\":true}"
+    },
+    {
+      "name": "4b barcode scan adds product to cart",
+      "pass": true,
+      "detail": "2 → 3"
+    },
+    {
+      "name": "4c scanner store hours respected",
+      "pass": true,
+      "detail": "[{\"id\":\"t-caznova\",\"open\":true,\"h\":{\"open\":\"00:00\",\"close\":\"24:00\"}},{\"id\":\"t-smozy\",\"open\":true,\"h\":{\"open\":\"00:00\",\"close\":\"24:00\"}},{\"id\":\"t-bnsheikh\",\"open\":true,\"h\":{\"open\":\"00:00\",\"close\":\"24:00\"}},{\"id\":\"t-mastore\",\"open\":true,\"h\":{\"open\":\"00:00\",\"close\":\"24:00\"}}]"
+    },
+    {
+      "name": "5a invoices list renders",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "5b 80mm thermal receipt rendered",
+      "pass": true,
+      "detail": "width=302px"
+    },
+    {
+      "name": "5c @page size is 80mm",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "5d QR code present",
+      "pass": true,
+      "detail": "<canvas width=\"88\" height=\"88\" style=\"display: none;\"></canv"
+    },
+    {
+      "name": "5e giant logo removed (no logo block by default)",
+      "pass": true,
+      "detail": "logo=false"
+    },
+    {
+      "name": "5f receipt content sane",
+      "pass": true,
+      "detail": "Caznovaفاتورة ضريبيةرقم الطلبINV-2001التاريخ26 أكتوبر 2026، 07:20 صكاشيرCaznova Cashierطريقة الدفعنقديعنصرالكميةالسعرالإ"
+    },
+    {
+      "name": "5g print media isolates 80mm area",
+      "pass": true,
+      "detail": "{\"width\":\"302.359px\",\"visible\":\"visible\",\"sidebar\":\"hidden\"}"
+    },
+    {
+      "name": "5h standalone print window uses thermal layout",
+      "pass": true,
+      "detail": "{\"area\":true,\"qr\":true,\"css\":true}"
+    },
+    {
+      "name": "6a quick-view modal has exactly 5 stars",
+      "pass": true,
+      "detail": "{\"count\":5,\"maxSize\":14,\"giantText\":false,\"giantEmoji\":false}"
+    },
+    {
+      "name": "6b stars are small (≤16px)",
+      "pass": true,
+      "detail": "max=14px"
+    },
+    {
+      "name": "6c no giant star/emoji left",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "7a hardware-tools.html loads",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "7b sidebar link present",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "7c sidebar link marked active",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "7d 3 tabs present",
+      "pass": true,
+      "detail": "3"
+    },
+    {
+      "name": "7e scanner tab works",
+      "pass": true,
+      "detail": "{\"rows\":1,\"count\":\"1\"}"
+    },
+    {
+      "name": "7f label designer tab works (60×40 preview + barcode)",
+      "pass": true,
+      "detail": "{\"preview\":true,\"bars\":1,\"w\":227}"
+    },
+    {
+      "name": "7g invoice settings tab works + 80mm preview",
+      "pass": true,
+      "detail": "{\"name\":\"QA Store 80mm\",\"preview\":\"QA Store 80mm\",\"w\":302}"
+    },
+    {
+      "name": "8a tracking page mounts map host",
+      "pass": true,
+      "detail": "{\"leaflet\":true,\"eta\":\"6 دقيقة\"}"
+    },
+    {
+      "name": "8b \"Simulate Driver Movement\" button exists",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "8c \"Chat with Driver\" button shows while delivering",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "8d marker moves when simulating",
+      "pass": true,
+      "detail": "from [31.1489,30.9731] to [31.14373918,30.96860117]"
+    },
+    {
+      "name": "8e ETA refreshes live",
+      "pass": true,
+      "detail": "5 دقيقة"
+    },
+    {
+      "name": "8f live badge active",
+      "pass": true,
+      "detail": "📍 موقع المندوب مباشر"
+    },
+    {
+      "name": "10d Chat with Driver opens + sends",
+      "pass": true,
+      "detail": "{\"open\":true,\"input\":true,\"head\":true,\"sent\":true}"
+    },
+    {
+      "name": "9a business-hours engine closes stores correctly",
+      "pass": true,
+      "detail": "{\"evening\":true,\"dawn\":false,\"overnight\":true,\"allDay\":true,\"demoOpen\":[{\"id\":\"t-caznova\",\"open\":true},{\"id\":\"t-smozy\",\"open\":true},{\"id\":\"t-bnsheikh\",\"open\":true},{\"id\":\"t-mastore\",\"open\":true}]}"
+    },
+    {
+      "name": "9b demo stores open by default (24/7 demo-ready)",
+      "pass": true,
+      "detail": "[{\"id\":\"t-caznova\",\"open\":true},{\"id\":\"t-smozy\",\"open\":true},{\"id\":\"t-bnsheikh\",\"open\":true},{\"id\":\"t-mastore\",\"open\":true}]"
+    },
+    {
+      "name": "9c owner has store availability control",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "9d store can be switched offline",
+      "pass": true,
+      "detail": "{\"offline\":true,\"open\":false,\"checked\":false}"
+    },
+    {
+      "name": "9e offline store products disabled in storefront",
+      "pass": true,
+      "detail": "{\"disabled\":9,\"offlineLabels\":1,\"cards\":36}"
+    },
+    {
+      "name": "9f checkout disabled while store offline",
+      "pass": true,
+      "detail": "{\"disabled\":true,\"label\":\"المتجر أوفلاين\",\"warn\":1}"
+    },
+    {
+      "name": "9g store can be brought back online",
+      "pass": true,
+      "detail": "{\"offline\":false,\"open\":true}"
+    },
+    {
+      "name": "10a admin chat mounts (support → agents)",
+      "pass": true,
+      "detail": "{\"channels\":3,\"rooms\":17,\"thread\":true,\"input\":true}"
+    },
+    {
+      "name": "10b support thread sends a message",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "10c channels are hierarchical scopes",
+      "pass": true,
+      "detail": "support, stores, delivery"
+    },
+    {
+      "name": "10e customer can reach stores from storefront chat",
+      "pass": true,
+      "detail": "Caznova · Smozy Fresh · Bn Alsheikh · MA Store"
+    }
+  ],
+  "consoleErrors": []
+}

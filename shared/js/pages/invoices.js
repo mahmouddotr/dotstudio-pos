@@ -91,32 +91,103 @@
     bind(list);
   }
 
+  /* Print CSS comes from the shared thermal receipt module (ui.js) so the
+     invoices page, POS and the print window always match. */
+  function ensurePrintStyle() {
+    var el = document.getElementById('dsActivePrintStyle');
+    if (!el) {
+      el = document.createElement('style');
+      el.id = 'dsActivePrintStyle';
+      document.head.appendChild(el);
+    }
+    el.textContent = DS.thermalCss + '\n' +
+      '@media print {\n' +
+      '  .modal-backdrop, .modal, .modal-card, .modal-body, .modal-dialog { position: static !important; transform: none !important; overflow: visible !important; max-height: none !important; background: #ffffff !important; box-shadow: none !important; }\n' +
+      '  .invoice-modal-wrapper { display: block !important; padding: 0 !important; background: #ffffff !important; }\n' +
+      '}';
+  }
+
+  function drawFallbackQr(box, url) {
+    if (!box) return;
+    box.innerHTML = '<svg viewBox="0 0 80 80" width="80" height="80" style="display:block;">' +
+      '<rect width="80" height="80" fill="#fff"/>' +
+      '<rect x="6" y="6" width="22" height="22" fill="#000"/><rect x="9" y="9" width="16" height="16" fill="#fff"/><rect x="12" y="12" width="10" height="10" fill="#000"/>' +
+      '<rect x="52" y="6" width="22" height="22" fill="#000"/><rect x="55" y="9" width="16" height="16" fill="#fff"/><rect x="58" y="12" width="10" height="10" fill="#000"/>' +
+      '<rect x="6" y="52" width="22" height="22" fill="#000"/><rect x="9" y="55" width="16" height="16" fill="#fff"/><rect x="12" y="58" width="10" height="10" fill="#000"/>' +
+      '<rect x="34" y="8" width="4" height="4" fill="#000"/><rect x="42" y="8" width="4" height="4" fill="#000"/>' +
+      '<rect x="8" y="34" width="4" height="4" fill="#000"/><rect x="8" y="42" width="4" height="4" fill="#000"/>' +
+      '<rect x="34" y="34" width="12" height="12" fill="#000"/><rect x="38" y="38" width="4" height="4" fill="#fff"/>' +
+      '<rect x="52" y="34" width="4" height="4" fill="#000"/><rect x="60" y="34" width="8" height="4" fill="#000"/>' +
+      '<rect x="34" y="52" width="4" height="8" fill="#000"/><rect x="42" y="60" width="8" height="4" fill="#000"/>' +
+      '<rect x="56" y="56" width="8" height="8" fill="#000"/><rect x="68" y="52" width="4" height="12" fill="#000"/>' +
+      '</svg>';
+  }
+
+  function renderQrCodeInto(box, url) {
+    if (!box) return;
+    box.innerHTML = '';
+    function tryQr() {
+      if (window.QRCode) {
+        try {
+          new QRCode(box, {
+            text: url,
+            width: 88,
+            height: 88,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+          });
+          return true;
+        } catch (e) {
+          console.warn('QRCode render error', e);
+        }
+      }
+      return false;
+    }
+    if (!tryQr()) {
+      drawFallbackQr(box, url);
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+      s.onload = function () {
+        box.innerHTML = '';
+        tryQr();
+      };
+      document.head.appendChild(s);
+    }
+  }
+
   function openInvoice(id) {
     var inv = invoices().filter(function (i) { return i.id === id; })[0];
     if (!inv) return;
-    var body = '<div class="order-details-grid" style="margin-bottom:12px">' +
-        '<div class="order-detail-box"><div class="l">' + esc(t('invoice')) + '</div><div class="v" style="font-family:var(--font-mono);direction:ltr">' + esc(inv.invoice_no) + '</div></div>' +
-        '<div class="order-detail-box"><div class="l">' + esc(t('date')) + '</div><div class="v">' + esc(DS.datetime(inv.created_at)) + '</div></div>' +
-        '<div class="order-detail-box"><div class="l">' + esc(t('cashier')) + '</div><div class="v">' + esc(inv.cashier_name || '—') + '</div></div>' +
-        '<div class="order-detail-box"><div class="l">' + esc(t('paymentMethod')) + '</div><div class="v">' + esc(t(methodOf(inv))) + '</div></div>' +
-      '</div>' +
-      '<div class="order-items">' + (inv.items || []).map(function (it) {
-        return '<div class="order-item-row"><img src="' + esc(DS.data.img(it.image)) + '" alt=""><div class="info"><div class="nm">' + esc(it.name) + '</div><div class="qt">' + it.qty + ' × ' + money(it.price) + '</div></div><div class="pr">' + money(it.qty * it.price) + '</div></div>';
-      }).join('') + '</div>' +
-      '<div class="cart-summary" style="margin-top:12px">' +
-        '<div class="cart-row"><span>' + esc(t('subtotal')) + '</span><span>' + money(inv.subtotal) + '</span></div>' +
-        (inv.discount ? '<div class="cart-row"><span>' + esc(t('discount')) + '</span><span style="color:var(--lime)">− ' + money(inv.discount) + '</span></div>' : '') +
-        (inv.delivery_fee ? '<div class="cart-row"><span>' + esc(t('delivery')) + '</span><span>' + money(inv.delivery_fee) + '</span></div>' : '') +
-        '<div class="cart-row total"><span>' + esc(t('total')) + '</span><span class="num">' + money(totalOf(inv)) + '</span></div>' +
-      '</div>';
+
+    var invTenant = DS.data.tenantById(inv.tenant_id) || tenant || {};
+    var settings = DS.receiptSettings();
+    var storeName = settings.name || DS.loc(invTenant, 'name') || invTenant.name || 'DotStudio POS';
+    var orderNo = inv.order_no || inv.invoice_no || '—';
+    var trackingUrl = new URL(DS.url('customer/tracking.html?order=' + encodeURIComponent(orderNo)), window.location.href).href;
+
+    ensurePrintStyle();
+    var receiptHtml = '<div class="invoice-modal-wrapper">' + DS.thermalInvoice(inv) + '</div>';
+
     DS.modal({
-      title: t('invoice') + ' ' + inv.invoice_no,
-      sub: inv.order_no || '',
-      body: body,
+      title: t('invoice') + ' ' + (inv.invoice_no || ''),
+      sub: esc(orderNo) + ' · ' + esc(storeName),
+      body: receiptHtml,
       actions: [
         { label: t('close'), variant: 'btn-secondary' },
-        { label: t('printReceipt'), variant: 'btn-primary', icon: icon('printer'), onClick: function () { DS.printReceipt(inv, 'invoice'); } }
-      ]
+        {
+          label: t('printReceipt'),
+          variant: 'btn-primary',
+          icon: icon('printer'),
+          onClick: function () {
+            ensurePrintStyle();
+            setTimeout(function () { window.print(); }, 80);
+          }
+        }
+      ],
+      onMount: function () {
+        renderQrCodeInto(document.getElementById('invoiceQrBox'), trackingUrl);
+      }
     });
   }
 

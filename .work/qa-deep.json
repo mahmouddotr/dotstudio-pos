@@ -1,0 +1,70 @@
+{
+  "out": [
+    {
+      "n": "POS renders catalogue + cart",
+      "p": true,
+      "d": "{\"products\":9,\"grid\":true,\"cart\":true,\"hiddenScanner\":true}"
+    },
+    {
+      "n": "POS add-to-cart updates the cart",
+      "p": true,
+      "d": "{\"count\":\"1\",\"rows\":1,\"text\":\"إسوارة فضة مطلية320 ج.م × 11\"}"
+    },
+    {
+      "n": "POS checkout modal opens",
+      "p": true,
+      "d": ""
+    },
+    {
+      "n": "POS sale creates order + invoice",
+      "p": true,
+      "d": "{\"order\":{\"no\":\"ORD-1033\",\"total\":355,\"source\":\"pos\",\"status\":\"delivered\"},\"invoice\":{\"no\":\"INV-7191\",\"total\":355,\"status\":\"paid\"},\"receipt\":true}"
+    },
+    {
+      "n": "POS sale decrements stock + clears cart",
+      "p": true,
+      "d": "{\"stockBefore\":24,\"stockAfter\":23,\"cart\":\"0\"}"
+    },
+    {
+      "n": "checkout shows both vendors + summary",
+      "p": true,
+      "d": "{\"vendors\":2,\"total\":\"715 ج.م\",\"fields\":true,\"place\":true}"
+    },
+    {
+      "n": "order placed from multi-vendor cart",
+      "p": true,
+      "d": "{\"no\":\"ORD-1033\",\"total\":715,\"status\":\"pending\",\"vendors\":[\"t-caznova\",\"t-smozy\"]}"
+    },
+    {
+      "n": "cart cleared after order",
+      "p": true,
+      "d": "0 items left"
+    },
+    {
+      "n": "80mm receipt screenshot captured",
+      "p": true,
+      "d": "{\"w\":302,\"h\":486,\"qr\":true,\"logo\":false}"
+    },
+    {
+      "n": "EN storefront is LTR with 4 columns + cards",
+      "p": true,
+      "d": "{\"dir\":\"ltr\",\"lang\":\"en\",\"hero\":\"All your stores.\",\"cols\":4,\"cards\":3,\"overflow\":0,\"title\":\"Silver-plated bracelet\",\"price\":\"320 EGP\"}"
+    },
+    {
+      "n": "public page renders: marketing/index.html",
+      "p": true,
+      "d": "{\"text\":1608,\"imgs\":0,\"overflow\":0}"
+    },
+    {
+      "n": "public page renders: auth/jobs/jobs.html",
+      "p": true,
+      "d": "{\"text\":1048,\"imgs\":0,\"overflow\":0}"
+    },
+    {
+      "n": "public page renders: index.html",
+      "p": true,
+      "d": "{\"text\":157,\"imgs\":0,\"overflow\":0}"
+    }
+  ],
+  "errs": []
+}

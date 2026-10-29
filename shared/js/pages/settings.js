@@ -91,6 +91,14 @@
         '<div class="field"><label>' + esc(t('delivery')) + ' (EGP)</label><input class="input" id="stFee" type="number" value="' + esc(tn.delivery_fee) + '"></div>' +
         '<div class="field" style="grid-column:1/-1"><label>' + esc(t('storeDesc')) + '</label><textarea class="textarea" id="stDesc" rows="2">' + esc(tn.description || '') + '</textarea></div>' +
       '</div>' +
+      '<div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">' +
+        toggle('stOpen',
+          DS.lang() === 'en' ? 'Accept new orders' : 'استقبال طلبات جديدة',
+          tn.offline
+            ? (DS.lang() === 'en' ? 'Store is offline — the storefront hides ordering until you switch it back on.' : 'المتجر أوفلاين — الواجهة توقف الطلب حتى تعيد التفعيل.')
+            : (DS.lang() === 'en' ? 'Store is open — customers can add to bag and check out.' : 'المتجر مفتوح — العملاء يضيفون للسلة ويتممون الطلب.'),
+          !tn.offline) +
+      '</div>' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:10px;flex-wrap:wrap">' +
         '<a class="btn btn-ghost btn-sm" href="' + url('owner/subscriptions.html') + '">' + icon('card') + esc(t('subscriptions')) + '</a>' +
         '<button class="btn btn-primary" data-save-store>' + icon('check') + esc(t('saveChanges')) + '</button></div>' +
@@ -160,6 +168,17 @@
         description: page.body.querySelector('#stDesc').value.trim()
       });
       DS.toast(t('settingsSaved'), 'success');
+      render();
+    });
+    var openSwitch = page.body.querySelector('#stOpen');
+    if (openSwitch) openSwitch.addEventListener('change', function () {
+      var tn = DS.data.tenantById(user.tenant_id);
+      if (!tn) return;
+      DS.data.setStoreOffline(tn.id, !openSwitch.checked);
+      DS.toast(openSwitch.checked
+        ? (DS.lang() === 'en' ? 'Store is now open for orders.' : 'المتجر مفتوح الآن لاستقبال الطلبات.')
+        : (DS.lang() === 'en' ? 'Store is offline — checkout is disabled.' : 'المتجر أوفلاين الآن — تم إيقاف الطلب.'),
+        openSwitch.checked ? 'success' : 'warning');
       render();
     });
     var savePlatform = page.body.querySelector('[data-save-platform]');

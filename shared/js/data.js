@@ -41,6 +41,7 @@
       industry: 'أزياء وإكسسوارات', industry_en: 'Fashion & accessories',
       plan: 'yearly', subscription_start: daysAgo(120), subscription_end: daysAhead(245),
       status: 'active', avatar_id: 'av1', color: '#82FF1F', rating: 4.9, delivery_fee: 35,
+      openTime: '00:00', closeTime: '24:00', offline: false,
       lat: 30.0511, lng: 31.3656,
       description: 'ساعات، خواتم، عطور وإكسسوارات مختارة بعناية.', description_en: 'Curated watches, rings, perfumes and accessories.',
       created_at: daysAgo(420)
@@ -52,6 +53,7 @@
       industry: 'عصائر طازجة', industry_en: 'Fresh juices',
       plan: 'monthly', subscription_start: daysAgo(20), subscription_end: daysAhead(10),
       status: 'active', avatar_id: 'av2', color: '#FF6B9D', rating: 4.8, delivery_fee: 25,
+      openTime: '00:00', closeTime: '24:00', offline: false,
       lat: 29.9602, lng: 31.2569,
       description: 'عصائر وسموذي وميلك شيك طازج يومياً.', description_en: 'Fresh juices, smoothies and milkshakes every day.',
       created_at: daysAgo(300)
@@ -63,6 +65,7 @@
       industry: 'قهوة مختصة', industry_en: 'Specialty coffee',
       plan: 'sixmonths', subscription_start: daysAgo(80), subscription_end: daysAhead(100),
       status: 'active', avatar_id: 'av3', color: '#F59E0B', rating: 4.9, delivery_fee: 30,
+      openTime: '00:00', closeTime: '24:00', offline: false,
       lat: 30.0912, lng: 31.3275,
       description: 'قهوة مختصة محمصة طازجة وحبوب مختارة.', description_en: 'Specialty coffee, freshly roasted beans.',
       created_at: daysAgo(260)
@@ -74,6 +77,7 @@
       industry: 'ملابس وإكسسوارات', industry_en: 'Apparel & accessories',
       plan: 'monthly', subscription_start: daysAgo(12), subscription_end: daysAhead(18),
       status: 'active', avatar_id: 'av4', color: '#60A5FA', rating: 4.7, delivery_fee: 40,
+      openTime: '00:00', closeTime: '24:00', offline: false,
       lat: 29.9285, lng: 30.9188,
       description: 'ملابس عصرية بجودة عالية لكل المناسبات.', description_en: 'Modern quality apparel for every occasion.',
       created_at: daysAgo(210)
@@ -130,48 +134,48 @@
   /* ────────────────────────────── CATALOGUE ───────────────────────────── */
   var CATALOG = {
     't-caznova': [
-      { name: 'إسوارة فضة مطلية', name_en: 'Silver-plated bracelet', category: 'اكسسوارات', category_en: 'Accessories', sku: 'CAZ-ACC-001', cost: 110, price: 320, stock: 24, min_stock: 5, image: 'products/1-caznova/1-caznova-bracelet.webp', rating: 4.7, sold: 118 },
-      { name: 'عطر Oud Noir 50ml', name_en: 'Oud Noir perfume 50ml', category: 'عطور', category_en: 'Perfumes', sku: 'CAZ-PRF-002', cost: 300, price: 850, stock: 12, min_stock: 3, image: 'products/1-caznova/2-caznova-perfume.webp', rating: 4.9, sold: 86 },
-      { name: 'محفظة جلد طبيعي', name_en: 'Genuine leather wallet', category: 'محافظ', category_en: 'Wallets', sku: 'CAZ-WLT-003', cost: 160, price: 450, stock: 18, min_stock: 4, image: 'products/1-caznova/3-caznova-wallet.webp', rating: 4.6, sold: 74 },
-      { name: 'خاتم فضة رجالي', name_en: 'Men’s silver ring', category: 'خواتم', category_en: 'Rings', sku: 'CAZ-RNG-004', cost: 90, price: 280, stock: 30, min_stock: 6, image: 'products/1-caznova/4-caznova-ring.webp', rating: 4.8, sold: 203 },
-      { name: 'ساعة يد كلاسيك', name_en: 'Classic wrist watch', category: 'ساعات', category_en: 'Watches', sku: 'CAZ-WCH-005', cost: 480, price: 1250, stock: 10, min_stock: 3, image: 'products/1-caznova/5-caznova-watch.webp', rating: 4.9, sold: 64 },
-      { name: 'طقم هدايا فاخر', name_en: 'Premium gift set', category: 'هدايا', category_en: 'Gifts', sku: 'CAZ-GFT-006', cost: 380, price: 990, stock: 8, min_stock: 2, image: 'products/1-caznova/6-caznova-giftset.webp', rating: 5.0, sold: 41 },
-      { name: 'نظارة شمس UV400', name_en: 'UV400 sunglasses', category: 'نظارات', category_en: 'Sunglasses', sku: 'CAZ-SUN-007', cost: 180, price: 520, stock: 15, min_stock: 4, image: 'products/1-caznova/7-caznova-sunglasses.webp', rating: 4.5, sold: 57 },
-      { name: 'حزام جلد كلاسيك', name_en: 'Classic leather belt', category: 'أحزمة', category_en: 'Belts', sku: 'CAZ-BLT-008', cost: 120, price: 360, stock: 22, min_stock: 5, image: 'products/1-caznova/8-caznova-belt.webp', rating: 4.6, sold: 93 },
-      { name: 'حقيبة جلد صغيرة', name_en: 'Small leather bag', category: 'حقائب', category_en: 'Bags', sku: 'CAZ-BAG-009', cost: 280, price: 780, stock: 9, min_stock: 2, image: 'products/1-caznova/CAZNOVA_9.webp', rating: 4.8, sold: 38 }
+      { name: 'إسوارة فضة مطلية', name_en: 'Silver-plated bracelet', category: 'اكسسوارات', category_en: 'Accessories', sku: 'CAZ-ACC-001', barcode: '628100100001', cost: 110, price: 320, stock: 24, min_stock: 5, image: 'products/1-caznova/1-caznova-bracelet.webp', rating: 4.7, sold: 118 },
+      { name: 'عطر Oud Noir 50ml', name_en: 'Oud Noir perfume 50ml', category: 'عطور', category_en: 'Perfumes', sku: 'CAZ-PRF-002', barcode: '628100100002', cost: 300, price: 850, stock: 12, min_stock: 3, image: 'products/1-caznova/2-caznova-perfume.webp', rating: 4.9, sold: 86 },
+      { name: 'محفظة جلد طبيعي', name_en: 'Genuine leather wallet', category: 'محافظ', category_en: 'Wallets', sku: 'CAZ-WLT-003', barcode: '628100100003', cost: 160, price: 450, stock: 18, min_stock: 4, image: 'products/1-caznova/3-caznova-wallet.webp', rating: 4.6, sold: 74 },
+      { name: 'خاتم فضة رجالي', name_en: 'Men’s silver ring', category: 'خواتم', category_en: 'Rings', sku: 'CAZ-RNG-004', barcode: '628100100004', cost: 90, price: 280, stock: 30, min_stock: 6, image: 'products/1-caznova/4-caznova-ring.webp', rating: 4.8, sold: 203 },
+      { name: 'ساعة يد كلاسيك', name_en: 'Classic wrist watch', category: 'ساعات', category_en: 'Watches', sku: 'CAZ-WCH-005', barcode: '628100100005', cost: 480, price: 1250, stock: 10, min_stock: 3, image: 'products/1-caznova/5-caznova-watch.webp', rating: 4.9, sold: 64 },
+      { name: 'طقم هدايا فاخر', name_en: 'Premium gift set', category: 'هدايا', category_en: 'Gifts', sku: 'CAZ-GFT-006', barcode: '628100100006', cost: 380, price: 990, stock: 8, min_stock: 2, image: 'products/1-caznova/6-caznova-giftset.webp', rating: 5.0, sold: 41 },
+      { name: 'نظارة شمس UV400', name_en: 'UV400 sunglasses', category: 'نظارات', category_en: 'Sunglasses', sku: 'CAZ-SUN-007', barcode: '628100100007', cost: 180, price: 520, stock: 15, min_stock: 4, image: 'products/1-caznova/7-caznova-sunglasses.webp', rating: 4.5, sold: 57 },
+      { name: 'حزام جلد كلاسيك', name_en: 'Classic leather belt', category: 'أحزمة', category_en: 'Belts', sku: 'CAZ-BLT-008', barcode: '628100100008', cost: 120, price: 360, stock: 22, min_stock: 5, image: 'products/1-caznova/8-caznova-belt.webp', rating: 4.6, sold: 93 },
+      { name: 'حقيبة جلد صغيرة', name_en: 'Small leather bag', category: 'حقائب', category_en: 'Bags', sku: 'CAZ-BAG-009', barcode: '628100100009', cost: 280, price: 780, stock: 9, min_stock: 2, image: 'products/1-caznova/CAZNOVA_9.webp', rating: 4.8, sold: 38 }
     ],
     't-smozy': [
-      { name: 'عصير مانجو طازج', name_en: 'Fresh mango juice', category: 'عصائر', category_en: 'Juices', sku: 'SMZ-JUI-001', cost: 20, price: 45, stock: 40, min_stock: 10, image: 'products/2-smozy/1-smozy-mango.webp', rating: 4.9, sold: 340 },
-      { name: 'عصير برتقال طازج', name_en: 'Fresh orange juice', category: 'عصائر', category_en: 'Juices', sku: 'SMZ-JUI-002', cost: 15, price: 35, stock: 45, min_stock: 10, image: 'products/2-smozy/2-smozy-orange.webp', rating: 4.8, sold: 412 },
-      { name: 'عصير فراولة', name_en: 'Strawberry juice', category: 'عصائر', category_en: 'Juices', sku: 'SMZ-JUI-003', cost: 18, price: 40, stock: 38, min_stock: 8, image: 'products/2-smozy/3-smozy-strawberry.webp', rating: 4.7, sold: 286 },
-      { name: 'سموذي كيوي', name_en: 'Kiwi smoothie', category: 'سموذي', category_en: 'Smoothies', sku: 'SMZ-SMT-004', cost: 25, price: 55, stock: 30, min_stock: 6, image: 'products/2-smozy/4-smozy-kiwi.webp', rating: 4.8, sold: 198 },
-      { name: 'عصير موز باللبن', name_en: 'Banana milk juice', category: 'عصائر', category_en: 'Juices', sku: 'SMZ-JUI-005', cost: 22, price: 50, stock: 32, min_stock: 6, image: 'products/2-smozy/5-smozy-banana.webp', rating: 4.6, sold: 174 },
-      { name: 'سموذي توت مشكل', name_en: 'Mixed berry smoothie', category: 'سموذي', category_en: 'Smoothies', sku: 'SMZ-SMT-006', cost: 28, price: 60, stock: 26, min_stock: 6, image: 'products/2-smozy/6-smozy-mixed-berry.webp', rating: 4.9, sold: 221 },
-      { name: 'ميلك شيك أوريو', name_en: 'Oreo milkshake', category: 'ميلك شيك', category_en: 'Milkshakes', sku: 'SMZ-MLK-007', cost: 32, price: 65, stock: 24, min_stock: 5, image: 'products/2-smozy/7-smozy-oreo.webp', rating: 4.9, sold: 311 },
-      { name: 'ميلك شيك شوكولاتة', name_en: 'Chocolate milkshake', category: 'ميلك شيك', category_en: 'Milkshakes', sku: 'SMZ-MLK-008', cost: 32, price: 65, stock: 22, min_stock: 5, image: 'products/2-smozy/8-smozy-chocolate.webp', rating: 4.8, sold: 267 },
-      { name: 'ميلك شيك لوتس', name_en: 'Lotus milkshake', category: 'ميلك شيك', category_en: 'Milkshakes', sku: 'SMZ-MLK-009', cost: 35, price: 70, stock: 20, min_stock: 5, image: 'products/2-smozy/9-smozy-lotus.webp', rating: 5.0, sold: 254 }
+      { name: 'عصير مانجو طازج', name_en: 'Fresh mango juice', category: 'عصائر', category_en: 'Juices', sku: 'SMZ-JUI-001', barcode: '628200100001', cost: 20, price: 45, stock: 40, min_stock: 10, image: 'products/2-smozy/1-smozy-mango.webp', rating: 4.9, sold: 340 },
+      { name: 'عصير برتقال طازج', name_en: 'Fresh orange juice', category: 'عصائر', category_en: 'Juices', sku: 'SMZ-JUI-002', barcode: '628200100002', cost: 15, price: 35, stock: 45, min_stock: 10, image: 'products/2-smozy/2-smozy-orange.webp', rating: 4.8, sold: 412 },
+      { name: 'عصير فراولة', name_en: 'Strawberry juice', category: 'عصائر', category_en: 'Juices', sku: 'SMZ-JUI-003', barcode: '628200100003', cost: 18, price: 40, stock: 38, min_stock: 8, image: 'products/2-smozy/3-smozy-strawberry.webp', rating: 4.7, sold: 286 },
+      { name: 'سموذي كيوي', name_en: 'Kiwi smoothie', category: 'سموذي', category_en: 'Smoothies', sku: 'SMZ-SMT-004', barcode: '628200100004', cost: 25, price: 55, stock: 30, min_stock: 6, image: 'products/2-smozy/4-smozy-kiwi.webp', rating: 4.8, sold: 198 },
+      { name: 'عصير موز باللبن', name_en: 'Banana milk juice', category: 'عصائر', category_en: 'Juices', sku: 'SMZ-JUI-005', barcode: '628200100005', cost: 22, price: 50, stock: 32, min_stock: 6, image: 'products/2-smozy/5-smozy-banana.webp', rating: 4.6, sold: 174 },
+      { name: 'سموذي توت مشكل', name_en: 'Mixed berry smoothie', category: 'سموذي', category_en: 'Smoothies', sku: 'SMZ-SMT-006', barcode: '628200100006', cost: 28, price: 60, stock: 26, min_stock: 6, image: 'products/2-smozy/6-smozy-mixed-berry.webp', rating: 4.9, sold: 221 },
+      { name: 'ميلك شيك أوريو', name_en: 'Oreo milkshake', category: 'ميلك شيك', category_en: 'Milkshakes', sku: 'SMZ-MLK-007', barcode: '628200100007', cost: 32, price: 65, stock: 24, min_stock: 5, image: 'products/2-smozy/7-smozy-oreo.webp', rating: 4.9, sold: 311 },
+      { name: 'ميلك شيك شوكولاتة', name_en: 'Chocolate milkshake', category: 'ميلك شيك', category_en: 'Milkshakes', sku: 'SMZ-MLK-008', barcode: '628200100008', cost: 32, price: 65, stock: 22, min_stock: 5, image: 'products/2-smozy/8-smozy-chocolate.webp', rating: 4.8, sold: 267 },
+      { name: 'ميلك شيك لوتس', name_en: 'Lotus milkshake', category: 'ميلك شيك', category_en: 'Milkshakes', sku: 'SMZ-MLK-009', barcode: '628200100009', cost: 35, price: 70, stock: 20, min_stock: 5, image: 'products/2-smozy/9-smozy-lotus.webp', rating: 5.0, sold: 254 }
     ],
     't-bnsheikh': [
-      { name: 'قهوة تركي', name_en: 'Turkish coffee', category: 'قهوة ساخنة', category_en: 'Hot coffee', sku: 'BNS-HCO-001', cost: 12, price: 25, stock: 60, min_stock: 15, image: 'products/3-bnsheikh/1-bnsheikh-turkish-coffee.webp', rating: 4.7, sold: 520 },
-      { name: 'إسبريسو مزدوج', name_en: 'Double espresso', category: 'قهوة ساخنة', category_en: 'Hot coffee', sku: 'BNS-HCO-002', cost: 15, price: 30, stock: 50, min_stock: 12, image: 'products/3-bnsheikh/2-bnsheikh-espresso.webp', rating: 4.8, sold: 388 },
-      { name: 'كابتشينو', name_en: 'Cappuccino', category: 'قهوة ساخنة', category_en: 'Hot coffee', sku: 'BNS-HCO-003', cost: 18, price: 35, stock: 38, min_stock: 8, image: 'products/3-bnsheikh/3-bnsheikh-cappuccino.webp', rating: 4.9, sold: 466 },
-      { name: 'لاتيه', name_en: 'Latte', category: 'قهوة ساخنة', category_en: 'Coffee', sku: 'BNS-HCO-004', cost: 20, price: 38, stock: 35, min_stock: 8, image: 'products/3-bnsheikh/4-bnsheikh-latte.webp', rating: 4.8, sold: 402 },
-      { name: 'موكا', name_en: 'Mocha', category: 'قهوة ساخنة', category_en: 'Hot coffee', sku: 'BNS-HCO-005', cost: 30, price: 65, stock: 18, min_stock: 4, image: 'products/3-bnsheikh/5-bnsheikh-mocha.webp', rating: 4.7, sold: 219 },
-      { name: 'آيس لاتيه', name_en: 'Iced latte', category: 'قهوة باردة', category_en: 'Iced coffee', sku: 'BNS-ICO-006', cost: 22, price: 40, stock: 35, min_stock: 8, image: 'products/3-bnsheikh/6-bnsheikh-iced-latte.webp', rating: 4.9, sold: 355 },
-      { name: 'قهوة تركي مطحونة 250g', name_en: 'Turkish ground coffee 250g', category: 'حبوب قهوة', category_en: 'Coffee beans', sku: 'BNS-BEA-007', cost: 55, price: 120, stock: 28, min_stock: 6, image: 'products/3-bnsheikh/7-bnsheikh-turkish-ground.webp', rating: 4.8, sold: 142 },
-      { name: 'قهوة متوسطة 500g', name_en: 'Medium roast 500g', category: 'حبوب قهوة', category_en: 'Coffee beans', sku: 'BNS-BEA-008', cost: 120, price: 240, stock: 16, min_stock: 4, image: 'products/3-bnsheikh/8-bnsheikh-medium-ground.webp', rating: 4.9, sold: 97 },
-      { name: 'حبوب قهوة كاملة 1kg', name_en: 'Whole beans 1kg', category: 'حبوب قهوة', category_en: 'Coffee beans', sku: 'BNS-BEA-009', cost: 260, price: 490, stock: 9, min_stock: 3, image: 'products/3-bnsheikh/9-bnsheikh-whole-beans.webp', rating: 5.0, sold: 63 }
+      { name: 'قهوة تركي', name_en: 'Turkish coffee', category: 'قهوة ساخنة', category_en: 'Hot coffee', sku: 'BNS-HCO-001', barcode: '628300100001', cost: 12, price: 25, stock: 60, min_stock: 15, image: 'products/3-bnsheikh/1-bnsheikh-turkish-coffee.webp', rating: 4.7, sold: 520 },
+      { name: 'إسبريسو مزدوج', name_en: 'Double espresso', category: 'قهوة ساخنة', category_en: 'Hot coffee', sku: 'BNS-HCO-002', barcode: '628300100002', cost: 15, price: 30, stock: 50, min_stock: 12, image: 'products/3-bnsheikh/2-bnsheikh-espresso.webp', rating: 4.8, sold: 388 },
+      { name: 'كابتشينو', name_en: 'Cappuccino', category: 'قهوة ساخنة', category_en: 'Hot coffee', sku: 'BNS-HCO-003', barcode: '628300100003', cost: 18, price: 35, stock: 38, min_stock: 8, image: 'products/3-bnsheikh/3-bnsheikh-cappuccino.webp', rating: 4.9, sold: 466 },
+      { name: 'لاتيه', name_en: 'Latte', category: 'قهوة ساخنة', category_en: 'Coffee', sku: 'BNS-HCO-004', barcode: '628300100004', cost: 20, price: 38, stock: 35, min_stock: 8, image: 'products/3-bnsheikh/4-bnsheikh-latte.webp', rating: 4.8, sold: 402 },
+      { name: 'موكا', name_en: 'Mocha', category: 'قهوة ساخنة', category_en: 'Hot coffee', sku: 'BNS-HCO-005', barcode: '628300100005', cost: 30, price: 65, stock: 18, min_stock: 4, image: 'products/3-bnsheikh/5-bnsheikh-mocha.webp', rating: 4.7, sold: 219 },
+      { name: 'آيس لاتيه', name_en: 'Iced latte', category: 'قهوة باردة', category_en: 'Iced coffee', sku: 'BNS-ICO-006', barcode: '628300100006', cost: 22, price: 40, stock: 35, min_stock: 8, image: 'products/3-bnsheikh/6-bnsheikh-iced-latte.webp', rating: 4.9, sold: 355 },
+      { name: 'قهوة تركي مطحونة 250g', name_en: 'Turkish ground coffee 250g', category: 'حبوب قهوة', category_en: 'Coffee beans', sku: 'BNS-BEA-007', barcode: '628300100007', cost: 55, price: 120, stock: 28, min_stock: 6, image: 'products/3-bnsheikh/7-bnsheikh-turkish-ground.webp', rating: 4.8, sold: 142 },
+      { name: 'قهوة متوسطة 500g', name_en: 'Medium roast 500g', category: 'حبوب قهوة', category_en: 'Coffee beans', sku: 'BNS-BEA-008', barcode: '628300100008', cost: 120, price: 240, stock: 16, min_stock: 4, image: 'products/3-bnsheikh/8-bnsheikh-medium-ground.webp', rating: 4.9, sold: 97 },
+      { name: 'حبوب قهوة كاملة 1kg', name_en: 'Whole beans 1kg', category: 'حبوب قهوة', category_en: 'Coffee beans', sku: 'BNS-BEA-009', barcode: '628300100009', cost: 260, price: 490, stock: 9, min_stock: 3, image: 'products/3-bnsheikh/9-bnsheikh-whole-beans.webp', rating: 5.0, sold: 63 }
     ],
     't-mastore': [
-      { name: 'تيشيرت قطن أبيض', name_en: 'White cotton t-shirt', category: 'رجالي', category_en: 'Men', sku: 'MAS-MEN-001', cost: 120, price: 250, stock: 28, min_stock: 6, image: 'products/4-mastore/1-mastore-white-tshirt.webp', rating: 4.6, sold: 210 },
-      { name: 'بولو أسود', name_en: 'Black polo', category: 'رجالي', category_en: 'Men', sku: 'MAS-MEN-002', cost: 160, price: 320, stock: 22, min_stock: 5, image: 'products/4-mastore/2-mastore-black-polo.webp', rating: 4.7, sold: 168 },
-      { name: 'بنطلون جينز', name_en: 'Denim jeans', category: 'رجالي', category_en: 'Men', sku: 'MAS-MEN-003', cost: 250, price: 450, stock: 16, min_stock: 4, image: 'products/4-mastore/3-mastore-denim-jeans.webp', rating: 4.8, sold: 142 },
-      { name: 'بنطلون شينو', name_en: 'Chino pants', category: 'رجالي', category_en: 'Men', sku: 'MAS-MEN-004', cost: 220, price: 390, stock: 14, min_stock: 4, image: 'products/4-mastore/4-mastore-chino-pants.webp', rating: 4.5, sold: 96 },
-      { name: 'جاكيت جلد', name_en: 'Leather jacket', category: 'رجالي', category_en: 'Men', sku: 'MAS-MEN-005', cost: 850, price: 1450, stock: 5, min_stock: 2, image: 'products/4-mastore/5-mastore-leather-jacket.webp', rating: 4.9, sold: 31 },
-      { name: 'قميص كاجوال', name_en: 'Casual shirt', category: 'نسائي', category_en: 'Women', sku: 'MAS-WMN-006', cost: 300, price: 550, stock: 11, min_stock: 3, image: 'products/4-mastore/6-mastore-casual-shirt.webp', rating: 4.7, sold: 74 },
-      { name: 'ساعة رياضية', name_en: 'Sports watch', category: 'إكسسوارات', category_en: 'Accessories', sku: 'MAS-ACC-007', cost: 390, price: 690, stock: 8, min_stock: 2, image: 'products/4-mastore/7-mastore-sports-watch.webp', rating: 4.6, sold: 52 },
-      { name: 'محفظة جلد', name_en: 'Leather wallet', category: 'إكسسوارات', category_en: 'Accessories', sku: 'MAS-ACC-008', cost: 200, price: 380, stock: 14, min_stock: 3, image: 'products/4-mastore/8-mastore-leather-wallet.webp', rating: 4.5, sold: 88 },
-      { name: 'نظارة شمس', name_en: 'Sunglasses', category: 'إكسسوارات', category_en: 'Accessories', sku: 'MAS-ACC-009', cost: 180, price: 420, stock: 10, min_stock: 3, image: 'products/4-mastore/9-mastore-sunglasses.webp', rating: 4.4, sold: 66 }
+      { name: 'تيشيرت قطن أبيض', name_en: 'White cotton t-shirt', category: 'رجالي', category_en: 'Men', sku: 'MAS-MEN-001', barcode: '628400100001', cost: 120, price: 250, stock: 28, min_stock: 6, image: 'products/4-mastore/1-mastore-white-tshirt.webp', rating: 4.6, sold: 210 },
+      { name: 'بولو أسود', name_en: 'Black polo', category: 'رجالي', category_en: 'Men', sku: 'MAS-MEN-002', barcode: '628400100002', cost: 160, price: 320, stock: 22, min_stock: 5, image: 'products/4-mastore/2-mastore-black-polo.webp', rating: 4.7, sold: 168 },
+      { name: 'بنطلون جينز', name_en: 'Denim jeans', category: 'رجالي', category_en: 'Men', sku: 'MAS-MEN-003', barcode: '628400100003', cost: 250, price: 450, stock: 16, min_stock: 4, image: 'products/4-mastore/3-mastore-denim-jeans.webp', rating: 4.8, sold: 142 },
+      { name: 'بنطلون شينو', name_en: 'Chino pants', category: 'رجالي', category_en: 'Men', sku: 'MAS-MEN-004', barcode: '628400100004', cost: 220, price: 390, stock: 14, min_stock: 4, image: 'products/4-mastore/4-mastore-chino-pants.webp', rating: 4.5, sold: 96 },
+      { name: 'جاكيت جلد', name_en: 'Leather jacket', category: 'رجالي', category_en: 'Men', sku: 'MAS-MEN-005', barcode: '628400100005', cost: 850, price: 1450, stock: 5, min_stock: 2, image: 'products/4-mastore/5-mastore-leather-jacket.webp', rating: 4.9, sold: 31 },
+      { name: 'قميص كاجوال', name_en: 'Casual shirt', category: 'نسائي', category_en: 'Women', sku: 'MAS-WMN-006', barcode: '628400100006', cost: 300, price: 550, stock: 11, min_stock: 3, image: 'products/4-mastore/6-mastore-casual-shirt.webp', rating: 4.7, sold: 74 },
+      { name: 'ساعة رياضية', name_en: 'Sports watch', category: 'إكسسوارات', category_en: 'Accessories', sku: 'MAS-ACC-007', barcode: '628400100007', cost: 390, price: 690, stock: 8, min_stock: 2, image: 'products/4-mastore/7-mastore-sports-watch.webp', rating: 4.6, sold: 52 },
+      { name: 'محفظة جلد', name_en: 'Leather wallet', category: 'إكسسوارات', category_en: 'Accessories', sku: 'MAS-ACC-008', barcode: '628400100008', cost: 200, price: 380, stock: 14, min_stock: 3, image: 'products/4-mastore/8-mastore-leather-wallet.webp', rating: 4.5, sold: 88 },
+      { name: 'نظارة شمس', name_en: 'Sunglasses', category: 'إكسسوارات', category_en: 'Accessories', sku: 'MAS-ACC-009', barcode: '628400100009', cost: 180, price: 420, stock: 10, min_stock: 3, image: 'products/4-mastore/9-mastore-sunglasses.webp', rating: 4.4, sold: 66 }
     ]
   };
 
@@ -184,11 +188,13 @@
   /* ─────────────────────────── BUILD DATABASE ─────────────────────────── */
   function buildProducts() {
     var out = [];
-    Object.keys(CATALOG).forEach(function (tid) {
+    Object.keys(CATALOG).forEach(function (tid, tidx) {
       CATALOG[tid].forEach(function (p, i) {
+        var defBarcode = '628' + (tidx + 1) + String(10000000 + i + 1).slice(1);
         out.push(Object.assign({}, p, {
           id: 'p-' + tid.replace('t-', '') + '-' + (i + 1),
           tenant_id: tid,
+          barcode: p.barcode || defBarcode,
           is_active: true,
           created_at: daysAgo(200 - i * 3),
           updated_at: daysAgo(4 + i)
@@ -347,7 +353,7 @@
      Hierarchical inbox: support agents · stores · delivery companies.
      Every channel opens a focused direct conversation with the chosen peer.
      The old "General / عام" room is intentionally gone.                       */
-  var CHAT_SCOPES = ['support', 'stores', 'delivery'];
+  var CHAT_SCOPES = ['support', 'stores', 'delivery', 'driver'];
 
   function pairKey(a, b) { return [String(a), String(b)].sort().join('--'); }
   function supportRoomId(a, b) { return 'dm-support-' + pairKey(a, b); }
@@ -356,6 +362,8 @@
   function storeRoomId(tenantId, personId) { return 'dm-store-' + pairKey('tenant-' + tenantId, personId); }
   /* Delivery threads are per person too: two stores never share a company thread. */
   function deliveryRoomId(companyId, personId) { return 'dm-delivery-' + pairKey('company-' + companyId, personId); }
+  /* Customer ↔ assigned rider: a private pair thread created from tracking. */
+  function driverRoomId(a, b) { return 'dm-driver-' + pairKey(a, b); }
   function isStoreStaff(user) { return !!user && (user.role === 'owner' || user.role === 'cashier') && !!user.tenant_id; }
   function isDeliveryStaff(user) { return !!user && user.role === 'delivery' && !!user.delivery_company; }
   function deliveryPair(user, peerId) {
@@ -549,6 +557,10 @@
         room.person_id = String(room.person_id);
         room.users = [room.person_id, 'company-' + room.peer_id].sort();
         room.id = deliveryRoomId(room.peer_id, room.person_id);
+      } else if (room.scope === 'driver') {
+        if (!Array.isArray(room.users) || room.users.length !== 2) return;
+        room.peer_type = 'user';
+        room.id = driverRoomId(room.users[0], room.users[1]);
       }
       add(room);
     });
@@ -626,10 +638,54 @@
       save(db);
       return db;
     }
+    var changed = false;
+    /* Migration — business hours (offline mode) added in the 2026 release. */
+    if (Array.isArray(db.tenants)) {
+      db.tenants.forEach(function (tn, i) {
+        var seedTn = TENANTS.filter(function (x) { return x.id === tn.id; })[0];
+        if (!tn.openTime) { tn.openTime = seedTn ? seedTn.openTime : '10:00'; changed = true; }
+        if (!tn.closeTime) { tn.closeTime = seedTn ? seedTn.closeTime : '22:00'; changed = true; }
+        if (typeof tn.offline !== 'boolean') { tn.offline = false; changed = true; }
+      });
+    }
+    /* Migration — 2026.10: demo stores trade around the clock by default so the
+       storefront is always demo-ready; owners pause ordering explicitly with the
+       "accept orders" switch instead of hitting a scheduled closing time. */
+    db.migrations = db.migrations || {};
+    if (!db.migrations.allDayStores) {
+      var LEGACY_HOURS = {
+        't-caznova': ['10:00', '23:00'],
+        't-smozy': ['00:00', '24:00'],
+        't-bnsheikh': ['07:00', '23:30'],
+        't-mastore': ['10:00', '22:00']
+      };
+      (db.tenants || []).forEach(function (tn) {
+        var legacy = LEGACY_HOURS[tn.id];
+        if (legacy && tn.openTime === legacy[0] && tn.closeTime === legacy[1]) {
+          tn.openTime = '00:00';
+          tn.closeTime = '24:00';
+        }
+      });
+      db.migrations.allDayStores = true;
+      changed = true;
+    }
+    if (Array.isArray(db.products)) {
+      db.products.forEach(function (p, i) {
+        if (!p.barcode) {
+          // Check matching in CATALOG
+          var match = null;
+          if (p.tenant_id && CATALOG[p.tenant_id]) {
+            match = CATALOG[p.tenant_id].filter(function (cp) { return cp.sku === p.sku || cp.name === p.name; })[0];
+          }
+          p.barcode = match && match.barcode ? match.barcode : ('628' + String(1000000000 + i).slice(1));
+          changed = true;
+        }
+      });
+    }
     var before = (db.chats || []).map(function (c) { return c.id; }).join('|');
     ensureChats(db);
     var after = (db.chats || []).map(function (c) { return c.id; }).join('|');
-    if (before !== after) save(db);
+    if (before !== after || changed) save(db);
     return db;
   }
 
@@ -694,6 +750,38 @@
   /* ───────────────────────────── QUERIES ───────────────────────────── */
   function tenantById(id) { return DB.tenants.filter(function (t) { return t.id === id; })[0] || null; }
   function tenantBySlug(slug) { return DB.tenants.filter(function (t) { return t.slug === slug || t.id === slug; })[0] || null; }
+
+  /* ─────────────────────── Store business hours ───────────────────────
+     Each tenant carries openTime / closeTime ("HH:MM"). Windows crossing
+     midnight (e.g. 18:00 → 02:00) are supported, and equal times mean the
+     store is open 24 hours.                                        */
+  function parseHM(value) {
+    var m = /^(\d{1,2}):(\d{2})$/.exec(String(value == null ? '' : value).trim());
+    if (!m) return null;
+    var h = Number(m[1]), mi = Number(m[2]);
+    if (h > 24 || mi > 59 || h < 0 || mi < 0) return null;
+    return h * 60 + mi;
+  }
+  function storeHours(tn) {
+    tn = tn || {};
+    return { open: tn.openTime || '10:00', close: tn.closeTime || '22:00' };
+  }
+  function isStoreOpen(tn, when) {
+    if (!tn || tn.status === 'suspended' || tn.offline === true) return false;
+    var hours = storeHours(tn);
+    var open = parseHM(hours.open), close = parseHM(hours.close);
+    if (open == null || close == null) return true;
+    if (open === close) return true;
+    if (open === 0 && close >= 1440) return true;             /* 00:00 → 24:00 */
+    var now = when ? new Date(when) : new Date();
+    var mins = now.getHours() * 60 + now.getMinutes();
+    if (close > open) return mins >= open && mins < close;
+    return mins >= open || mins < close;                      /* crosses midnight */
+  }
+  function nextOpenLabel(tn) {
+    var hours = storeHours(tn);
+    return hours.open;
+  }
   function userByUsername(name) { return DB.users.filter(function (u) { return u.username === name; })[0] || null; }
   function userById(id) { return DB.users.filter(function (u) { return u.id === id; })[0] || null; }
 
@@ -726,6 +814,14 @@
     return DB.products.filter(function (p) { return p.tenant_id === tid; });
   }
 
+  /* Multi-vendor orders carry a vendor_ids[] list while keeping a legacy
+     tenant_id (the first vendor) for older screens. */
+  function orderHasTenant(order, tenantId) {
+    if (!order || !tenantId) return false;
+    if (order.tenant_id === tenantId) return true;
+    return Array.isArray(order.vendor_ids) && order.vendor_ids.indexOf(tenantId) > -1;
+  }
+
   function visibleOrders(user) {
     user = user || DS.session();
     if (!user) return [];
@@ -739,7 +835,7 @@
     if (user.role === 'customer') {
       return DB.orders.filter(function (o) { return (o.customer && o.customer.phone === user.phone) || o.customer_id === user.id; });
     }
-    return DB.orders.filter(function (o) { return o.tenant_id === user.tenant_id; });
+    return DB.orders.filter(function (o) { return orderHasTenant(o, user.tenant_id); });
   }
 
   function visibleInvoices(user) {
@@ -750,7 +846,7 @@
     return DB.invoices.filter(function (i) { return i.tenant_id === user.tenant_id; });
   }
 
-  function ordersByTenant(tenantId) { return DB.orders.filter(function (o) { return o.tenant_id === tenantId; }); }
+  function ordersByTenant(tenantId) { return DB.orders.filter(function (o) { return orderHasTenant(o, tenantId); }); }
   function productsByTenant(tenantId) { return DB.products.filter(function (p) { return p.tenant_id === tenantId; }); }
 
   function customers() {
@@ -1014,9 +1110,27 @@
     return tn;
   }
 
+  /* Owner-controlled "accept orders" switch. `offline: true` closes the store
+     immediately — the storefront disables its products and checkout blocks the
+     order until it is switched back on. */
+  function setStoreOffline(tenantId, offline) {
+    var tn = tenantById(tenantId);
+    if (!tn) return null;
+    tn.offline = !!offline;
+    audit(
+      (offline ? 'إيقاف استقبال طلبات ' : 'استئناف استقبال طلبات ') + tn.name,
+      (offline ? 'Paused orders for ' : 'Resumed orders for ') + (tn.name_en || tn.name),
+      'store'
+    );
+    commit();
+    return tn;
+  }
+
   function addProduct(data) {
     var product = Object.assign({
-      id: DS.uid('p'), is_active: true, rating: 4.8, sold: 0, created_at: nowISO(), updated_at: nowISO(), min_stock: 5
+      id: DS.uid('p'),
+      barcode: data.barcode || ('628' + String(Date.now()).slice(-9)),
+      is_active: true, rating: 4.8, sold: 0, created_at: nowISO(), updated_at: nowISO(), min_stock: 5
     }, data);
     DB.products.push(product);
     audit('أضاف منتج «' + product.name + '»', 'Added product “' + (product.name_en || product.name) + '”', 'box');
@@ -1110,10 +1224,18 @@
   function addInvoice(data) {
     var invoice = Object.assign({ id: DS.uid('inv'), invoice_no: 'INV-' + Math.floor(3000 + Math.random() * 6000), created_at: nowISO() }, data);
     DB.invoices.unshift(invoice);
-    invoice.items.forEach(function (it) {
-      var p = DB.products.filter(function (x) { return x.id === it.product_id; })[0];
-      if (p) p.stock = Math.max(0, p.stock - it.qty);
-    });
+    /* Inventory already left the shelf when the order was created. Only a
+       standalone invoice (no linked order) adjusts stock here — otherwise a
+       POS sale would deduct every unit twice. */
+    if (!invoice.order_id) {
+      (invoice.items || []).forEach(function (it) {
+        var p = DB.products.filter(function (x) { return x.id === it.product_id; })[0];
+        if (!p) return;
+        p.stock = Math.max(0, (Number(p.stock) || 0) - (Number(it.qty) || 0));
+        p.sold = (Number(p.sold) || 0) + (Number(it.qty) || 0);
+        p.updated_at = nowISO();
+      });
+    }
     audit('فاتورة ' + invoice.invoice_no + ' بقيمة ' + invoice.total, 'Invoice ' + invoice.invoice_no + ' for ' + invoice.total, 'receipt');
     commit();
     return invoice;
@@ -1177,12 +1299,14 @@
   function chatCanScope(user, scope) {
     if (!user) return false;
     if (scope === 'support') return true;
+    if (scope === 'driver') return true;
     if (scope === 'stores') return user.role !== 'delivery';
     if (scope === 'delivery') return user.role !== 'customer';
     return false;
   }
 
   function chatPeerFor(scope, peerId) {
+    if (scope === 'driver') return userById(peerId);
     if (scope === 'support') return userById(peerId);
     /* Store / company peers may be the entity (customer view) or a person
        (the business team's view); resolve whichever exists. */
@@ -1197,6 +1321,7 @@
     user = user || DS.session();
     if (!user) return null;
     if (scope === 'support') return supportRoomId(user.id, peerId);
+    if (scope === 'driver') return driverRoomId(user.id, peerId);
     if (scope === 'stores') {
       var pair = storePair(user, peerId);
       return storeRoomId(pair.tenantId, pair.personId);
@@ -1329,6 +1454,27 @@
       });
       return out;
     }
+    if (scope === 'driver') {
+      /* Customer ↔ rider threads: each side sees the other participant. */
+      DB.chats.filter(function (r) {
+        return r && r.scope === 'driver' && Array.isArray(r.users) && r.users.indexOf(user.id) > -1;
+      }).forEach(function (room) {
+        var other = room.users.filter(function (id) { return id !== user.id; })[0];
+        var person = userById(other);
+        if (!person || person.is_active === false) return;
+        out.push({
+          key: person.id, type: 'user', id: person.id,
+          roomId: room.id,
+          name: person.name, name_en: person.name_en || person.name,
+          avatar_id: person.avatar_id, avatar: null,
+          subtitle: person.role === 'delivery' ? 'مندوب التوصيل' : 'عميل',
+          subtitle_en: person.role === 'delivery' ? 'Delivery rider' : 'Customer',
+          tone: 'orange', last_at: lastAt(room)
+        });
+      });
+      out.sort(function (a, b) { return (b.last_at || '').localeCompare(a.last_at || '') || String(a.name).localeCompare(String(b.name)); });
+      return out;
+    }
     return out;
   }
 
@@ -1358,6 +1504,15 @@
         id: roomId, scope: 'support', peer_type: 'user',
         users: [user.id, String(peerId)].sort(),
         title: 'دعم · ' + (peer.name || ''), title_en: 'Support · ' + (peer.name_en || peer.name || ''),
+        messages: []
+      };
+    } else if (scope === 'driver') {
+      var driver = userById(peerId);
+      if (!driver) return null;
+      room = {
+        id: roomId, scope: 'driver', peer_type: 'user',
+        peer_id: driver.id, users: [user.id, driver.id].sort(),
+        title: 'المندوب · ' + (driver.name || ''), title_en: 'Rider · ' + (driver.name_en || driver.name || ''),
         messages: []
       };
     } else if (scope === 'delivery') {
@@ -1414,6 +1569,9 @@
   function roomVisible(user, room) {
     if (!user || !room) return false;
     var scope = room.scope;
+    if (scope === 'driver') {
+      return Array.isArray(room.users) && room.users.indexOf(user.id) > -1;
+    }
     if (scope === 'support') {
       if (isAdmin(user) && user.role === 'superadmin') return true;
       return Array.isArray(room.users) && room.users.indexOf(user.id) > -1;
@@ -1543,7 +1701,7 @@
         out.push({ icon: 'card', title: (en ? t.name + ' subscription expires soon' : 'اشتراك ' + t.name + ' ينتهي قريباً'), text: (en ? Math.max(0, Math.ceil((new Date(t.subscription_end) - Date.now()) / 86400000)) + ' days left' : 'متبقي ' + Math.max(0, Math.ceil((new Date(t.subscription_end) - Date.now()) / 86400000)) + ' يوم'), at: nowISO(), href: 'admin/subscriptions.html' });
       });
     } else if (user.role === 'owner') {
-      DB.orders.filter(function (o) { return o.tenant_id === user.tenant_id && (o.status === 'pending' || o.status === 'delivering'); }).slice(0, 4).forEach(function (o) {
+      DB.orders.filter(function (o) { return orderHasTenant(o, user.tenant_id) && (o.status === 'pending' || o.status === 'delivering'); }).slice(0, 4).forEach(function (o) {
         out.push({ icon: 'receipt', title: (en ? 'Order ' : 'طلب ') + o.order_no + ' · ' + tStatus(o.status), text: DS.loc(o.customer, 'name') + ' · ' + DS.money(o.total), at: o.created_at, href: 'owner/orders.html' });
       });
       var prods = productsByTenant(user.tenant_id).filter(function (p) { return p.stock <= p.min_stock; });
@@ -1558,6 +1716,22 @@
       });
     }
     return out.sort(function (a, b) { return new Date(b.at) - new Date(a.at); }).slice(0, 8);
+  }
+
+  /* Assigned rider for an order (used by "Chat with driver"). */
+  function driverForOrder(order) {
+    if (!order) return null;
+    if (order.driver_id) {
+      var byId = userById(order.driver_id);
+      if (byId && byId.role === 'delivery') return byId;
+    }
+    if (order.delivery_company_id) {
+      var rider = DB.users.filter(function (u) {
+        return u.role === 'delivery' && u.delivery_company === order.delivery_company_id && u.is_active !== false;
+      })[0];
+      if (rider) return rider;
+    }
+    return DB.users.filter(function (u) { return u.role === 'delivery' && u.is_active !== false; })[0] || null;
   }
 
   function tStatus(status) {
@@ -1591,6 +1765,11 @@
     logout: DS.logout,
     tenantById: tenantById,
     tenantBySlug: tenantBySlug,
+    storeHours: storeHours,
+    isStoreOpen: isStoreOpen,
+    nextOpenLabel: nextOpenLabel,
+    driverForOrder: driverForOrder,
+    orderHasTenant: orderHasTenant,
     userById: userById,
     userByUsername: userByUsername,
     isAdmin: isAdmin,
@@ -1645,6 +1824,7 @@
     get chatReports() { return DB.chat_reports || []; },
     manageSubscription: manageSubscription,
     setTenantStatus: setTenantStatus,
+    setStoreOffline: setStoreOffline,
     saveSettings: saveSettings,
     subscriptionPayload: subscriptionPayload,
     activeSubscription: activeSubscription,

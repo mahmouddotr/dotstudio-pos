@@ -32,6 +32,7 @@
       { section: 'communication' },
       { key: 'chats', href: 'admin/chats.html', icon: 'chat' },
       { section: 'system' },
+      { key: 'systemTools', href: 'admin/hardware-tools.html', icon: 'settings' },
       { key: 'settings', href: 'admin/settings.html', icon: 'settings' }
     ],
     subadmin: [
@@ -52,6 +53,7 @@
       { section: 'communication' },
       { key: 'chats', href: 'admin/chats.html', icon: 'chat', perm: 'chats' },
       { section: 'system' },
+      { key: 'systemTools', href: 'admin/hardware-tools.html', icon: 'settings', perm: 'products' },
       { key: 'settings', href: 'admin/settings.html', icon: 'settings' }
     ],
     owner: [
@@ -70,6 +72,7 @@
       { section: 'communication' },
       { key: 'chats', href: 'owner/messages.html', icon: 'chat' },
       { section: 'system' },
+      { key: 'systemTools', href: 'admin/hardware-tools.html', icon: 'settings' },
       { key: 'settings', href: 'owner/settings.html', icon: 'settings' }
     ],
     cashier: [
@@ -79,6 +82,7 @@
       { key: 'invoices', href: 'cashier/invoices.html', icon: 'receipt' },
       { key: 'chats', href: 'owner/messages.html', icon: 'chat' },
       { section: 'system' },
+      { key: 'systemTools', href: 'admin/hardware-tools.html', icon: 'settings' },
       { key: 'settings', href: 'cashier/settings.html', icon: 'settings' }
     ],
     delivery: [

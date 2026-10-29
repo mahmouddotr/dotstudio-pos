@@ -6,7 +6,7 @@
    ═══════════════════════════════════════════════════════════════ */
 'use strict';
 
-var VERSION = 'dotstudio-pos-v9';
+var VERSION = 'dotstudio-pos-v13';
 var SHELL = [
   './',
   './index.html',
@@ -22,6 +22,7 @@ var SHELL = [
   './shared/js/shell.js',
   './shared/js/ui.js',
   './shared/js/chat.js',
+  './shared/js/scanner.js',
   './shared/js/gps-track.js',
   './shared/js/pages/dashboard.js',
   './shared/js/pages/products.js',
@@ -44,6 +45,7 @@ var SHELL = [
   './shared/js/pages/checkout.js',
   './shared/js/pages/my-orders.js',
   './shared/js/pages/tracking.js',
+  './shared/js/pages/hardware-tools.js',
   './shared/js/pages/delivery-dashboard.js',
   './shared/js/pages/delivery-orders.js',
   './shared/js/pages/delivery-tracking.js',
@@ -70,7 +72,7 @@ var PAGES = [
   './admin/dashboard.html', './admin/orders.html', './admin/products.html', './admin/stores.html',
   './admin/customers.html', './admin/cashiers.html', './admin/delivery-companies.html',
   './admin/sub-admins.html', './admin/reports.html', './admin/subscriptions.html', './admin/jobs.html',
-  './admin/audit-logs.html', './admin/chats.html', './admin/settings.html',
+  './admin/audit-logs.html', './admin/chats.html', './admin/settings.html', './admin/hardware-tools.html',
   './owner/dashboard.html', './owner/orders.html', './owner/products.html', './owner/customers.html',
   './owner/cashiers.html', './owner/delivery-companies.html', './owner/reports.html',
   './owner/subscriptions.html', './owner/chats.html', './owner/settings.html',

@@ -70,7 +70,11 @@
         '<div class="t"><b>' + esc(o.status === 'delivering' ? t('driverOnWay') : o.status === 'delivered' ? t('orderDelivered') : meta.label) + '</b>' +
           '<span>' + esc(o.order_no) + ' · ' + esc(tn.name || '') + ' · ' + esc(o.driver_id && DS.data.userById(o.driver_id) ? DS.loc(DS.data.userById(o.driver_id), 'name') : (o.driver_name || t('driver'))) + '</span></div>' +
         DS.badge(o.status, meta.label) + '</div>' +
-      '<div id="gpsHost"></div></div>';
+      '<div id="gpsHost"></div>' +
+      '<div class="trk-actions">' +
+        (o.status === 'delivering' ? '<button type="button" class="btn btn-primary" data-driver-chat>' + icon('chat') + esc(t('chatWithDriver')) + '</button>' : '') +
+        (['delivered', 'cancelled'].indexOf(o.status) === -1 ? '<button type="button" class="btn btn-secondary" data-simulate>' + icon('bike') + esc(t('simulateDriver')) + '</button>' : '') +
+      '</div></div>';
 
     var right = '<div style="display:flex;flex-direction:column;gap:14px">' +
       '<div class="card"><div class="card-head"><div class="section-title">' + icon('receipt') + esc(t('details')) + '</div>' + DS.badge(o.status, meta.label) + '</div><div class="card-body">' +
@@ -127,6 +131,24 @@
     if (sel) sel.addEventListener('change', function () { state.id = sel.value; render(); });
     var det = page.body.querySelector('[data-details]');
     if (det) det.addEventListener('click', function () { DS.openOrder(o.id); });
+
+    var chatBtn = page.body.querySelector('[data-driver-chat]');
+    if (chatBtn) chatBtn.addEventListener('click', function () {
+      if (DS.openDriverChat) DS.openDriverChat(o);
+      else DS.toast(t('chatDriverNoOrder'), 'warning');
+    });
+
+    var simBtn = page.body.querySelector('[data-simulate]');
+    if (simBtn) simBtn.addEventListener('click', function () {
+      var host = page.body.querySelector('#gpsHost');
+      var ok = state.gps && state.gps.simulate ? state.gps.simulate()
+        : (DS.gps && DS.gps.simulate ? DS.gps.simulate(host) : false);
+      DS.toast(ok
+        ? (DS.lang() === 'en' ? 'Simulating rider movement…' : 'جارٍ محاكاة حركة المندوب…')
+        : (DS.lang() === 'en' ? 'Map is still loading, try again.' : 'الخريطة قيد التحميل، جرّب مرة أخرى.'),
+        ok ? 'success' : 'warning');
+      simBtn.classList.toggle('is-active', !!ok);
+    });
   }
 
   var refresh = page.root.querySelector('[data-refresh]');

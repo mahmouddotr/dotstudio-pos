@@ -1,0 +1,1366 @@
+{
+  "results": [
+    {
+      "key": "admin/ar",
+      "path": "admin/dashboard.html",
+      "app": true,
+      "empty": 60859,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة تحكم الإدارة · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "admin/orders.html",
+      "app": true,
+      "empty": 75443,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الطلبات · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "admin/products.html",
+      "app": true,
+      "empty": 100556,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "المنتجات · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "admin/stores.html",
+      "app": true,
+      "empty": 29420,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "المتاجر · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "admin/customers.html",
+      "app": true,
+      "empty": 28718,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "العملاء · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "admin/users.html",
+      "app": true,
+      "empty": 42242,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "المستخدمون · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "admin/cashiers.html",
+      "app": true,
+      "empty": 25234,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الكاشير · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "admin/delivery-companies.html",
+      "app": true,
+      "empty": 26692,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "شركات التوصيل · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "admin/sub-admins.html",
+      "app": true,
+      "empty": 26521,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "المشرفون · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "admin/reports.html",
+      "app": true,
+      "empty": 29677,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "التقارير · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "admin/subscriptions.html",
+      "app": true,
+      "empty": 30416,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الاشتراكات · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "admin/jobs.html",
+      "app": true,
+      "empty": 31313,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الوظائف · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "admin/audit-logs.html",
+      "app": true,
+      "empty": 27202,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "سجل النشاط · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "admin/chats.html",
+      "app": true,
+      "empty": 27220,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "المحادثات · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "admin/settings.html",
+      "app": true,
+      "empty": 19921,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الإعدادات · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "admin/hardware-tools.html",
+      "app": true,
+      "empty": 19926,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "أدوات النظام · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "owner/dashboard.html",
+      "app": true,
+      "empty": 60911,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة تحكم المتجر · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "owner/orders.html",
+      "app": true,
+      "empty": 75443,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "طلبات المتجر · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "owner/products.html",
+      "app": true,
+      "empty": 100556,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "منتجات المتجر · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "owner/customers.html",
+      "app": true,
+      "empty": 28718,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "عملاء المتجر · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "owner/reports.html",
+      "app": true,
+      "empty": 29677,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "تقارير المتجر · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "owner/subscriptions.html",
+      "app": true,
+      "empty": 30416,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الاشتراكات · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "owner/cashiers.html",
+      "app": true,
+      "empty": 25234,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "فريق الكاشير · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "owner/delivery-companies.html",
+      "app": true,
+      "empty": 26692,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "شركات التوصيل · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "owner/messages.html",
+      "app": true,
+      "empty": 27220,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الرسائل · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "owner/chats.html",
+      "app": true,
+      "empty": 27220,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الرسائل · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "owner/settings.html",
+      "app": true,
+      "empty": 19921,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "إعدادات المتجر · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "cashier/pos.html",
+      "app": true,
+      "empty": 61828,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة تحكم الإدارة · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "cashier/orders.html",
+      "app": true,
+      "empty": 75443,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "طلبات الكاشير · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "cashier/invoices.html",
+      "app": true,
+      "empty": 63792,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة تحكم الإدارة · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "cashier/settings.html",
+      "app": true,
+      "empty": 19921,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "إعدادات الكاشير · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "delivery/dashboard.html",
+      "app": true,
+      "empty": 63779,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة تحكم الإدارة · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "delivery/orders.html",
+      "app": true,
+      "empty": 63778,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة تحكم الإدارة · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "delivery/tracking.html",
+      "app": true,
+      "empty": 63779,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة تحكم الإدارة · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "delivery/messages.html",
+      "app": true,
+      "empty": 27220,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "مركز الرسائل · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "customer/storefront.html",
+      "app": true,
+      "empty": 128969,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "المتجر · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "customer/checkout.html",
+      "app": true,
+      "empty": 17030,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "إتمام الطلب · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "customer/my-orders.html",
+      "app": true,
+      "empty": 63784,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة تحكم الإدارة · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "customer/tracking.html",
+      "app": true,
+      "empty": 63782,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة تحكم الإدارة · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "auth/public-chat.html",
+      "app": true,
+      "empty": 27672,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الرسائل · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "auth/jobs/jobs.html",
+      "app": false,
+      "empty": 0,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الوظائف · DotStudio® POS"
+    },
+    {
+      "key": "admin/ar",
+      "path": "marketing/index.html",
+      "app": false,
+      "empty": 0,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "DotStudio® POS — منصة إدارة المتاجر"
+    },
+    {
+      "key": "admin/ar",
+      "path": "index.html",
+      "app": false,
+      "empty": 0,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "admin/dashboard.html",
+      "app": true,
+      "empty": 60857,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة تحكم الإدارة · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "admin/orders.html",
+      "app": true,
+      "empty": 75443,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الطلبات · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "admin/products.html",
+      "app": true,
+      "empty": 100556,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "المنتجات · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "admin/stores.html",
+      "app": true,
+      "empty": 29420,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "المتاجر · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "admin/customers.html",
+      "app": true,
+      "empty": 28718,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "العملاء · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "admin/users.html",
+      "app": true,
+      "empty": 42242,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "المستخدمون · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "admin/cashiers.html",
+      "app": true,
+      "empty": 25234,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الكاشير · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "admin/delivery-companies.html",
+      "app": true,
+      "empty": 26692,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "شركات التوصيل · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "admin/sub-admins.html",
+      "app": true,
+      "empty": 26521,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "المشرفون · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "admin/reports.html",
+      "app": true,
+      "empty": 29677,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "التقارير · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "admin/subscriptions.html",
+      "app": true,
+      "empty": 30416,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الاشتراكات · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "admin/jobs.html",
+      "app": true,
+      "empty": 31313,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الوظائف · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "admin/audit-logs.html",
+      "app": true,
+      "empty": 27202,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "سجل النشاط · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "admin/chats.html",
+      "app": true,
+      "empty": 27220,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "المحادثات · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "admin/settings.html",
+      "app": true,
+      "empty": 19921,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الإعدادات · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "admin/hardware-tools.html",
+      "app": true,
+      "empty": 19926,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "أدوات النظام · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "owner/dashboard.html",
+      "app": true,
+      "empty": 61438,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة تحكم المتجر · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "owner/orders.html",
+      "app": true,
+      "empty": 75443,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "طلبات المتجر · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "owner/products.html",
+      "app": true,
+      "empty": 100556,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "منتجات المتجر · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "owner/customers.html",
+      "app": true,
+      "empty": 28718,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "عملاء المتجر · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "owner/reports.html",
+      "app": true,
+      "empty": 29677,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "تقارير المتجر · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "owner/subscriptions.html",
+      "app": true,
+      "empty": 30416,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الاشتراكات · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "owner/cashiers.html",
+      "app": true,
+      "empty": 25234,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "فريق الكاشير · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "owner/delivery-companies.html",
+      "app": true,
+      "empty": 26692,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "شركات التوصيل · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "owner/messages.html",
+      "app": true,
+      "empty": 27220,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الرسائل · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "owner/chats.html",
+      "app": true,
+      "empty": 27220,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الرسائل · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "owner/settings.html",
+      "app": true,
+      "empty": 19921,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "إعدادات المتجر · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "cashier/pos.html",
+      "app": true,
+      "empty": 63804,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة تحكم الإدارة · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "cashier/orders.html",
+      "app": true,
+      "empty": 75443,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "طلبات الكاشير · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "cashier/invoices.html",
+      "app": true,
+      "empty": 63780,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة تحكم الإدارة · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "cashier/settings.html",
+      "app": true,
+      "empty": 19921,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "إعدادات الكاشير · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "delivery/dashboard.html",
+      "app": true,
+      "empty": 63775,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة تحكم الإدارة · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "delivery/orders.html",
+      "app": true,
+      "empty": 63781,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة تحكم الإدارة · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "delivery/tracking.html",
+      "app": true,
+      "empty": 63776,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة تحكم الإدارة · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "delivery/messages.html",
+      "app": true,
+      "empty": 27220,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "مركز الرسائل · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "customer/storefront.html",
+      "app": true,
+      "empty": 128969,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "المتجر · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "customer/checkout.html",
+      "app": true,
+      "empty": 17030,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "إتمام الطلب · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "customer/my-orders.html",
+      "app": true,
+      "empty": 63783,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة تحكم الإدارة · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "customer/tracking.html",
+      "app": true,
+      "empty": 63770,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة تحكم الإدارة · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "auth/public-chat.html",
+      "app": true,
+      "empty": 27672,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الرسائل · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "auth/jobs/jobs.html",
+      "app": false,
+      "empty": 0,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الوظائف · DotStudio® POS"
+    },
+    {
+      "key": "admin/en",
+      "path": "marketing/index.html",
+      "app": false,
+      "empty": 0,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "DotStudio® POS — منصة إدارة المتاجر"
+    },
+    {
+      "key": "admin/en",
+      "path": "index.html",
+      "app": false,
+      "empty": 0,
+      "overflow": 0,
+      "dir": "ltr",
+      "lang": "en",
+      "title": "DotStudio® POS"
+    },
+    {
+      "key": "customer/ar",
+      "path": "customer/storefront.html",
+      "app": true,
+      "empty": 122158,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "المتجر · DotStudio® POS"
+    },
+    {
+      "key": "customer/ar",
+      "path": "customer/my-orders.html",
+      "app": true,
+      "empty": 19647,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "طلباتي · DotStudio® POS"
+    },
+    {
+      "key": "customer/ar",
+      "path": "customer/tracking.html",
+      "app": true,
+      "empty": 22947,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "تتبع الطلب · DotStudio® POS"
+    },
+    {
+      "key": "customer/ar",
+      "path": "customer/checkout.html",
+      "app": true,
+      "empty": 10900,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "إتمام الطلب · DotStudio® POS"
+    },
+    {
+      "key": "customer/ar",
+      "path": "auth/public-chat.html",
+      "app": true,
+      "empty": 17793,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الرسائل · DotStudio® POS"
+    },
+    {
+      "key": "customer/en",
+      "path": "customer/storefront.html",
+      "app": true,
+      "empty": 122158,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "المتجر · DotStudio® POS"
+    },
+    {
+      "key": "customer/en",
+      "path": "customer/my-orders.html",
+      "app": true,
+      "empty": 19647,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "طلباتي · DotStudio® POS"
+    },
+    {
+      "key": "customer/en",
+      "path": "customer/tracking.html",
+      "app": true,
+      "empty": 22932,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "تتبع الطلب · DotStudio® POS"
+    },
+    {
+      "key": "customer/en",
+      "path": "customer/checkout.html",
+      "app": true,
+      "empty": 10900,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "إتمام الطلب · DotStudio® POS"
+    },
+    {
+      "key": "customer/en",
+      "path": "auth/public-chat.html",
+      "app": true,
+      "empty": 17793,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الرسائل · DotStudio® POS"
+    },
+    {
+      "key": "owner/ar",
+      "path": "owner/dashboard.html",
+      "app": true,
+      "empty": 40385,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة تحكم المتجر · DotStudio® POS"
+    },
+    {
+      "key": "owner/ar",
+      "path": "owner/orders.html",
+      "app": true,
+      "empty": 32585,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "طلبات المتجر · DotStudio® POS"
+    },
+    {
+      "key": "owner/ar",
+      "path": "owner/products.html",
+      "app": true,
+      "empty": 34385,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "منتجات المتجر · DotStudio® POS"
+    },
+    {
+      "key": "owner/ar",
+      "path": "owner/customers.html",
+      "app": true,
+      "empty": 20420,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "عملاء المتجر · DotStudio® POS"
+    },
+    {
+      "key": "owner/ar",
+      "path": "owner/reports.html",
+      "app": true,
+      "empty": 28585,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "تقارير المتجر · DotStudio® POS"
+    },
+    {
+      "key": "owner/ar",
+      "path": "owner/subscriptions.html",
+      "app": true,
+      "empty": 22858,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الاشتراكات · DotStudio® POS"
+    },
+    {
+      "key": "owner/ar",
+      "path": "owner/cashiers.html",
+      "app": true,
+      "empty": 18121,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "فريق الكاشير · DotStudio® POS"
+    },
+    {
+      "key": "owner/ar",
+      "path": "owner/delivery-companies.html",
+      "app": true,
+      "empty": 25070,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "شركات التوصيل · DotStudio® POS"
+    },
+    {
+      "key": "owner/ar",
+      "path": "owner/messages.html",
+      "app": true,
+      "empty": 20525,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الرسائل · DotStudio® POS"
+    },
+    {
+      "key": "owner/ar",
+      "path": "owner/settings.html",
+      "app": true,
+      "empty": 18278,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "إعدادات المتجر · DotStudio® POS"
+    },
+    {
+      "key": "owner/ar",
+      "path": "admin/hardware-tools.html",
+      "app": true,
+      "empty": 18303,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "أدوات النظام · DotStudio® POS"
+    },
+    {
+      "key": "owner/en",
+      "path": "owner/dashboard.html",
+      "app": true,
+      "empty": 40385,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة تحكم المتجر · DotStudio® POS"
+    },
+    {
+      "key": "owner/en",
+      "path": "owner/orders.html",
+      "app": true,
+      "empty": 32585,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "طلبات المتجر · DotStudio® POS"
+    },
+    {
+      "key": "owner/en",
+      "path": "owner/products.html",
+      "app": true,
+      "empty": 34385,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "منتجات المتجر · DotStudio® POS"
+    },
+    {
+      "key": "owner/en",
+      "path": "owner/customers.html",
+      "app": true,
+      "empty": 20420,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "عملاء المتجر · DotStudio® POS"
+    },
+    {
+      "key": "owner/en",
+      "path": "owner/reports.html",
+      "app": true,
+      "empty": 28585,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "تقارير المتجر · DotStudio® POS"
+    },
+    {
+      "key": "owner/en",
+      "path": "owner/subscriptions.html",
+      "app": true,
+      "empty": 22858,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الاشتراكات · DotStudio® POS"
+    },
+    {
+      "key": "owner/en",
+      "path": "owner/cashiers.html",
+      "app": true,
+      "empty": 18121,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "فريق الكاشير · DotStudio® POS"
+    },
+    {
+      "key": "owner/en",
+      "path": "owner/delivery-companies.html",
+      "app": true,
+      "empty": 25070,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "شركات التوصيل · DotStudio® POS"
+    },
+    {
+      "key": "owner/en",
+      "path": "owner/messages.html",
+      "app": true,
+      "empty": 20525,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الرسائل · DotStudio® POS"
+    },
+    {
+      "key": "owner/en",
+      "path": "owner/settings.html",
+      "app": true,
+      "empty": 18278,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "إعدادات المتجر · DotStudio® POS"
+    },
+    {
+      "key": "owner/en",
+      "path": "admin/hardware-tools.html",
+      "app": true,
+      "empty": 18303,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "أدوات النظام · DotStudio® POS"
+    },
+    {
+      "key": "cashier/ar",
+      "path": "cashier/pos.html",
+      "app": true,
+      "empty": 23906,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "نقطة البيع · DotStudio® POS"
+    },
+    {
+      "key": "cashier/ar",
+      "path": "cashier/orders.html",
+      "app": true,
+      "empty": 29778,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "طلبات الكاشير · DotStudio® POS"
+    },
+    {
+      "key": "cashier/ar",
+      "path": "cashier/invoices.html",
+      "app": true,
+      "empty": 24420,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الفواتير · DotStudio® POS"
+    },
+    {
+      "key": "cashier/ar",
+      "path": "cashier/settings.html",
+      "app": true,
+      "empty": 15098,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "إعدادات الكاشير · DotStudio® POS"
+    },
+    {
+      "key": "cashier/ar",
+      "path": "admin/hardware-tools.html",
+      "app": true,
+      "empty": 15496,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "أدوات النظام · DotStudio® POS"
+    },
+    {
+      "key": "cashier/en",
+      "path": "cashier/pos.html",
+      "app": true,
+      "empty": 23906,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "نقطة البيع · DotStudio® POS"
+    },
+    {
+      "key": "cashier/en",
+      "path": "cashier/orders.html",
+      "app": true,
+      "empty": 29778,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "طلبات الكاشير · DotStudio® POS"
+    },
+    {
+      "key": "cashier/en",
+      "path": "cashier/invoices.html",
+      "app": true,
+      "empty": 24420,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "الفواتير · DotStudio® POS"
+    },
+    {
+      "key": "cashier/en",
+      "path": "cashier/settings.html",
+      "app": true,
+      "empty": 15098,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "إعدادات الكاشير · DotStudio® POS"
+    },
+    {
+      "key": "cashier/en",
+      "path": "admin/hardware-tools.html",
+      "app": true,
+      "empty": 15496,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "أدوات النظام · DotStudio® POS"
+    },
+    {
+      "key": "delivery/ar",
+      "path": "delivery/dashboard.html",
+      "app": true,
+      "empty": 26130,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة المندوب · DotStudio® POS"
+    },
+    {
+      "key": "delivery/ar",
+      "path": "delivery/orders.html",
+      "app": true,
+      "empty": 25111,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "طلبات التوصيل · DotStudio® POS"
+    },
+    {
+      "key": "delivery/ar",
+      "path": "delivery/tracking.html",
+      "app": true,
+      "empty": 19268,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "خريطة التتبع · DotStudio® POS"
+    },
+    {
+      "key": "delivery/ar",
+      "path": "delivery/messages.html",
+      "app": true,
+      "empty": 15612,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "مركز الرسائل · DotStudio® POS"
+    },
+    {
+      "key": "delivery/en",
+      "path": "delivery/dashboard.html",
+      "app": true,
+      "empty": 26130,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "لوحة المندوب · DotStudio® POS"
+    },
+    {
+      "key": "delivery/en",
+      "path": "delivery/orders.html",
+      "app": true,
+      "empty": 25111,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "طلبات التوصيل · DotStudio® POS"
+    },
+    {
+      "key": "delivery/en",
+      "path": "delivery/tracking.html",
+      "app": true,
+      "empty": 19268,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "خريطة التتبع · DotStudio® POS"
+    },
+    {
+      "key": "delivery/en",
+      "path": "delivery/messages.html",
+      "app": true,
+      "empty": 15612,
+      "overflow": 0,
+      "dir": "rtl",
+      "lang": "ar",
+      "title": "مركز الرسائل · DotStudio® POS"
+    }
+  ],
+  "errors": [],
+  "network404": []
+}

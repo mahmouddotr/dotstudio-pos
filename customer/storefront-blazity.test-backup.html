@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>BLAZITY TEST · المتجر · DotStudio® POS</title>
+  <meta name="description" content="DotStudio® POS — منصة إدارة المتاجر والمبيعات والتوصيل.">
+  <meta name="theme-color" content="#000000">
+  <link rel="icon" type="image/png" href="../assets/img/LOGO-ICON-DONE.png">
+  <link rel="stylesheet" href="../assets/css/fonts.css">
+  <link rel="stylesheet" href="../shared/css/design-system.css?v=20261026e">
+  <link rel="stylesheet" href="../shared/css/components.css?v=20261026e">
+  <link rel="stylesheet" href="../shared/css/app.css?v=20261026e">
+  <link rel="stylesheet" href="../shared/css/storefront.css?v=20261026e">
+  <script src="../shared/js/i18n.js?v=20261026e"></script>
+
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       BLAZITY TEST STOREFRONT — presentation only.
+       Standalone page: does not touch shared CSS or the live storefront.
+       ═══════════════════════════════════════════════════════════════ */
+    .bz-page {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(28px, 3.4vw, 52px);
+      padding-bottom: 40px;
+    }
+
+    /* ───────────────────────── HERO: FULL BLEED ───────────────────────── */
+    .bz-bleed {
+      width: calc(100% + (var(--bz-bleed, 28px) * 2));
+      margin-inline: calc(var(--bz-bleed, 28px) * -1);
+      margin-top: calc(var(--bz-bleed-top, 26px) * -1);
+    }
+
+    .blazity-hero {
+      position: relative;
+      height: clamp(520px, 78vh, 820px);
+      overflow: hidden;
+      background: #000;
+      direction: ltr;
+      isolation: isolate;
+    }
+
+    .blazity-hero .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: flex-end;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transform: scale(1.05);
+      transition: opacity 900ms ease, transform 7200ms linear;
+      pointer-events: none;
+    }
+    .blazity-hero .slide.active {
+      opacity: 1;
+      transform: scale(1);
+      z-index: 2;
+      pointer-events: auto;
+    }
+    .blazity-hero .slide::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.10) 0%, rgba(0, 0, 0, 0.30) 46%, rgba(0, 0, 0, 0.80) 100%),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.42) 0%, rgba(0, 0, 0, 0) 62%);
+    }
+
+    .blazity-hero .hero-content {
+      position: relative;
+      z-index: 3;
+      width: 100%;
+      max-width: min(820px, 100%);
+      padding: clamp(28px, 5vw, 84px);
+      color: #fff;
+    }
+    .blazity-hero .hero-content h1 {
+      margin: 0 0 16px;
+      font-size: clamp(40px, 6.2vw, 80px);
+      line-height: 0.96;
+      letter-spacing: -0.045em;
+      font-weight: 800;
+      color: #fff;
+      text-wrap: balance;
+    }
+    .blazity-hero .hero-content p {
+      margin: 0 0 30px;
+      max-width: 520px;
+      font-size: clamp(15px, 1.3vw, 19px);
+      line-height: 1.55;
+      color: rgba(255, 255, 255, 0.80);
+    }
+    .blazity-hero .hero-content button {
+      height: 54px;
+      padding: 0 34px;
+      border: 0;
+      border-radius: 999px;
+      background: #fff;
+      color: #0A0A0B;
+      font-family: inherit;
+      font-size: var(--fs-sm);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: transform 240ms var(--ease-out), background 240ms;
+    }
+    .blazity-hero .hero-content button:hover {
+      transform: translateY(-2px);
+      background: rgba(255, 255, 255, 0.90);
+    }
+
+    /* Slider dots */
+    .bz-dots {
+      position: absolute;
+      z-index: 4;
+      inset-inline-end: clamp(20px, 5vw, 84px);
+      bottom: clamp(24px, 4vw, 56px);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .bz-dot {
+      width: 8px;
+      height: 8px;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.38);
+      cursor: pointer;
+      transition: width 260ms var(--ease-out), background 260ms;
+    }
+    .bz-dot.is-on {
+      width: 26px;
+      background: #fff;
+    }
+
+    /* ─────────────────────────── CATALOG ─────────────────────────── */
+    .bz-catalog { display: flex; flex-direction: column; gap: 22px; }
+
+    .bz-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+    }
+    .bz-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+    }
+    .bz-eyebrow svg { width: 14px; height: 14px; }
+    .bz-title {
+      margin: 8px 0 0;
+      font-size: clamp(26px, 2.8vw, 40px);
+      font-weight: 700;
+      letter-spacing: -0.035em;
+      line-height: 1.1;
+    }
+    html[lang="ar"] .bz-title { letter-spacing: 0; }
+    .bz-search {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 48px;
+      padding-inline: 18px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-tertiary);
+      transition: border-color 180ms;
+    }
+    .bz-search:focus-within { border-color: var(--text-secondary); }
+    .bz-search svg { width: 17px; height: 17px; flex: none; }
+    .bz-search input {
+      width: 100%;
+      min-width: 180px;
+      height: 100%;
+      border: 0;
+      outline: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: var(--fs-sm);
+      color: var(--text-primary);
+    }
+    .bz-search input::placeholder { color: var(--text-tertiary); }
+
+    .bz-rail {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .bz-rail::-webkit-scrollbar { display: none; }
+    .bz-chip {
+      flex: none;
+      height: 42px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: var(--fs-sm);
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 180ms, color 180ms, border-color 180ms;
+    }
+    .bz-chip:hover { background: var(--surface-2); color: var(--text-primary); }
+    .bz-chip.is-on {
+      background: var(--text-primary);
+      border-color: var(--text-primary);
+      color: var(--bg);
+      font-weight: 600;
+    }
+
+    .bz-count {
+      font-size: var(--fs-xs);
+      color: var(--text-tertiary);
+      letter-spacing: 0.02em;
+    }
+    .bz-count b { color: var(--text-primary); font-weight: 600; }
+
+    /* ────────────────────────── PRODUCT GRID ────────────────────────── */
+    .bz-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: clamp(14px, 1.7vw, 26px);
+    }
+
+    .bz-card {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      transition: transform 260ms var(--ease-out), border-color 260ms var(--ease-out), box-shadow 260ms var(--ease-out);
+    }
+    .bz-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--text-tertiary);
+      box-shadow: 0 22px 48px rgba(0, 0, 0, 0.18);
+    }
+    .bz-card.is-out { opacity: 0.55; }
+    .bz-card.just-added { border-color: var(--text-primary); }
+
+    .bz-media {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      background: var(--surface-2);
+    }
+    .bz-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 700ms var(--ease-out);
+    }
+    .bz-card:hover .bz-media img { transform: scale(1.04); }
+
+    .bz-badge {
+      position: absolute;
+      top: 12px;
+      inset-inline-start: 12px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(10, 10, 11, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #fff;
+      font-size: 9.5px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+    }
+    .bz-badge.is-lime { background: #fff; border-color: transparent; color: #0A0A0B; }
+    .bz-badge.is-danger { background: rgba(255, 69, 58, 0.92); border-color: transparent; }
+
+    .bz-body {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      gap: 6px;
+      padding: 16px 18px 18px;
+    }
+    .bz-cat {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+    }
+    .bz-name {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.35;
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: calc(1.35em * 2);
+    }
+    .bz-store {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      opacity: 0.9;
+    }
+    .bz-meta {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+    .bz-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: auto;
+      padding-top: 14px;
+    }
+    .bz-price {
+      font-size: clamp(16px, 1.2vw, 19px);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+    .bz-add {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1px solid var(--border-strong, var(--border));
+      background: transparent;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: transform 200ms var(--ease-out), background 200ms, color 200ms, border-color 200ms;
+    }
+    .bz-add svg { width: 18px; height: 18px; }
+    .bz-add:hover:not(:disabled) {
+      background: var(--text-primary);
+      border-color: var(--text-primary);
+      color: var(--bg);
+      transform: scale(1.07);
+    }
+    .bz-add.is-in {
+      background: var(--text-primary);
+      border-color: var(--text-primary);
+      color: var(--bg);
+    }
+    .bz-add:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .bz-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 64px 24px;
+      text-align: center;
+      border: 1px dashed var(--border);
+      border-radius: 20px;
+      color: var(--text-tertiary);
+    }
+    .bz-empty svg { width: 30px; height: 30px; }
+    .bz-empty b { font-size: var(--fs-base); color: var(--text-primary); }
+
+    /* ─────────────────────────── RESPONSIVE ─────────────────────────── */
+    @media (max-width: 900px) {
+      .blazity-hero { height: clamp(460px, 72vh, 640px); }
+    }
+    @media (max-width: 640px) {
+      .bz-page { gap: 26px; }
+      .blazity-hero { height: clamp(430px, 66vh, 560px); }
+      .blazity-hero .hero-content { padding: 30px 20px 36px; }
+      .blazity-hero .hero-content h1 { font-size: clamp(34px, 11vw, 46px); }
+      .blazity-hero .hero-content p { font-size: 14px; margin-bottom: 22px; }
+      .blazity-hero .hero-content button { height: 48px; padding: 0 26px; }
+      .bz-dots { inset-inline-end: 20px; bottom: 18px; }
+      .bz-head { align-items: flex-start; }
+      .bz-search { width: 100%; }
+      .bz-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+      .bz-body { padding: 12px 12px 14px; }
+      .bz-name { font-size: 13.5px; min-height: calc(1.35em * 2); }
+    }
+  </style>
+
+  <script>
+    /* Keeps the hero edge-to-edge by matching the shell's real content padding. */
+    (function () {
+      function sync() {
+        var host = document.querySelector('.ds-content');
+        if (!host) return;
+        var cs = window.getComputedStyle(host);
+        host.style.setProperty('--bz-bleed', cs.paddingLeft || '28px');
+        host.style.setProperty('--bz-bleed-top', cs.paddingTop || '26px');
+      }
+      var raf = 0;
+      function schedule() { cancelAnimationFrame(raf); raf = requestAnimationFrame(sync); }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sync);
+      else sync();
+      window.addEventListener('load', sync);
+      window.addEventListener('resize', schedule);
+    })();
+  </script>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script src="../shared/js/preview-session.js?v=20261026e"></script>
+  <script src="../shared/js/core.js?v=20261026e"></script>
+  <script src="../shared/js/data.js?v=20261026e"></script>
+  <script src="../shared/js/shell.js?v=20261026e"></script>
+  <script src="../shared/js/ui.js?v=20261026e"></script>
+
+  <script>
+  /* ═══════════════════════════════════════════════════════════════
+     BLAZITY TEST STOREFRONT — standalone page logic.
+     Reads the same seeded data as the live storefront
+     (DS.data.products / DS.data.tenants) and renders it dynamically.
+     ═══════════════════════════════════════════════════════════════ */
+  (function () {
+    'use strict';
+
+    var DS = window.DS;
+    if (!DS || !DS.shell) return;
+
+    var user = DS.session();
+    if (!user) return;
+
+    var esc = DS.esc, icon = DS.icon, money = DS.money, url = DS.url, t = DS.t;
+    var EN = DS.lang() === 'en';
+
+    var state = { q: '', cat: '' };
+    var cart = loadCart();
+
+    /* ───────────────────────────── DATA ───────────────────────────── */
+    function allProducts() {
+      var tenants = DS.data.tenants || [];
+      var allowed = {};
+      tenants.forEach(function (tn) {
+        if (tn.status !== 'suspended') allowed[tn.id] = tn;
+      });
+      return (DS.data.products || []).filter(function (p) {
+        return p.is_active !== false && allowed[p.tenant_id];
+      });
+    }
+    function storeOf(p) { return DS.data.tenantById(p && p.tenant_id); }
+    function storeOpen(tn) { return DS.data.isStoreOpen ? DS.data.isStoreOpen(tn) : true; }
+    function imgOf(p) { return DS.data.img(p.image); }
+    function pname(p) { return DS.loc(p, 'name'); }
+    function pcat(p) { return DS.loc(p, 'category'); }
+    function tname(tn) { return tn ? DS.loc(tn, 'name') : ''; }
+
+    /* ───────────────────────────── CART ───────────────────────────── */
+    function loadCart() {
+      var raw = DS.store.get('ds_cart', null);
+      if (raw && Array.isArray(raw.items)) {
+        return { items: raw.items.filter(function (l) { return l && l.id; }) };
+      }
+      return { items: [] };
+    }
+    function saveCart() { DS.store.set('ds_cart', cart); }
+    function cartCount() {
+      return cart.items.reduce(function (s, l) { return s + (Number(l.qty) || 0); }, 0);
+    }
+    function lineOf(id) {
+      return cart.items.filter(function (l) { return l.id === id; })[0];
+    }
+
+    function addToCart(id) {
+      var p = allProducts().filter(function (x) { return x.id === id; })[0];
+      if (!p) return false;
+      var tn = storeOf(p);
+      if (!tn) return false;
+      if (!storeOpen(tn)) {
+        DS.toast(EN ? tname(tn) + ' is offline right now.' : 'متجر ' + tname(tn) + ' أوفلاين حالياً.', 'error');
+        return false;
+      }
+      if ((Number(p.stock) || 0) <= 0) {
+        DS.toast(t('outOfStock'), 'warning');
+        return false;
+      }
+      var line = lineOf(p.id);
+      var wanted = line ? line.qty + 1 : 1;
+      if (wanted > p.stock) {
+        DS.toast(t('outOfStock'), 'warning');
+        return false;
+      }
+      if (line) line.qty = wanted;
+      else cart.items.push({
+        id: p.id, name: p.name, name_en: p.name_en, price: Number(p.price) || 0,
+        qty: 1, image: p.image, stock: p.stock, tenant_id: p.tenant_id
+      });
+      saveCart();
+      renderCart();
+      DS.toast(pname(p) + ' · ' + t('addedToBag'), 'success');
+      return true;
+    }
+
+    function renderCart() {
+      var count = cartCount();
+      DS.$$('[data-bz-count]').forEach(function (el) { el.textContent = count; });
+      DS.$$('[data-bz-add]').forEach(function (b) {
+        var line = lineOf(b.getAttribute('data-bz-add'));
+        b.classList.toggle('is-in', !!line);
+        if (!b.disabled) b.innerHTML = line ? '<b>' + line.qty + '</b>' : icon('plus');
+      });
+    }
+
+    /* ─────────────────────────── HERO MARKUP ───────────────────────── */
+    /* Exact hero markup requested for the test. Dots are appended by JS. */
+    function heroMarkup() {
+      return '<div class="bz-bleed">' +
+        '<div class="blazity-hero">' +
+          '<div class="slide active" style="background-image: url(\'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2000\');">' +
+            '<div class="hero-content">' +
+              '<h1>Sound On The Go</h1>' +
+              '<p>Premium audio that moves with your lifestyle</p>' +
+              '<button>Shop Speakers</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="slide" style="background-image: url(\'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2000\');">' +
+            '<div class="hero-content">' +
+              '<h1>Adventure Awaits</h1>' +
+              '<p>Gear up for your next outdoor expedition</p>' +
+              '<button>Shop Outdoor</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="slide" style="background-image: url(\'https://images.unsplash.com/photo-1596462502278-27bfdc403348?q=80&w=2000\');">' +
+            '<div class="hero-content">' +
+              '<h1>Signature Scents</h1>' +
+              '<p>Discover fragrances that capture your essence</p>' +
+              '<button>Explore Perfumes</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    function catalogMarkup() {
+      return '<section class="bz-catalog" id="bzCatalog">' +
+        '<div class="bz-head">' +
+          '<div>' +
+            '<div class="bz-eyebrow">' + icon('grid') + esc(EN ? 'Shop the collection' : 'تسوق المجموعة') + '</div>' +
+            '<h2 class="bz-title">' + esc(EN ? 'All products' : 'كل المنتجات') + '</h2>' +
+          '</div>' +
+          '<div class="bz-search">' + icon('search') +
+            '<input type="search" data-bz-q placeholder="' + esc(EN ? 'Search products…' : 'ابحث عن منتج…') + '" aria-label="' + esc(t('search')) + '">' +
+          '</div>' +
+        '</div>' +
+        '<div class="bz-rail" data-bz-rail></div>' +
+        '<div class="bz-count" data-bz-count-line></div>' +
+        '<div class="bz-grid" data-bz-grid></div>' +
+      '</section>';
+    }
+
+    /* ───────────────────────── PRODUCT CARD ─────────────────────────── */
+    function cardMarkup(p) {
+      var tn = storeOf(p);
+      var offline = tn ? !storeOpen(tn) : true;
+      var out = (Number(p.stock) || 0) <= 0;
+      var disabled = offline || out;
+      var badge = '';
+      if (offline) badge = '<span class="bz-badge is-danger">' + esc(EN ? 'Offline' : 'أوفلاين') + '</span>';
+      else if (out) badge = '<span class="bz-badge is-danger">' + esc(t('outOfStock')) + '</span>';
+      else if ((p.sold || 0) >= 300) badge = '<span class="bz-badge is-lime">' + esc(t('bestSeller')) + '</span>';
+      else if ((p.rating || 0) >= 4.9) badge = '<span class="bz-badge">' + esc(t('newArrival')) + '</span>';
+
+      var line = lineOf(p.id);
+      return '<article class="bz-card' + (disabled ? ' is-out' : '') + '">' +
+        '<div class="bz-media">' +
+          '<img src="' + esc(imgOf(p)) + '" alt="' + esc(pname(p)) + '" loading="lazy" ' +
+            'onerror="this.onerror=null;this.src=\'' + esc(url('assets/product-placeholder.svg')) + '\'">' +
+          badge +
+        '</div>' +
+        '<div class="bz-body">' +
+          '<div class="bz-cat">' + esc(pcat(p)) + '</div>' +
+          '<h3 class="bz-name">' + esc(pname(p)) + '</h3>' +
+          '<div class="bz-store">' + esc(tname(tn)) + '</div>' +
+          '<div class="bz-meta">' + esc(offline ? (EN ? 'Offline' : 'أوفلاين') : out ? t('outOfStock') : t('inStock')) +
+            ((p.rating || 0) >= 4.9 ? ' · ★ ' + Number(p.rating).toFixed(1) : '') + '</div>' +
+          '<div class="bz-foot">' +
+            '<span class="bz-price">' + money(p.price) + '</span>' +
+            '<button type="button" class="bz-add' + (line ? ' is-in' : '') + '" data-bz-add="' + esc(p.id) + '"' +
+              (disabled ? ' disabled' : '') + ' aria-label="' + esc(t('addToBag')) + '">' +
+              (line ? '<b>' + line.qty + '</b>' : icon('plus')) +
+            '</button>' +
+          '</div>' +
+        '</div>' +
+      '</article>';
+    }
+
+    /* ───────────────────────────── RENDER ─────────────────────────── */
+    function mount() {
+      var page = DS.shell.mount({
+        roles: null,
+        active: 'storefront',
+        title: EN ? 'Blazity test store' : 'متجر Blazity التجريبي',
+        eyebrow: EN ? 'Storefront test' : 'اختبار واجهة المتجر',
+        icon: 'store',
+        sub: EN ? 'A standalone test layout — same catalog, new hero slider.' : 'واجهة تجريبية مستقلة — نفس الكتالوج مع سلايدر جديد.',
+        actions: '<a class="btn btn-secondary" href="' + url('customer/checkout.html') + '">' +
+          icon('bag') + '<span>' + esc(t('cart')) + '</span><span class="badge lime" data-bz-count>0</span></a>',
+        content: heroMarkup() + catalogMarkup()
+      });
+      if (!page) return null;
+      return page;
+    }
+
+    var page = mount();
+    if (!page) return;
+
+    var body = page.body;
+
+    function categories() {
+      var out = [];
+      allProducts().forEach(function (p) {
+        var c = pcat(p);
+        if (c && out.indexOf(c) === -1) out.push(c);
+      });
+      return out;
+    }
+
+    function visibleProducts() {
+      var q = state.q.trim().toLowerCase();
+      return allProducts().filter(function (p) {
+        if (state.cat && pcat(p) !== state.cat) return false;
+        if (!q) return true;
+        var tn = storeOf(p);
+        var hay = (p.name || '') + ' ' + (p.name_en || '') + ' ' + (p.category || '') + ' ' + (p.category_en || '') +
+          ' ' + (tn ? ((tn.name || '') + ' ' + (tn.name_en || '')) : '');
+        return hay.toLowerCase().indexOf(q) > -1;
+      });
+    }
+
+    function renderChips() {
+      var rail = body.querySelector('[data-bz-rail]');
+      if (!rail) return;
+      var cats = categories();
+      rail.innerHTML = '<button type="button" class="bz-chip' + (!state.cat ? ' is-on' : '') + '" data-bz-cat="">' +
+          esc(t('allProducts')) + '</button>' +
+        cats.map(function (c) {
+          return '<button type="button" class="bz-chip' + (state.cat === c ? ' is-on' : '') + '" data-bz-cat="' + esc(c) + '">' + esc(c) + '</button>';
+        }).join('');
+      DS.$$('[data-bz-cat]', rail).forEach(function (b) {
+        b.addEventListener('click', function () {
+          state.cat = b.getAttribute('data-bz-cat');
+          renderChips();
+          renderGrid();
+        });
+      });
+    }
+
+    function renderGrid() {
+      var host = body.querySelector('[data-bz-grid]');
+      if (!host) return;
+      var shown = visibleProducts();
+
+      var line = body.querySelector('[data-bz-count-line]');
+      if (line) {
+        line.innerHTML = state.q.trim()
+          ? esc(t('resultsFor')) + ' <b>“' + esc(state.q.trim()) + '”</b> · ' + shown.length + ' ' + esc(t('item'))
+          : '<b>' + shown.length + '</b> ' + esc(t('item')) + ' · ' + esc(EN ? 'delivered in 30–45 min' : 'توصيل في 30–45 دقيقة');
+      }
+
+      if (!shown.length) {
+        host.innerHTML = '<div class="bz-empty" style="grid-column: 1 / -1;">' + icon('search') +
+          '<b>' + esc(t('noItems')) + '</b><span>' + esc(t('emptyProductsText')) + '</span></div>';
+        return;
+      }
+
+      host.innerHTML = shown.map(cardMarkup).join('');
+
+      DS.$$('[data-bz-add]', host).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (b.disabled) return;
+          if (!addToCart(b.getAttribute('data-bz-add'))) return;
+          var card = b.closest('.bz-card');
+          if (card) {
+            card.classList.add('just-added');
+            setTimeout(function () { card.classList.remove('just-added'); }, 520);
+          }
+        });
+      });
+    }
+
+    /* ───────────────────────── HERO SLIDER ─────────────────────────── */
+    function initHero() {
+      var hero = body.querySelector('.blazity-hero');
+      if (!hero) return;
+
+      var slides = DS.$$('.slide', hero);
+      if (!slides.length) return;
+
+      var dots = document.createElement('div');
+      dots.className = 'bz-dots';
+      dots.innerHTML = slides.map(function (_, i) {
+        return '<button type="button" class="bz-dot' + (i === 0 ? ' is-on' : '') + '" data-bz-dot="' + i + '" aria-label="slide ' + (i + 1) + '"></button>';
+      }).join('');
+      hero.appendChild(dots);
+
+      var index = 0;
+      var timer = null;
+
+      function go(next) {
+        index = (next + slides.length) % slides.length;
+        slides.forEach(function (s, i) { s.classList.toggle('active', i === index); });
+        DS.$$('.bz-dot', dots).forEach(function (d, i) { d.classList.toggle('is-on', i === index); });
+      }
+
+      function start() {
+        stop();
+        timer = setInterval(function () { go(index + 1); }, 6000);
+      }
+      function stop() {
+        if (timer) { clearInterval(timer); timer = null; }
+      }
+
+      DS.$$('.bz-dot', dots).forEach(function (d) {
+        d.addEventListener('click', function () {
+          go(Number(d.getAttribute('data-bz-dot')) || 0);
+          start();
+        });
+      });
+
+      hero.addEventListener('mouseenter', stop);
+      hero.addEventListener('mouseleave', start);
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) stop();
+        else start();
+      });
+
+      /* The exact hero buttons scroll down to the live product grid. */
+      DS.$$('.hero-content button', hero).forEach(function (b) {
+        b.addEventListener('click', function () {
+          var target = body.querySelector('#bzCatalog');
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+
+      start();
+    }
+
+    /* Search (debounced, same pattern as the live storefront). */
+    var qEl = body.querySelector('[data-bz-q]');
+    if (qEl) {
+      qEl.addEventListener('input', DS.debounce(function () {
+        state.q = qEl.value;
+        renderGrid();
+      }, 150));
+    }
+
+    initHero();
+    renderChips();
+    renderGrid();
+    renderCart();
+  })();
+  </script>
+</body>
+</html>

@@ -1293,7 +1293,7 @@ html[lang="ar"] .hero-title{line-height:1.22!important}html[lang="ar"] .hero-des
       <div class="form-options">
         <label class="check-wrap"><input type="checkbox" id="rememberMe"><span id="labelRemember">Remember me</span></label>
         <a href="#" class="forgot-link" id="labelForgot">Forgot password?</a>
-        <a href="#" class="forgot-link" onclick="openSignup();return false;" id="labelSignup" style="margin-right:16px;color:#d4ff3a">سجّل الآن</a>
+        <a href="#" class="forgot-link" onclick="openSubsModal();return false;" id="labelSignup" style="margin-right:16px;color:#d4ff3a">سجّل الآن</a>
       </div>
 
       <button class="btn-submit" id="loginBtn" onclick="doLogin()">
@@ -1323,6 +1323,7 @@ const I18N = {
     labelPass: 'كلمة السر',
     labelRemember: 'تذكرني',
     labelForgot: 'نسيت كلمة السر؟',
+    labelSignup: 'سجّل الآن',
     labelLoginBtn: 'دخول',
     errEmpty: 'أدخل البيانات أولاً',
     errChecking: '⏳ جاري التحقق...',
@@ -1348,6 +1349,7 @@ const I18N = {
     labelPass: 'Password',
     labelRemember: 'Remember me',
     labelForgot: 'Forgot password?',
+    labelSignup: 'Sign up now',
     labelLoginBtn: 'Sign in',
     errEmpty: 'Please enter credentials',
     errChecking: '⏳ Authenticating...',
@@ -1380,6 +1382,7 @@ function setLang(lang) {
     welcomeTitle: 'welcomeTitle', welcomeSub: 'welcomeSub',
     labelUser: 'labelUser', labelPass: 'labelPass',
     labelRemember: 'labelRemember', labelForgot: 'labelForgot',
+    labelSignup: 'labelSignup',
     labelLoginBtn: 'labelLoginBtn'
   };
   Object.entries(map).forEach(([id, k]) => {
@@ -1646,7 +1649,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
   /* ═══ Modal ═══ */
   function openSubsModal(){
-    const ML = (ar, en) => ar;
+    const EN = isEn();
+    const ML = (ar, en) => EN ? en : ar;
     document.querySelectorAll('[data-dsp-subs-backdrop]').forEach(e => e.remove());
 
     const back = document.createElement('div');
@@ -1667,8 +1671,8 @@ window.addEventListener('DOMContentLoaded', () => {
       maxHeight: '92vh', overflowY: 'auto', position: 'relative',
       backdropFilter: 'blur(30px) saturate(180%)', WebkitBackdropFilter: 'blur(30px) saturate(180%)',
       boxShadow: '0 40px 100px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.06)',
-      direction: 'rtl',
-      fontFamily: FONT_AR
+      direction: EN ? 'ltr' : 'rtl',
+      fontFamily: fontFamily()
     });
 
     let head = '<div style="text-align:center;margin-bottom:28px;position:relative">';
@@ -1680,9 +1684,9 @@ window.addEventListener('DOMContentLoaded', () => {
     let grid = '<div class="dsp-subs-grid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:20px">';
     PLANS.forEach(p => {
       const isPop = p.popular;
-      const name = p.name_ar;
-      const period = p.period_ar;
-      const tag = p.tag_ar;
+      const name = EN ? p.name : p.name_ar;
+      const period = EN ? p.period_en : p.period_ar;
+      const tag = EN ? p.tag_en : p.tag_ar;
       grid += '<div style="background:linear-gradient(180deg,#16181c,#0f1114);border:' + (isPop ? '2px solid ' + p.color : '1px solid #26262c') + ';border-radius:18px;padding:22px 18px 18px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;position:relative;box-shadow:' + (isPop ? '0 0 24px ' + p.color + '40' : 'none') + '">';
       if(isPop) grid += '<div style="position:absolute;top:14px;' + ('left') + ':14px;background:' + p.color + ';color:#0a0a0a;font-family:' + FONT_AR + ';font-size:9px;font-weight:900;padding:4px 9px;border-radius:20px;letter-spacing:.5px">' + ML('الأكثر طلباً','POPULAR') + '</div>';
       grid += '<div style="font-size:26px;margin-bottom:4px">' + p.icon + '</div>';
@@ -1721,14 +1725,18 @@ window.addEventListener('DOMContentLoaded', () => {
   function sendWhatsApp(planId){
     const p = PLANS.find(x => x.id === planId);
     if(!p) return;
-    const msg =
-      'السلام عليكم\n\n' +
-      'أريد الاشتراك في DotStudio® POS\n\n' +
-      'الباقة: ' + p.name_ar + ' — ' + p.price + ' ج.م / ' + p.period_ar + '\n\n' +
-      'برجاء إرسال تفاصيل الدفع والتفعيل.';
+    const msg = isEn()
+      ? ('Hello,\n\nI would like to subscribe to DotStudio® POS.\n\nPlan: ' + p.name + ' — ' + p.price + ' EGP / ' + p.period_en + '\n\nPlease send payment and activation details.')
+      : ('السلام عليكم\n\n' +
+        'أريد الاشتراك في DotStudio® POS\n\n' +
+        'الباقة: ' + p.name_ar + ' — ' + p.price + ' ج.م / ' + p.period_ar + '\n\n' +
+        'برجاء إرسال تفاصيل الدفع والتفعيل.');
     window.open('https://wa.me/' + ADMIN_WA + '?text=' + encodeURIComponent(msg), '_blank');
     document.querySelectorAll('[data-dsp-subs-backdrop]').forEach(e => e.remove());
   }
+
+  /* Expose the subscription modal so the inline "سجّل الآن" link can open it. */
+  window.openSubsModal = openSubsModal;
 
   function init(){
     hideContactUs();

@@ -20,6 +20,7 @@
   if (!page) return;
 
   var range = 7;
+  var fleet = null;
 
   function greeting() {
     var h = new Date().getHours();
@@ -184,6 +185,10 @@
             '<div style="font-size:10px;color:var(--text-tertiary);margin-top:1px">' + esc(DS.lang() === 'en' ? (l.actor_en || l.actor) : l.actor) + ' · ' + esc(DS.timeAgo(l.at)) + '</div></div></div>';
         }).join('') + '</div></div></div>' +
 
+      '<div class="card"><div class="card-header"><div><div class="card-title">' + esc(t('liveTracking')) + '</div>' +
+        '<div class="card-subtitle">' + esc(t('liveTrackingHint')) + '</div></div><span class="badge lime">' + esc(t('live')) + '</span></div>' +
+        '<div class="card-body"><div data-fleet-map style="height:340px;border-radius:16px;overflow:hidden"></div></div></div>' +
+
       '<div class="kpi-grid cols-2"><div class="card"><div class="card-header"><div class="card-title">' + esc(t('topProducts')) + '</div></div><div class="card-body">' +
         DS.chart.bars(tops.map(function (p) { return { label: DS.lang() === 'en' ? (p.name_en || p.name) : p.name, value: p.revenue }; })) + '</div></div>' +
         '<div class="card"><div class="card-header"><div class="card-title">' + esc(t('quickActions')) + '</div></div><div class="card-body"><div class="quick-grid">' +
@@ -211,12 +216,16 @@
   }
 
   function render() {
+    if (fleet && fleet.stop) { try { fleet.stop(); } catch (e) {} fleet = null; }
     page.setContent(isAdmin ? adminRender() : ownerRender());
     bind();
     if (!isAdmin) {
       var host = page.body.querySelector('[data-owner-map]');
       var active = DS.data.visibleOrders(user).filter(function (o) { return o.status === 'delivering'; })[0];
       if (host && active) DS.gps.mount(host, { order: active, height: 260, showStrip: false });
+    } else {
+      var fleetHost = page.body.querySelector('[data-fleet-map]');
+      if (fleetHost && DS.gps && DS.gps.fleet) fleet = DS.gps.fleet(fleetHost, { height: 340 });
     }
   }
 
