@@ -903,5 +903,142 @@
     refresh: refreshContent
   };
 
+  /* ═════════ PRO MAX · SMART WEB PUSH NOTIFICATIONS ═════════
+     Native browser notifications for the customer. Status changes are
+     detected both inside the tab (ds:order-status) and across tabs
+     (ds:data / storage) so a POS/cashier update instantly reaches the
+     shopper. Permission is opt-in and remembered in localStorage. */
+  (function () {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+    var OPTIN_KEY = 'ds_notify_optin';
+    var SEEN_KEY = 'ds_notify_seen';
+
+    function supported() { return typeof window.Notification !== 'undefined'; }
+    function granted() { return supported() && window.Notification.permission === 'granted'; }
+    function optedIn() { return DS.store.get(OPTIN_KEY, false) === true; }
+    function sessionUser() { return DS.session ? DS.session() : null; }
+    function readSeen() {
+      try { return JSON.parse(sessionStorage.getItem(SEEN_KEY) || '{}') || {}; } catch (e) { return {}; }
+    }
+    function writeSeen(map) {
+      try { sessionStorage.setItem(SEEN_KEY, JSON.stringify(map)); } catch (e) {}
+    }
+    function isCustomerOrder(detail, me) {
+      if (!me || me.role !== 'customer') return false;
+      var phone = String(detail.customer_phone || '').replace(/\s/g, '');
+      var myPhone = String(me.phone || '').replace(/\s/g, '');
+      return (detail.customer_id && detail.customer_id === me.id) || (!!phone && !!myPhone && phone === myPhone);
+    }
+    function statusText(status) {
+      var EN = DS.lang() === 'en';
+      var map = {
+        pending: EN ? 'Order received' : 'تم استلام طلبك',
+        preparing: EN ? 'Your order is being prepared' : 'جارٍ تجهيز طلبك',
+        handed_to_company: EN ? 'Handed to the delivery company' : 'تم تسليم طلبك لشركة التوصيل',
+        out_for_delivery: EN ? 'The courier is on the way' : 'المندوب في الطريق إليك',
+        delivered: EN ? 'Delivered — enjoy!' : 'تم تسليم طلبك — بالهنا والشفا',
+        cancelled: EN ? 'Your order was cancelled' : 'تم إلغاء طلبك'
+      };
+      return map[status] || status;
+    }
+    function show(detail) {
+      if (!granted() || !optedIn()) return null;
+      var EN = DS.lang() === 'en';
+      var title = detail && detail.order_no
+        ? (EN ? 'Order ' + detail.order_no : 'طلبك ' + detail.order_no)
+        : (EN ? 'Notifications enabled' : 'تم تفعيل الإشعارات');
+      var bodyText = detail && detail.order_no
+        ? statusText(detail.status)
+        : (EN ? 'We will ping you when your order moves.' : 'سنخبرك بكل تحديث يحدث في طلبك.');
+      try {
+        var n = new Notification(title, {
+          body: bodyText,
+          icon: DS.url('assets/img/LOGO-ICON-DONE.png'),
+          badge: DS.url('assets/img/LOGO-ICON-DONE.png'),
+          tag: 'ds-order-' + ((detail && (detail.order_id || detail.order_no)) || 'welcome'),
+          renotify: true
+        });
+        n.onclick = function () { try { window.focus(); } catch (e) {} n.close(); };
+        return n;
+      } catch (e) { return null; }
+    }
+    function sweep(notify) {
+      var me = sessionUser();
+      if (!me || me.role !== 'customer' || !DS.data) return false;
+      var list = DS.data.visibleOrders(me) || [];
+      var seen = readSeen();
+      var fresh = false;
+      list.forEach(function (o) {
+        if (!o || !o.id) return;
+        var prev = seen[o.id];
+        seen[o.id] = o.status;
+        if (notify && prev && prev !== o.status) {
+          show({ order_id: o.id, order_no: o.order_no, status: o.status });
+          fresh = true;
+        }
+      });
+      writeSeen(seen);
+      return fresh;
+    }
+
+    DS.notify = {
+      supported: supported,
+      permission: function () { return supported() ? window.Notification.permission : 'unsupported'; },
+      enabled: function () { return granted() && optedIn(); },
+      request: function (cb) {
+        var EN = DS.lang() === 'en';
+        if (!supported()) {
+          if (DS.toast) DS.toast(EN ? 'Notifications are not supported in this browser.' : 'الإشعارات غير مدعومة في هذا المتصفح.', 'warning');
+          return;
+        }
+        var done = function (perm) {
+          DS.store.set(OPTIN_KEY, perm === 'granted');
+          if (DS.toast) DS.toast(perm === 'granted'
+            ? (EN ? 'Notifications enabled — we will ping you when your order moves.' : 'تم تفعيل الإشعارات — سنخبرك بكل تحديث لطلبك.')
+            : (EN ? 'Notifications were blocked in the browser.' : 'تم رفض الإشعارات من المتصفح.'), perm === 'granted' ? 'success' : 'warning');
+          if (perm === 'granted') show(null);
+          if (typeof cb === 'function') cb(perm);
+        };
+        try {
+          var p = window.Notification.requestPermission(done);
+          if (p && typeof p.then === 'function') p.then(done);
+        } catch (e) { /* legacy Safari uses the callback only */ }
+      },
+      show: show
+    };
+
+    window.addEventListener('ds:order-status', function (e) {
+      var d = e.detail || {};
+      if (!isCustomerOrder(d, sessionUser())) return;
+      sweep(false);
+      show(d);
+    });
+    window.addEventListener('ds:data', function () { sweep(true); });
+    window.addEventListener('storage', function () { sweep(true); });
+
+    function mountOptIn() {
+      var me = sessionUser();
+      if (!me || me.role !== 'customer' || !supported()) return;
+      if (granted() && optedIn()) return;
+      if (document.querySelector('[data-notify-optin]')) return;
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pm-notify-fab';
+      b.setAttribute('data-notify-optin', '');
+      b.innerHTML = '<span class="pm-notify-dot"></span>' + (DS.lang() === 'en' ? 'Enable notifications' : 'تفعيل الإشعارات');
+      b.addEventListener('click', function () {
+        DS.notify.request(function (perm) { if (perm === 'granted') b.remove(); });
+      });
+      document.body.appendChild(b);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () { mountOptIn(); sweep(false); });
+    } else {
+      mountOptIn();
+      sweep(false);
+    }
+  })();
+
   console.log('%cDotStudio® POS · shell ready', 'color:#82FF1F;font-weight:bold');
 })();

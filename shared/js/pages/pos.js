@@ -541,27 +541,10 @@
 
     var addrPicks = knownAddresses(customer.phone);
     var body =
-      '<div class="pos-checkout-grid">' +
+      '<div class="pos-checkout-stack">' +
 
-        '<div class="pos-checkout-col">' +
-          '<div class="pos-checkout-section">' + esc(L('بيانات العميل', 'Customer details')) + '</div>' +
-          '<div class="field"><label>' + esc(t('customerPhone')) + '</label>' +
-            '<div class="pos-phone-lookup"><input class="input" id="ckPhone" value="' + esc(customer.phone) + '" placeholder="01xxxxxxxxx" style="direction:ltr" inputmode="tel">' +
-            '<button type="button" class="btn btn-secondary btn-sm" data-phone-lookup>' + icon('search') + '</button></div>' +
-            '<div class="cell-sub" data-phone-state></div></div>' +
-          '<div class="field"><label>' + esc(t('customerName')) + '</label><input class="input" id="ckName" value="' + esc(customer.name) + '" placeholder="' + esc(t('walkIn')) + '"></div>' +
-          '<div class="field"><label>' + L('عنوان التوصيل', 'Delivery address') + '</label>' +
-            '<input class="input" id="ckAddress" value="' + esc(customer.address) + '" placeholder="' + esc(t('address')) + '">' +
-            '<div class="pos-addr-picks" data-addr-picks>' + addrPicks.map(function (a, i) {
-              return '<button type="button" class="pos-addr-chip" data-addr="' + esc(a.address) + '">' + icon(i === 0 ? 'home' : 'briefcase') +
-                '<span><b>' + esc(EN ? (a.label_en || a.label) : a.label) + '</b><i>' + esc(a.address) + '</i></span></button>';
-            }).join('') + '</div></div>' +
-          '<div class="field"><label>' + esc(t('notes')) + '</label><textarea class="textarea" id="ckNotes" rows="2" placeholder="' + esc(t('notes')) + '">' + esc(state.notes) + '</textarea></div>' +
-        '</div>' +
-
-        '<div class="pos-checkout-col">' +
+        '<div class="pos-checkout-pay">' +
           '<div class="pos-checkout-section">' + esc(L('الدفع والملخص', 'Payment & summary')) + '</div>' +
-          discountBlock +
           '<div class="field"><label>' + esc(t('paymentMethod')) + '</label><select class="select" id="ckPay">' +
               '<option value="cash"' + (state.payment === 'cash' ? ' selected' : '') + '>' + esc(t('cash')) + '</option>' +
               '<option value="card"' + (state.payment === 'card' ? ' selected' : '') + '>' + esc(t('card')) + '</option>' +
@@ -584,6 +567,25 @@
           '</div>' +
         '</div>' +
 
+        '<details class="pos-checkout-more">' +
+          '<summary class="pos-more-toggle">' + icon('user') + '<span>' + L('خيارات إضافية · العميل، الخصم، الملاحظات', 'More options · customer, discount, notes') + '</span>' + icon('chevronDown') + '</summary>' +
+          '<div class="pos-checkout-extra">' +
+            '<div class="field"><label>' + esc(t('customerPhone')) + '</label>' +
+              '<div class="pos-phone-lookup"><input class="input" id="ckPhone" value="' + esc(customer.phone) + '" placeholder="01xxxxxxxxx" style="direction:ltr" inputmode="tel">' +
+              '<button type="button" class="btn btn-secondary btn-sm" data-phone-lookup>' + icon('search') + '</button></div>' +
+              '<div class="cell-sub" data-phone-state></div></div>' +
+            '<div class="field"><label>' + esc(t('customerName')) + '</label><input class="input" id="ckName" value="' + esc(customer.name) + '" placeholder="' + esc(t('walkIn')) + '"></div>' +
+            '<div class="field"><label>' + L('عنوان التوصيل', 'Delivery address') + '</label>' +
+              '<input class="input" id="ckAddress" value="' + esc(customer.address) + '" placeholder="' + esc(t('address')) + '">' +
+              '<div class="pos-addr-picks" data-addr-picks>' + addrPicks.map(function (a, i) {
+                return '<button type="button" class="pos-addr-chip" data-addr="' + esc(a.address) + '">' + icon(i === 0 ? 'home' : 'briefcase') +
+                  '<span><b>' + esc(EN ? (a.label_en || a.label) : a.label) + '</b><i>' + esc(a.address) + '</i></span></button>';
+              }).join('') + '</div></div>' +
+            discountBlock +
+            '<div class="field"><label>' + esc(t('notes')) + '</label><textarea class="textarea" id="ckNotes" rows="2" placeholder="' + esc(t('notes')) + '">' + esc(state.notes) + '</textarea></div>' +
+          '</div>' +
+        '</details>' +
+
       '</div>';
 
     var m = DS.modal({
@@ -595,7 +597,7 @@
       actions: [
         { label: t('cancel'), variant: 'btn-secondary' },
         { label: t('confirmOrder'), variant: 'btn-primary', icon: icon('check'), onClick: function (root) {
-            var name = root.querySelector('#ckName').value.trim();
+            var name = root.querySelector('#ckName').value.trim() || t('walkIn');
             var phone = root.querySelector('#ckPhone').value.trim();
             if (!name) { DS.toast(t('required'), 'error'); return false; }
             if (phone && !/^[0-9+\-\s]{7,20}$/.test(phone)) { DS.toast(t('invalidPhone'), 'error'); return false; }

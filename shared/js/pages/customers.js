@@ -19,6 +19,16 @@
   if (!page) return;
 
   var state = { q: '', sort: 'spent' };
+  var EN = DS.lang() === 'en';
+
+  function lifetime() {
+    return DS.data.customerLifetime ? DS.data.customerLifetime(isAdmin ? null : user.tenant_id) : { customers: [], vipCount: 0, total: 0, avg: 0, count: 0 };
+  }
+  function vipIds() {
+    var map = {};
+    lifetime().customers.forEach(function (c) { if (c.vip) map[c.id] = true; });
+    return map;
+  }
 
   function list() {
     var rows = DS.data.customersFor(user);
@@ -31,14 +41,16 @@
   function render() {
     var all = DS.data.customersFor(user);
     var rows = list();
-    var totalSpent = all.reduce(function (s, c) { return s + c.spent; }, 0);
-    var avg = all.length ? totalSpent / all.length : 0;
+    var ltv = lifetime();
+    var vips = vipIds();
+    var totalSpent = ltv.total || all.reduce(function (s, c) { return s + c.spent; }, 0);
+    var avg = ltv.avg || (all.length ? totalSpent / all.length : 0);
 
     var stats = '<div class="kpi-grid">' +
       stat(t('totalCustomers'), all.length, 'users', 'lime') +
       stat(t('totalSpent'), money(totalSpent), 'wallet', 'green') +
       stat(t('avgBasket'), money(avg), 'receipt', 'info') +
-      stat(t('returning'), all.filter(function (c) { return c.orders > 1; }).length, 'refresh', 'purple') + '</div>';
+      stat(EN ? 'Diamond customers' : 'عملاء ماسيون', ltv.vipCount || 0, 'star', 'purple') + '</div>';
 
     var toolbar = '<div class="card"><div class="card-body" style="padding:12px 14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">' +
       '<div class="search-mini" style="flex:1;min-width:220px">' + icon('search') + '<input data-q placeholder="' + esc(t('search')) + ' ' + esc(t('name')) + ' / ' + esc(t('phone')) + '" value="' + esc(state.q) + '"></div>' +
@@ -47,7 +59,7 @@
     var table = '<div class="card"><div class="table-wrap flush"><table class="table"><thead><tr><th>' + esc(t('customerLabel')) + '</th><th>' + esc(t('city')) + '</th><th>' + esc(t('ordersCount')) + '</th><th>' + esc(t('spent')) + '</th><th>' + esc(t('lastOrder')) + '</th><th></th></tr></thead><tbody>' +
       (rows.length ? rows.map(function (c) {
         return '<tr data-customer="' + esc(c.id) + '" style="cursor:pointer"><td><div class="customer-cell"><span class="avatar sm" style="background:var(--surface-3);color:var(--lime)">' + esc(DS.initials(DS.loc(c, 'name'))) + '</span>' +
-          '<div><div class="cell-title">' + esc(DS.loc(c, 'name')) + '</div><div class="cell-sub" style="direction:ltr;text-align:start">' + esc(c.phone) + '</div></div></div></td>' +
+          '<div><div class="cell-title">' + esc(DS.loc(c, 'name')) + (vips[c.id] ? ' <span class="pm-vip-badge">◆ ' + esc(EN ? 'Diamond' : 'عميل ماسي') + '</span>' : '') + '</div><div class="cell-sub" style="direction:ltr;text-align:start">' + esc(c.phone) + '</div></div></div></td>' +
           '<td><span class="badge neutral">' + esc(DS.loc(c, 'city') || '—') + '</span></td>' +
           '<td>' + c.orders + '</td><td><b>' + money(c.spent) + '</b></td>' +
           '<td style="font-size:11px;color:var(--text-tertiary)">' + esc(DS.timeAgo(c.last_order)) + '</td>' +
@@ -75,12 +87,15 @@
   function detail(id) {
     var c = list().filter(function (x) { return x.id === id; })[0] || DS.data.customersFor(user).filter(function (x) { return x.id === id; })[0];
     if (!c) return;
+    var lt = lifetime().customers.filter(function (x) { return x.id === id || x.phone === c.phone; })[0] || {};
     var orders = DS.data.visibleOrders(user).filter(function (o) { return o.customer && o.customer.phone === c.phone; }).sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
     var body = '<div class="order-details-grid" style="margin-bottom:14px">' +
       '<div class="order-detail-box"><div class="l">' + esc(t('phone')) + '</div><div class="v" style="direction:ltr;text-align:start">' + esc(c.phone) + '</div></div>' +
       '<div class="order-detail-box"><div class="l">' + esc(t('city')) + '</div><div class="v">' + esc(DS.loc(c, 'city') || '—') + '</div></div>' +
       '<div class="order-detail-box"><div class="l">' + esc(t('ordersCount')) + '</div><div class="v">' + c.orders + '</div></div>' +
       '<div class="order-detail-box"><div class="l">' + esc(t('totalSpent')) + '</div><div class="v" style="color:var(--lime)">' + money(c.spent) + '</div></div>' +
+      '<div class="order-detail-box"><div class="l">' + esc(EN ? 'Lifetime value' : 'القيمة الإجمالية') + '</div><div class="v" style="color:var(--lime)">' + money(lt.ltv || c.spent) + '</div></div>' +
+      '<div class="order-detail-box"><div class="l">' + esc(EN ? 'Average basket' : 'متوسط السلة') + '</div><div class="v">' + money(lt.avg || (c.orders ? c.spent / c.orders : 0)) + '</div></div>' +
       '</div>' +
       '<div class="order-detail-box" style="margin-bottom:14px"><div class="l">' + esc(t('address')) + '</div><div class="v" style="font-weight:500;color:var(--text-secondary)">' + esc(DS.loc(c, 'address') || '—') + '</div></div>' +
       '<div class="section-title" style="font-size:var(--fs-md);margin-bottom:8px">' + icon('orders') + esc(t('orders')) + '</div>' +
@@ -90,7 +105,8 @@
       }).join('') : '<tr><td colspan="4">' + DS.empty({ icon: 'orders', title: t('emptyOrders'), text: t('emptyOrdersText') }) + '</td></tr>') +
       '</tbody></table></div>';
     DS.modal({
-      title: esc(c.name), sub: esc(c.phone) + ' · ' + esc(t('customerLabel')),
+      title: esc(c.name) + ' ' + (lt.vip ? '<span class="pm-vip-badge">◆ ' + esc(EN ? 'Diamond customer' : 'عميل ماسي') + '</span>' : ''),
+      sub: esc(c.phone) + ' · ' + esc(t('customerLabel')),
       size: 'lg', body: body,
       actions: [
         { label: t('contactWhatsapp'), variant: 'btn-success', icon: icon('whatsapp'), close: true, onClick: function () { window.open('https://wa.me/2' + String(c.phone).replace(/^0/, '') + '?text=' + encodeURIComponent(DS.lang() === 'en' ? 'Hello ' + c.name + ' 👋 How can we help?' : 'مرحباً ' + c.name + ' 👋 كيف نقدر نساعدك؟'), '_blank', 'noopener'); } },

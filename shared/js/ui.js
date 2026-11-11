@@ -765,11 +765,14 @@
     '.invoice-print-area .ipa-qr-url { font-size: 7px; color: #333; word-break: break-all; direction: ltr; max-width: 100%; }',
     '.invoice-print-area .ipa-footer { text-align: center; font-size: 9px; line-height: 1.5; }',
     '@media print {',
-    '  @page { size: 80mm auto; margin: 0; }',
+    '  @page { size: 80mm auto; margin: 0 !important; }',
     '  html, body { margin: 0 !important; padding: 0 !important; background: #ffffff !important; }',
+    '  body { font-family: "Cairo", "Inter", sans-serif !important; }',
     '  body * { visibility: hidden !important; }',
-    '  .invoice-print-area, .invoice-print-area * { visibility: visible !important; }',
-    '  .invoice-print-area { position: absolute !important; left: 0 !important; top: 0 !important; width: 80mm !important; margin: 0 !important; padding: 5mm !important; box-sizing: border-box !important; background: #ffffff !important; color: #000000 !important; font-family: "Courier New", Courier, monospace !important; }',
+    '  .invoice-print-area, .invoice-print-area *, .invoice-container, .invoice-container * { visibility: visible !important; }',
+    '  .invoice-container { width: 80mm !important; max-width: 80mm !important; margin: 0 !important; padding: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: #ffffff !important; color: #000000 !important; }',
+    '  .invoice-modal-wrapper { display: block !important; margin: 0 !important; padding: 0 !important; }',
+    '  .invoice-print-area { position: absolute !important; left: 0 !important; top: 0 !important; width: 80mm !important; margin: 0 !important; padding: 0 !important; box-sizing: border-box !important; background: #ffffff !important; color: #000000 !important; font-family: "Cairo", "Inter", sans-serif !important; }',
     '}'
   ].join('\n');
   DS.thermalCss = THERMAL_CSS;

@@ -67,6 +67,116 @@
     };
   }
 
+  /* ─────────── PRO MAX · MULTI-BRANCH STOCK SYNC ───────────
+     A visual per-branch stock ledger in localStorage. Transfers move
+     units between branches (10 by default) without touching the global
+     product stock — a safe, instant simulation of a real sync engine. */
+  var BRANCH_STOCK_KEY = 'ds_branch_stock_' + (user.tenant_id || 'store');
+  var TRANSFER_KEY = 'ds_branch_transfers_' + (user.tenant_id || 'store');
+
+  function branchStockMap() {
+    var list = branches();
+    var products = DS.data.visibleProducts(user);
+    var raw = DS.store.get(BRANCH_STOCK_KEY, null);
+    if (!raw || typeof raw !== 'object') raw = {};
+    var changed = false;
+    list.forEach(function (b, bi) {
+      if (!raw[b.id] || typeof raw[b.id] !== 'object') { raw[b.id] = {}; changed = true; }
+      products.forEach(function (p) {
+        if (raw[b.id][p.id] == null) {
+          var total = Number(p.stock) || 0;
+          var base = Math.floor(total / list.length);
+          var extra = bi === 0 ? total - base * list.length : 0;
+          raw[b.id][p.id] = base + extra;
+          changed = true;
+        }
+      });
+    });
+    if (changed) DS.store.set(BRANCH_STOCK_KEY, raw);
+    return raw;
+  }
+  function branchStockIn(branchId, productId) {
+    var map = branchStockMap();
+    return Number((map[branchId] || {})[productId]) || 0;
+  }
+  function distributionMarkup(productId) {
+    var map = branchStockMap();
+    return branches().map(function (b) {
+      return '<span class="pm-dist-chip"><b>' + esc(branchName(b)) + '</b><i>' + (Number((map[b.id] || {})[productId]) || 0) + '</i></span>';
+    }).join('');
+  }
+  function transferStock(productId, fromId, toId, qty) {
+    if (!productId || fromId === toId || !(qty > 0)) return false;
+    var map = branchStockMap();
+    var available = Number((map[fromId] || {})[productId]) || 0;
+    if (qty > available) return false;
+    map[fromId][productId] = available - qty;
+    map[toId][productId] = (Number((map[toId] || {})[productId]) || 0) + qty;
+    DS.store.set(BRANCH_STOCK_KEY, map);
+    var log = DS.store.get(TRANSFER_KEY, []);
+    if (!Array.isArray(log)) log = [];
+    log.unshift({ product_id: productId, from: fromId, to: toId, qty: qty, at: new Date().toISOString() });
+    DS.store.set(TRANSFER_KEY, log.slice(0, 12));
+    return true;
+  }
+
+  function branchTransferMarkup() {
+    var EN = DS.lang() === 'en';
+    var list = branches();
+    var products = DS.data.visibleProducts(user);
+    if (list.length < 2 || !products.length) {
+      return '<section class="pm-card pm-transfer"><header class="pm-card-head">' +
+        '<span class="pm-card-ico">' + icon('truck') + '</span>' +
+        '<div><div class="pm-kicker">' + esc(EN ? 'Multi-branch sync' : 'مزامنة الفروع') + '</div>' +
+          '<h2>' + esc(EN ? 'Transfer stock' : 'نقل المخزون') + '</h2></div></header>' +
+        '<div class="pm-empty">' + icon('store') +
+          '<b>' + esc(EN ? 'Add a second branch first' : 'أضف فرعاً ثانياً أولاً') + '</b>' +
+          '<span>' + esc(EN ? 'Stock transfers need at least two branches.' : 'نقل المخزون يحتاج فرعين على الأقل.') + '</span></div></section>';
+    }
+    var selectedId = products[0].id;
+    var productOpts = products.slice(0, 80).map(function (p) {
+      return '<option value="' + esc(p.id) + '">' + esc(EN ? (p.name_en || p.name) : p.name) + ' · ' + esc(p.sku || '') + '</option>';
+    }).join('');
+    var branchOpts = list.map(function (b) {
+      return '<option value="' + esc(b.id) + '">' + esc(branchName(b)) + '</option>';
+    }).join('');
+    var fromOpts = list.map(function (b, i) {
+      return '<option value="' + esc(b.id) + '"' + (i === 0 ? ' selected' : '') + '>' + esc(branchName(b)) + '</option>';
+    }).join('');
+    var toOpts = list.map(function (b, i) {
+      return '<option value="' + esc(b.id) + '"' + (i === 1 ? ' selected' : '') + '>' + esc(branchName(b)) + '</option>';
+    }).join('');
+    var log = DS.store.get(TRANSFER_KEY, []);
+    if (!Array.isArray(log)) log = [];
+    var logRows = log.slice(0, 4).map(function (t) {
+      var p = products.filter(function (x) { return x.id === t.product_id; })[0] || {};
+      var fromB = list.filter(function (b) { return b.id === t.from; })[0];
+      var toB = list.filter(function (b) { return b.id === t.to; })[0];
+      return '<div class="pm-transfer-log-row">' + icon('truck') +
+        '<span>' + esc(EN
+          ? 'Moved ' + t.qty + ' × ' + (p.name_en || p.name || '') + ' · ' + (fromB ? branchName(fromB) : t.from) + ' → ' + (toB ? branchName(toB) : t.to)
+          : 'نقل ' + t.qty + ' × ' + (p.name || '') + ' · ' + (fromB ? branchName(fromB) : t.from) + ' ← ' + (toB ? branchName(toB) : t.to)) +
+        '</span><i>' + esc(DS.timeAgo(t.at)) + '</i></div>';
+    }).join('');
+    return '<section class="pm-card pm-transfer">' +
+      '<header class="pm-card-head">' +
+        '<span class="pm-card-ico">' + icon('truck') + '</span>' +
+        '<div><div class="pm-kicker">' + esc(EN ? 'Multi-branch sync' : 'مزامنة الفروع') + '</div>' +
+          '<h2>' + esc(EN ? 'Transfer stock between branches' : 'نقل المخزون بين الفروع') + '</h2></div>' +
+        '<span class="pm-pill lime">' + icon('refresh') + esc(EN ? 'Live' : 'لحظي') + '</span>' +
+      '</header>' +
+      '<div class="pm-transfer-grid">' +
+        '<div class="field"><label>' + esc(EN ? 'Product' : 'المنتج') + '</label><select class="select" data-tr-product>' + productOpts + '</select></div>' +
+        '<div class="field"><label>' + esc(EN ? 'From branch' : 'من فرع') + '</label><select class="select" data-tr-from>' + fromOpts + '</select></div>' +
+        '<div class="field"><label>' + esc(EN ? 'To branch' : 'إلى فرع') + '</label><select class="select" data-tr-to>' + toOpts + '</select></div>' +
+        '<div class="field"><label>' + esc(EN ? 'Quantity' : 'الكمية') + '</label><input class="input" type="number" min="1" step="1" value="10" data-tr-qty dir="ltr"></div>' +
+        '<button type="button" class="btn btn-primary pm-transfer-btn" data-branch-transfer>' + icon('truck') + esc(EN ? 'Transfer' : 'نقل الآن') + '</button>' +
+      '</div>' +
+      '<div class="pm-transfer-dist" data-tr-dist>' + distributionMarkup(selectedId) + '</div>' +
+      (logRows ? '<div class="pm-transfer-log">' + logRows + '</div>' : '') +
+    '</section>';
+  }
+
   /* ────────────────────── TASK 2 · AI SALES FORECAST ───────────────────
      Reads the real order history for the tenant, ranks items by units
      sold and forecasts stock pressure. No backend, no external calls. */
@@ -161,6 +271,80 @@
     '</section>';
   }
 
+  /* ───────── PRO MAX · SMART INVENTORY FORECASTING CARD ─────────
+     Reads DS.data.inventoryForecast() (14-day sales velocity) and renders
+     the exact restock warning the owner needs to act on today. */
+  function inventoryAlertMarkup() {
+    var EN = DS.lang() === 'en';
+    var alerts = DS.data.inventoryForecast ? DS.data.inventoryForecast(user.tenant_id) : [];
+    var body;
+    if (alerts.length) {
+      body = '<div class="pm-alert-list">' + alerts.slice(0, 5).map(function (a) {
+        var name = EN ? (a.name_en || a.name) : a.name;
+        return '<div class="pm-alert-item">' +
+          '<span class="pm-alert-ico">' + icon('alert') + '</span>' +
+          '<div class="pm-alert-copy">' +
+            '<div class="pm-alert-title">' + esc(EN
+              ? 'Warning: ' + name + ' will run out in ' + a.days_left + ' days. Order ' + a.suggested + ' units.'
+              : 'تحذير: منتج ' + name + ' سينفد خلال ' + a.days_left + ' أيام. اطلب ' + a.suggested + ' قطعة') + '</div>' +
+            '<div class="pm-alert-meta">' +
+              '<span>' + icon('box') + (EN ? 'Stock ' : 'المخزون ') + a.stock + '</span>' +
+              '<span>' + icon('trendingUp') + a.velocity + (EN ? '/day' : '/يوم') + '</span>' +
+              '<span>' + icon('orders') + a.units + (EN ? ' sold' : ' مبيع') + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<a class="btn btn-secondary btn-sm" href="' + url('owner/products.html') + '">' + icon('plus') + esc(EN ? 'Restock' : 'تعبئة') + '</a>' +
+        '</div>';
+      }).join('') + '</div>';
+    } else {
+      body = '<div class="pm-empty">' + icon('checkCircle') +
+        '<b>' + esc(EN ? 'No product is running out in the next 3 days.' : 'لا يوجد منتج سينفد خلال 3 أيام.') + '</b>' +
+        '<span>' + esc(EN ? 'Alerts appear automatically as orders come in.' : 'ستظهر التحذيرات تلقائياً مع كل طلب جديد.') + '</span></div>';
+    }
+    return '<section class="pm-card pm-forecast">' +
+      '<header class="pm-card-head">' +
+        '<span class="pm-card-ico">' + icon('box') + '</span>' +
+        '<div><div class="pm-kicker">' + esc(EN ? 'Smart inventory' : 'المخزون الذكي') + '</div>' +
+          '<h2>' + esc(EN ? 'Forecasting' : 'التنبؤ بالمخزون') + '</h2></div>' +
+        (alerts.length ? '<span class="pm-pill danger">' + alerts.length + ' ' + esc(EN ? 'alerts' : 'تحذير') + '</span>' : '') +
+      '</header>' + body +
+      '<footer class="pm-card-foot">' + icon('sparkles') +
+        esc(EN ? 'Based on the last 14 days of sales · restock target = 21 days.' : 'محسوب من مبيعات آخر 14 يوم · هدف التعبئة = 21 يوم.') +
+      '</footer>' +
+    '</section>';
+  }
+
+  /* ───────── PRO MAX · CUSTOMER LIFETIME VALUE (VIP) ───────── */
+  function ltvMarkup() {
+    var EN = DS.lang() === 'en';
+    var d = DS.data.customerLifetime ? DS.data.customerLifetime(user.tenant_id) : { customers: [], vipCount: 0, avg: 0, total: 0, count: 0 };
+    var top = d.customers.slice(0, 5);
+    var body = top.length ? '<div class="pm-vip-list">' + top.map(function (c) {
+      var name = EN ? (c.name_en || c.name) : (c.name || c.name_en);
+      return '<div class="pm-vip-row">' +
+        '<span class="avatar sm" style="background:var(--surface-3);color:var(--text-primary)">' + esc(DS.initials(name || '?')) + '</span>' +
+        '<div class="pm-vip-copy"><b>' + esc(name || '—') + '</b>' +
+          '<span>' + esc(c.orders) + ' ' + esc(EN ? 'orders' : 'طلب') + ' · ' + money(c.avg) + ' ' + esc(EN ? 'avg' : 'متوسط') + '</span></div>' +
+        (c.vip ? '<span class="pm-vip-badge">◆ ' + esc(EN ? 'Diamond' : 'عميل ماسي') + '</span>' : '') +
+        '<b class="pm-vip-value">' + money(c.ltv) + '</b>' +
+      '</div>';
+    }).join('') + '</div>' : '<div class="pm-empty">' + icon('users') +
+      '<b>' + esc(EN ? 'No customers yet' : 'لا يوجد عملاء بعد') + '</b>' +
+      '<span>' + esc(EN ? 'Lifetime value appears after the first order.' : 'ستظهر القيمة الإجمالية بعد أول طلب.') + '</span></div>';
+    return '<section class="pm-card pm-ltv">' +
+      '<header class="pm-card-head">' +
+        '<span class="pm-card-ico">' + icon('users') + '</span>' +
+        '<div><div class="pm-kicker">' + esc(EN ? 'Customer lifetime value' : 'قيمة العميل مدى الحياة') + '</div>' +
+          '<h2>' + esc(EN ? 'Top customers' : 'أفضل العملاء') + '</h2></div>' +
+        '<span class="pm-pill lime">' + (d.vipCount || 0) + ' VIP</span>' +
+      '</header>' + body +
+      '<footer class="pm-card-foot">' + icon('wallet') +
+        esc(EN ? 'Total lifetime value ' : 'إجمالي القيمة ') + money(d.total) + ' · ' +
+        esc(EN ? 'average ' : 'متوسط ') + money(d.avg) +
+      '</footer>' +
+    '</section>';
+  }
+
   function ownerTabsMarkup() {
     var EN = DS.lang() === 'en';
     return '<div class="owner-tabs" role="tablist">' +
@@ -225,6 +409,8 @@
 
       aiInsightsMarkup() +
 
+      inventoryAlertMarkup() +
+
       '<div class="kpi-grid">' +
         statCard(t('monthRevenue'), money(s.monthRevenue), 'chart', 'lime', '+' + s.monthOrders + ' ' + t('orders')) +
         statCard(t('ordersToday'), String(s.todayOrders), 'orders', 'info', t('activeOrders') + ': ' + s.active) +
@@ -256,6 +442,8 @@
         '</div></div></div>' +
 
       driversCard() +
+
+      ltvMarkup() +
 
       '<div class="two-col">' +
         (active ? '<div class="card"><div class="card-header"><div class="card-title">' + esc(t('liveOrders')) + '</div><a class="btn btn-ghost btn-sm" href="' + url('customer/tracking.html?order=' + active.id) + '">' + esc(t('tracking')) + '</a></div><div class="card-body" data-owner-map></div></div>'
@@ -427,6 +615,7 @@
     return head + pills + kpis +
       '<div class="two-col"><div class="card"><div class="card-header"><div class="card-title">' + esc(t('topProducts')) + ' · ' + esc(branchName(current)) + '</div></div><div class="card-body">' + topsMarkup + '</div></div>' +
       '<div class="card"><div class="card-header"><div class="card-title">' + esc(EN ? 'All branches' : 'كل الفروع') + '</div></div><div class="card-body">' + branchCards + '</div></div></div>' +
+      branchTransferMarkup() +
       '<div class="card order-list-card"><div class="card-header"><div class="card-title">' + esc(t('recentOrders')) + ' · ' + esc(branchName(current)) + '</div>' +
         '<a class="btn btn-ghost btn-sm" href="' + url('owner/orders.html') + '">' + esc(t('viewAll')) + icon('arrowRight') + '</a></div>' + recent + '</div>';
   }
@@ -750,6 +939,39 @@
         view.branch = b.getAttribute('data-branch-select');
         render();
       });
+    });
+    bindBranchTransfer();
+  }
+
+  function bindBranchTransfer() {
+    var btn = page.body.querySelector('[data-branch-transfer]');
+    if (!btn) return;
+    var prod = page.body.querySelector('[data-tr-product]');
+    var dist = page.body.querySelector('[data-tr-dist]');
+    if (prod && dist) {
+      prod.addEventListener('change', function () { dist.innerHTML = distributionMarkup(prod.value); });
+    }
+    btn.addEventListener('click', function () {
+      var EN = DS.lang() === 'en';
+      var from = page.body.querySelector('[data-tr-from]');
+      var to = page.body.querySelector('[data-tr-to]');
+      var qtyEl = page.body.querySelector('[data-tr-qty]');
+      var qty = Math.max(1, Number(qtyEl && qtyEl.value) || 0);
+      var productId = prod && prod.value;
+      if (!productId || !from || !to) return;
+      if (from.value === to.value) { DS.toast(EN ? 'Pick two different branches' : 'اختر فرعين مختلفين', 'error'); return; }
+      var list = branches();
+      var fromB = list.filter(function (b) { return b.id === from.value; })[0];
+      var toB = list.filter(function (b) { return b.id === to.value; })[0];
+      var product = DS.data.visibleProducts(user).filter(function (p) { return p.id === productId; })[0];
+      if (!transferStock(productId, from.value, to.value, qty)) {
+        DS.toast(EN ? 'Not enough stock in the source branch' : 'الكمية غير متاحة في الفرع المصدر', 'error');
+        return;
+      }
+      DS.toast(EN
+        ? 'Moved ' + qty + ' × ' + (product ? (product.name_en || product.name) : '') + ' from ' + branchName(fromB) + ' to ' + branchName(toB)
+        : 'تم نقل ' + qty + ' قطعة من ' + branchName(fromB) + ' إلى ' + branchName(toB), 'success');
+      render();
     });
   }
 

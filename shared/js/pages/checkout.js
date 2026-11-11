@@ -218,22 +218,40 @@
           '<a class="btn btn-secondary btn-sm" href="' + url('customer/storefront.html') + '">' + esc(t('cart')) + '</a></div>'
       : '';
 
+    /* One-click checkout: details saved from the previous order. */
+    var quick = DS.store.get('ds_quick_customer', null);
+    var quickBtn = quick && (quick.name || quick.phone || quick.address)
+      ? '<button type="button" class="co-quickpay" data-quick-pay>' +
+          '<span class="co-quickpay-ic">' + icon('zap') + '</span>' +
+          '<span class="co-quickpay-copy"><b>' + esc(EN ? 'Express payment' : 'الدفع السريع') + '</b>' +
+            '<i>' + esc([quick.name, quick.address].filter(Boolean).join(' · ')) + '</i></span>' +
+          icon('arrowLeft') +
+        '</button>'
+      : '';
+
+    var nameVal = quick && quick.name ? quick.name : (user.name || '');
+    var phoneVal = quick && quick.phone ? quick.phone : (user.phone || '');
+    var addressVal = quick && quick.address ? quick.address : (DS.loc(user, 'address') || '');
+    var cityVal = quick && quick.city ? quick.city : (DS.loc(user, 'city') || DS.loc(primary, 'city') || '');
+
     var form = warning + '<div class="checkout-grid">' +
       '<div class="checkout-section">' +
         '<div class="card"><div class="card-head"><div class="section-title">' + icon('user') + esc(t('customerInfo')) + '</div>' + (preview ? '<span class="badge purple">' + esc(EN ? 'Preview' : 'معاينة') + '</span>' : '') + '</div>' +
-          '<div class="card-body"><div class="field-grid">' +
-            '<div class="field"><label>' + esc(t('customerName')) + ' *</label><input class="input" id="coName" value="' + esc(user.name || '') + '"></div>' +
-            '<div class="field"><label>' + esc(t('phone')) + ' *</label><input class="input" id="coPhone" value="' + esc(user.phone || '') + '" style="direction:ltr" inputmode="tel"></div>' +
-            (addressCards ? '<div class="field" style="grid-column:1/-1"><label>' + esc(EN ? 'Saved addresses' : 'العناوين المحفوظة') + '</label>' +
+          '<div class="card-body">' + quickBtn +
+            (addressCards ? '<div class="field" style="margin-bottom:14px"><label>' + esc(EN ? 'Saved addresses' : 'العناوين المحفوظة') + '</label>' +
               '<div class="co-address-cards">' + addressCards + '</div></div>' : '') +
-            '<div class="field" style="grid-column:1/-1"><label>' + esc(t('deliveryTo')) + ' *</label><input class="input" id="coAddress" value="' + esc(DS.loc(user, 'address') || '') + '"></div>' +
-            '<div class="field"><label>' + esc(t('city')) + '</label><input class="input" id="coCity" value="' + esc(DS.loc(user, 'city') || DS.loc(primary, 'city') || '') + '"></div>' +
-            '<div class="field"><label>' + esc(t('deliveryCompany')) + '</label><select class="select" id="coCompany">' +
-              '<option value="">' + esc(EN ? 'Store delivery' : 'توصيل المتجر') + ' (' + money(fee(vlist, sub)) + ')</option>' +
-              companies.map(function (c) { return '<option value="' + esc(c.id) + '"' + (state.company === c.id ? ' selected' : '') + '>' + esc(c.name) + ' · ' + money(c.fee) + '</option>'; }).join('') +
-            '</select></div>' +
-            '<div class="field" style="grid-column:1/-1"><label>' + esc(t('notes')) + '</label><textarea class="textarea" id="coNotes" rows="2" placeholder="' + esc(t('notes')) + '"></textarea></div>' +
-          '</div></div></div>' +
+            '<div class="co-fields">' +
+              '<div class="co-field"><input class="co-input" id="coName" placeholder=" " autocomplete="name" value="' + esc(nameVal) + '"><label for="coName">' + esc(t('customerName')) + ' *</label></div>' +
+              '<div class="co-field"><input class="co-input" id="coPhone" placeholder=" " autocomplete="tel" dir="ltr" inputmode="tel" value="' + esc(phoneVal) + '"><label for="coPhone">' + esc(t('phone')) + ' *</label></div>' +
+              '<div class="co-field co-field-full"><input class="co-input" id="coAddress" placeholder=" " autocomplete="street-address" value="' + esc(addressVal) + '"><label for="coAddress">' + esc(t('deliveryTo')) + ' *</label></div>' +
+              '<div class="co-field"><input class="co-input" id="coCity" placeholder=" " autocomplete="address-level2" value="' + esc(cityVal) + '"><label for="coCity">' + esc(t('city')) + '</label></div>' +
+              '<div class="co-field is-select"><select class="co-input" id="coCompany">' +
+                '<option value="">' + esc(EN ? 'Store delivery' : 'توصيل المتجر') + ' (' + money(fee(vlist, sub)) + ')</option>' +
+                companies.map(function (c) { return '<option value="' + esc(c.id) + '"' + (state.company === c.id ? ' selected' : '') + '>' + esc(c.name) + ' · ' + money(c.fee) + '</option>'; }).join('') +
+              '</select><label for="coCompany">' + esc(t('deliveryCompany')) + '</label></div>' +
+              '<div class="co-field co-field-full"><textarea class="co-input" id="coNotes" rows="2" placeholder=" "></textarea><label for="coNotes">' + esc(t('notes')) + '</label></div>' +
+            '</div>' +
+          '</div></div>' +
         '<div class="card"><div class="card-head"><div class="section-title">' + icon('wallet') + esc(t('choosePayment')) + '</div></div>' +
           '<div class="card-body"><div class="payment-options" role="radiogroup" aria-label="' + esc(t('choosePayment')) + '">' +
             '<button type="button" class="payment-option' + (state.payment === 'cash' ? ' active' : '') + '" data-pay="cash" role="radio" aria-checked="' + (state.payment === 'cash' ? 'true' : 'false') + '">' + icon('wallet') + esc(EN ? 'Cash on delivery' : 'الدفع عند الاستلام') + '</button>' +
@@ -264,8 +282,9 @@
           '</label>' +
           '<div class="summary-line total"><span>' + esc(t('total')) + '</span><span class="num" data-sum-total>' + money(total) + '</span></div>' +
           '<div class="checkout-hint">' + icon('shield') + esc(t('orderSummaryHint')) + '</div>' +
-          '<button type="button" class="btn btn-primary" data-place style="width:100%;margin-top:10px;min-height:46px"' + (closed.length ? ' disabled' : '') + '>' +
-            icon(closed.length ? 'alert' : 'check') + esc(closed.length ? (EN ? 'Store offline' : 'المتجر أوفلاين') : t('confirmOrder')) + '</button>' +
+          '<button type="button" class="co-place-btn" data-place' + (closed.length ? ' disabled' : '') + '>' +
+            icon(closed.length ? 'alert' : 'check') + '<span>' + esc(closed.length ? (EN ? 'Store offline' : 'المتجر أوفلاين') : t('confirmOrder')) + '</span>' +
+            '<b>' + money(total) + '</b></button>' +
           '<div class="login-trust"><span>' + icon('shield') + esc(t('secure')) + '</span><span>' + icon('truck') + esc(t('delivered')) + '</span></div>' +
         '</div></div>' +
         '<div class="card"><div class="card-body" style="display:flex;flex-direction:column;gap:10px">' +
@@ -320,6 +339,18 @@
         if (totalEl) totalEl.textContent = money(Math.max(0, sub + q.fee - newDisc));
       });
     });
+    var quickBtnEl = page.body.querySelector('[data-quick-pay]');
+    if (quickBtnEl && quick) quickBtnEl.addEventListener('click', function () {
+      [['#coName', quick.name], ['#coPhone', quick.phone], ['#coAddress', quick.address], ['#coCity', quick.city]].forEach(function (pair) {
+        var el = page.body.querySelector(pair[0]);
+        if (el && pair[1]) el.value = pair[1];
+      });
+      state.lat = Number(quick.lat) || null;
+      state.lng = Number(quick.lng) || null;
+      quickBtnEl.classList.add('is-filled');
+      DS.toast(EN ? 'Details filled — place your order in one tap.' : 'تم تعبئة بياناتك — أكّد الطلب بضغطة واحدة.', 'success');
+    });
+
     var promoApply = page.body.querySelector('[data-co-promo-apply]');
     if (promoApply) promoApply.addEventListener('click', function () {
       var input = page.body.querySelector('[data-co-promo]');
@@ -399,6 +430,11 @@
     var total = Math.max(0, sub + finalFee - discount);
     var now = new Date().toISOString();
     var primary = vlist[0].tn;
+    /* One-click checkout: remember the delivery identity for next time. */
+    DS.store.set('ds_quick_customer', {
+      name: name, phone: phone, address: address, city: city,
+      lat: Number(state.lat) || null, lng: Number(state.lng) || null, saved_at: now
+    });
     busy = true;
     var order = DS.data.createOrder({
       tenant_id: primary.id,

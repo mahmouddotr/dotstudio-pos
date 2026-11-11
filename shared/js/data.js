@@ -1451,6 +1451,74 @@
     return all.filter(function (c) { return c.tenant_ids.indexOf(user.tenant_id) > -1; });
   }
 
+  /* ─────────── PRO MAX · CUSTOMER LIFETIME VALUE (CRM) ───────────
+     Total spend per customer, average basket and the top 10% "Diamond"
+     tier. Pure read-model: it never mutates orders or users. */
+  function customerLifetime(tenantId) {
+    var base = customers();
+    if (tenantId) base = base.filter(function (c) { return c.tenant_ids.indexOf(tenantId) > -1; });
+    var ranked = base.slice().sort(function (a, b) { return b.spent - a.spent; });
+    var vipCount = ranked.length ? Math.max(1, Math.ceil(ranked.length * 0.1)) : 0;
+    var cutoff = vipCount ? Number(ranked[vipCount - 1].spent) || 0 : 0;
+    base.forEach(function (c) {
+      c.ltv = Number(c.spent) || 0;
+      c.avg = c.orders ? c.ltv / c.orders : 0;
+      c.vip = vipCount > 0 && c.ltv > 0 && c.ltv >= cutoff;
+    });
+    var total = base.reduce(function (s, c) { return s + c.ltv; }, 0);
+    return {
+      customers: base.slice().sort(function (a, b) { return b.ltv - a.ltv; }),
+      vipCount: vipCount,
+      cutoff: cutoff,
+      count: base.length,
+      total: total,
+      avg: base.length ? total / base.length : 0
+    };
+  }
+
+  /* ─────────── PRO MAX · SMART INVENTORY FORECASTING ───────────
+     A product's daily velocity is measured from real order lines in the
+     last 14 days. When the remaining stock covers 3 days or less we
+     surface a restock alert with a suggested purchase quantity. */
+  function inventoryForecast(tenantId, opts) {
+    opts = opts || {};
+    var windowDays = Math.max(1, Number(opts.days) || 14);
+    var horizon = Math.max(1, Number(opts.horizon) || 3);
+    var since = Date.now() - windowDays * 86400000;
+    var list = tenantId ? productsByTenant(tenantId) : DB.products.slice();
+    var out = [];
+    list.forEach(function (p) {
+      var units = 0;
+      DB.orders.forEach(function (o) {
+        if (o.status === 'cancelled') return;
+        if (tenantId && !orderHasTenant(o, tenantId)) return;
+        if (new Date(o.created_at).getTime() < since) return;
+        (o.items || []).forEach(function (it) {
+          if (it.product_id === p.id) units += Number(it.qty) || 0;
+        });
+      });
+      var velocity = units / windowDays;
+      var stock = Number(p.stock) || 0;
+      if (!(velocity > 0)) return;
+      var daysLeft = stock / velocity;
+      if (daysLeft > horizon) return;
+      var target = Math.max(14, Math.ceil(velocity * 21));
+      var suggested = Math.max(10, Math.ceil(Math.max(0, target - stock) / 10) * 10);
+      out.push({
+        id: p.id,
+        name: p.name,
+        name_en: p.name_en || p.name,
+        image: p.image,
+        stock: stock,
+        velocity: Math.round(velocity * 100) / 100,
+        units: units,
+        days_left: Math.max(1, Math.round(daysLeft)),
+        suggested: suggested
+      });
+    });
+    return out.sort(function (a, b) { return a.days_left - b.days_left; });
+  }
+
   /* ───────────────────────────── STATS ───────────────────────────── */
   function sum(arr, key) { return arr.reduce(function (s, x) { return s + (Number(x[key]) || 0); }, 0); }
 
@@ -1886,6 +1954,24 @@
     if (!last || last.status !== status) order.timeline.push({ status: status, at: nowISO(), label: labels[status] || status });
     audit('تحديث الطلب ' + order.order_no + ' إلى «' + (labels[status] || status) + '»', 'Order ' + order.order_no + ' → ' + status, 'orders');
     commit();
+    /* Smart web push: any open page can react to the new status. The shell
+       notification bridge listens for this event and paints a native
+       browser notification for the matching customer. */
+    try {
+      window.dispatchEvent(new CustomEvent('ds:order-status', {
+        detail: {
+          order_id: order.id,
+          order_no: order.order_no,
+          status: status,
+          previous: previous,
+          label: labels[status] || status,
+          customer_id: order.customer_id,
+          customer_phone: order.customer && order.customer.phone,
+          customer_name: order.customer && order.customer.name,
+          tenant_id: order.tenant_id
+        }
+      }));
+    } catch (e) {}
     return order;
   }
 
@@ -2596,6 +2682,8 @@
     productsByTenant: productsByTenant,
     customers: customers,
     customersFor: customersFor,
+    customerLifetime: customerLifetime,
+    inventoryForecast: inventoryForecast,
     statsFor: statsFor,
     platformStats: platformStats,
     series: series,
