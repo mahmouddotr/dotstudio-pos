@@ -17,6 +17,11 @@
   try { existing = JSON.parse(localStorage.getItem('cz_user') || 'null'); } catch (e) {}
   if (existing && existing.role) return;   /* real session — leave it alone */
 
+  /* Preview sessions are opt-in only. A protected page must never authenticate
+     a visitor implicitly — otherwise opening /admin/dashboard.html would hand
+     out a super-admin session. Use ?preview=1 for a standalone design preview. */
+  if (!/(?:^|[?&])preview=1(?:&|$)/.test(window.location.search || '')) return;
+
   var path = window.location.pathname || '';
   var preview = null;
   if (/\/admin\//.test(path)) {

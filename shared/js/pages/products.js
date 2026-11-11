@@ -66,6 +66,8 @@
       list.map(function (p) {
         return DS.productCard(p, {
           actions: '<div class="product-actions">' +
+            '<button class="btn btn-sm ' + (p.featured ? 'btn-primary' : 'btn-secondary') + '" data-feat="' + esc(p.id) + '" data-tip="' + esc(DS.lang() === 'en' ? 'Featured' : 'مميز') + '" style="padding-inline:8px">⭐</button>' +
+            '<button class="btn btn-sm ' + (p.best_seller ? 'btn-primary' : 'btn-secondary') + '" data-best="' + esc(p.id) + '" data-tip="' + esc(DS.lang() === 'en' ? 'Best seller' : 'الأكثر مبيعاً') + '" style="padding-inline:8px">🔥</button>' +
             '<button class="btn btn-secondary btn-sm" data-edit="' + esc(p.id) + '">' + icon('edit') + '<span>' + esc(t('edit')) + '</span></button>' +
             '<button class="btn btn-secondary btn-sm" data-label="' + esc(p.id) + '">' + icon('printer') + '<span>' + (DS.lang() === 'en' ? 'Print Label' : 'طباعة ليبل') + '</span></button>' +
             (isAdmin ? '<a class="btn btn-icon" href="' + url('customer/storefront.html?store=' + p.tenant_id) + '" target="_blank" rel="noopener" data-tip="' + esc(t('viewStore')) + '">' + icon('external') + '</a>' : '') +
@@ -94,6 +96,24 @@
       var p = DS.data.products.filter(function (x) { return x.id === b.getAttribute('data-edit'); })[0];
       if (p) DS.productModal({ product: p, tenantId: p.tenant_id, onSave: render });
     }); });
+    DS.$$('[data-feat]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var p = DS.data.products.filter(function (x) { return x.id === b.getAttribute('data-feat'); })[0];
+        if (!p) return;
+        DS.data.updateProduct(p.id, { featured: !p.featured });
+        DS.toast(p.featured ? (DS.lang() === 'en' ? 'Removed from Top rated' : 'أُزيل من الأعلى تقييماً') : (DS.lang() === 'en' ? 'Added to Top rated' : 'أُضيف للأعلى تقييماً'), 'success');
+        render();
+      });
+    });
+    DS.$$('[data-best]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var p = DS.data.products.filter(function (x) { return x.id === b.getAttribute('data-best'); })[0];
+        if (!p) return;
+        DS.data.updateProduct(p.id, { best_seller: !p.best_seller });
+        DS.toast(p.best_seller ? (DS.lang() === 'en' ? 'Removed from Best sellers' : 'أُزيل من الأكثر مبيعاً') : (DS.lang() === 'en' ? 'Added to Best sellers' : 'أُضيف للأكثر مبيعاً'), 'success');
+        render();
+      });
+    });
     DS.$$('[data-label]', page.body).forEach(function (b) { b.addEventListener('click', function () {
       var p = DS.data.products.filter(function (x) { return x.id === b.getAttribute('data-label'); })[0];
       if (p) openLabelModal(p);
@@ -129,8 +149,8 @@
     }
     if (mode === 'label') {
       el.textContent =
-        '@page { size: 60mm 40mm; margin: 0; }\n' +
-        '@media print { body * { visibility: hidden !important; } .label-container, .label-container * { visibility: visible !important; } .label-container { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; height: 100% !important; margin: 0 !important; } }';
+        '@page { size: 50mm 30mm; margin: 0; }\n' +
+        '@media print { body * { visibility: hidden !important; } .label-container, .label-container * { visibility: visible !important; } .label-container { position: absolute !important; left: 0 !important; top: 0 !important; width: 50mm !important; height: 30mm !important; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; } .barcode-img { max-width: 80%; height: auto; } }';
     }
   }
 
@@ -189,23 +209,23 @@
 
     var labelBody =
       '<div class="label-preview-wrapper" style="display:flex;justify-content:center;align-items:center;padding:18px;background:rgba(0,0,0,0.45);border-radius:14px;border:1px solid rgba(255,255,255,0.08);">' +
-        '<div class="label-container" id="printableProductLabel" style="width:60mm;min-height:40mm;background:#ffffff;color:#111111;border-radius:6px;padding:3mm 4mm;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;align-items:center;text-align:center;box-shadow:0 12px 32px rgba(0,0,0,0.5);font-family:Inter,-apple-system,sans-serif;">' +
-          '<div class="label-store" style="font-size:10px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#333333;border-bottom:1px dashed #cccccc;padding-bottom:2px;width:100%;">' + esc(storeName) + '</div>' +
-          '<div class="label-product" style="font-size:12.5px;font-weight:700;color:#000000;margin:3px 0 1px;line-height:1.25;max-height:30px;overflow:hidden;">' + esc(prodName) + '</div>' +
-          '<div class="label-price" style="font-size:16px;font-weight:800;color:#000000;margin:1px 0;">' + esc(priceText) + '</div>' +
+        '<div class="label-container" id="printableProductLabel" style="width:50mm;height:30mm;background:#ffffff;color:#111111;border-radius:4px;padding:2mm 3mm;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;box-shadow:0 12px 32px rgba(0,0,0,0.5);font-family:Inter,-apple-system,sans-serif;">' +
+          '<div class="label-store" style="font-size:9px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#333333;border-bottom:1px dashed #cccccc;padding-bottom:2px;width:100%;">' + esc(storeName) + '</div>' +
+          '<div class="label-product" style="font-size:11px;font-weight:700;color:#000000;margin:2px 0 1px;line-height:1.2;max-height:26px;overflow:hidden;">' + esc(prodName) + '</div>' +
+          '<div class="label-price" style="font-size:12px;font-weight:800;color:#000000;margin:1px 0;">' + esc(priceText) + '</div>' +
           '<div class="label-barcode-wrap" style="width:100%;display:flex;flex-direction:column;align-items:center;">' +
-            '<svg id="modalLabelBarcodeSvg" class="label-barcode-svg" style="width:100%;max-height:38px;display:block;"></svg>' +
-            '<div class="label-barcode-num" style="font-family:monospace;font-size:11px;font-weight:700;letter-spacing:0.12em;color:#000000;margin-top:2px;">' + esc(barcodeVal) + '</div>' +
+            '<svg id="modalLabelBarcodeSvg" class="label-barcode-svg" style="width:80%;max-height:26px;display:block;"></svg>' +
+            '<div class="label-barcode-num" style="font-family:monospace;font-size:9px;font-weight:700;letter-spacing:0.12em;color:#000000;margin-top:2px;">' + esc(barcodeVal) + '</div>' +
           '</div>' +
         '</div>' +
       '</div>' +
       '<div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text-tertiary);">' +
-        '<span style="display:inline-flex;align-items:center;gap:6px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#82FF1F;"></span> Xprinter XP-235B · 60mm × 40mm Thermal Label</span>' +
+        '<span style="display:inline-flex;align-items:center;gap:6px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#82FF1F;"></span> Xprinter XP-235B · 50mm × 30mm Thermal Label</span>' +
       '</div>';
 
     DS.modal({
       title: DS.lang() === 'en' ? 'Print Product Label' : 'طباعة ليبل المنتج',
-      sub: esc(prodName) + ' · 60×40mm',
+      sub: esc(prodName) + ' · 50×30mm',
       body: labelBody,
       actions: [
         { label: t('close'), variant: 'btn-secondary' },

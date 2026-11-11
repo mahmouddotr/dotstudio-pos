@@ -22,6 +22,8 @@
   };
   var MARKET_HERO = 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1800&q=80';
 
+  document.body.classList.add('saleor-store');
+
   var page = DS.shell.mount({
     roles: null,
     active: 'storefront',
@@ -81,6 +83,22 @@
     return '<span class="sf-rating">' + starsMarkup(value) + '<b>' + value.toFixed(1) + '</b>' +
       (reviews ? '<span class="sf-rating-count">(' + reviews + ')</span>' : '') + '</span>';
   }
+  /* Live rating = seeded product score + every customer review. */
+  function ratingInfo(p) {
+    if (DS.data.ratingFor) {
+      var r = DS.data.ratingFor(p.id);
+      return { value: r.rating, count: r.count };
+    }
+    return { value: Number(p.rating) || 4.8, count: Number(p.review_count) || 0 };
+  }
+  function ratingOf(p) { return ratingMarkup(ratingInfo(p).value, ratingInfo(p).count || null); }
+  function stockBadge(p) {
+    var out = (Number(p.stock) || 0) <= 0;
+    var low = !out && (Number(p.stock) || 0) <= (Number(p.min_stock) || 0);
+    if (out) return '<span class="sf-badge danger">' + esc(t('outOfStock')) + '</span>';
+    if (low) return '<span class="sf-badge warning">' + esc(EN ? 'Low stock · ' + p.stock : 'كمية محدودة · ' + p.stock) + '</span>';
+    return '';
+  }
 
   /* ───────────────────────────── CART ───────────────────────────── */
   function loadCart() {
@@ -92,6 +110,48 @@
     return { items: [] };
   }
   function saveCart() { DS.store.set('ds_cart', cart); }
+
+  /* ── Promo code (applied in the bag, honoured at checkout) ─────── */
+  function promoCode() {
+    var raw = DS.store.get('ds_promo', '');
+    return typeof raw === 'string' ? raw : '';
+  }
+  function promoState() {
+    var code = promoCode();
+    if (!code) return null;
+    var check = DS.data.validateDiscount(code, cartTotal());
+    return { code: code, check: check };
+  }
+  function promoAmount() {
+    var p = promoState();
+    return p && p.check && p.check.ok ? Number(p.check.amount) || 0 : 0;
+  }
+  /* Store-wide sale set by the admin — automatic, no code required. */
+  function saleAmount() {
+    return DS.data.storeSaleAmount ? DS.data.storeSaleAmount(cartTotal()) : 0;
+  }
+  function totalDiscount() { return Math.min(cartTotal(), promoAmount() + saleAmount()); }
+  function promoMarkup() {
+    var p = promoState();
+    var applied = p && p.check && p.check.ok;
+    var err = p && p.check && !p.check.ok
+      ? (p.check.error === 'expired' ? (EN ? 'Code expired' : 'الكود منتهي')
+        : p.check.error === 'used' ? (EN ? 'Code fully used' : 'تم استهلاك الكود')
+        : p.check.error === 'min' ? (EN ? 'Minimum order not reached' : 'الحد الأدنى للطلب غير مكتمل')
+        : (EN ? 'Invalid code' : 'كود غير صالح'))
+      : '';
+    return '<div class="sf-promo">' +
+      '<div class="sf-promo-row">' +
+        '<span class="sf-promo-ic">' + icon('card') + '</span>' +
+        '<input class="sf-promo-input" data-promo-input maxlength="24" dir="ltr" placeholder="' + esc(EN ? 'Promo code' : 'كود الخصم') + '" value="' + esc(applied ? p.code : (p ? p.code : '')) + '">' +
+        '<button type="button" class="btn btn-secondary btn-sm" data-promo-apply>' + esc(applied ? (EN ? 'Update' : 'تحديث') : (EN ? 'Apply' : 'تطبيق')) + '</button>' +
+        (applied ? '<button type="button" class="btn btn-ghost btn-sm" data-promo-remove aria-label="remove">' + icon('x') + '</button>' : '') +
+      '</div>' +
+      (applied
+        ? '<div class="sf-promo-ok">' + icon('checkCircle') + esc(EN ? 'Code applied · −' + money(promoAmount()) : 'تم تطبيق الكود · خصم ' + money(promoAmount())) + '</div>'
+        : (err ? '<div class="sf-promo-err">' + icon('alert') + esc(err) + '</div>' : '')) +
+    '</div>';
+  }
   function cartCount() { return cart.items.reduce(function (s, l) { return s + l.qty; }, 0); }
   function cartTotal() { return cart.items.reduce(function (s, l) { return s + l.price * l.qty; }, 0); }
   function lineOf(id) { return cart.items.filter(function (l) { return l.id === id; })[0]; }
@@ -230,16 +290,46 @@
         '<span>' + esc(EN
           ? 'Offline store: ' + closed.join(', ') + '. Remove its items to check out.'
           : 'متجر أوفلاين: ' + closed.join('، ') + '. احذف منتجاته لإتمام الطلب.') + '</span></div>' : '') +
+      promoMarkup() +
       '<div class="sf-bag-sum">' +
         '<div class="sf-sum-row"><span>' + esc(t('subtotal')) + '</span><span>' + money(cartTotal()) + '</span></div>' +
+        (saleAmount() ? '<div class="sf-sum-row" style="color:var(--success)"><span>⚡ ' + esc(EN ? 'Store sale' : (DS.data.storeSale().label || 'تخفيضات المتجر')) + '</span><span>− ' + money(saleAmount()) + '</span></div>' : '') +
+        (promoAmount() ? '<div class="sf-sum-row" style="color:var(--success)"><span>' + esc(EN ? 'Discount' : 'الخصم') + ' · ' + esc(promoCode()) + '</span><span>− ' + money(promoAmount()) + '</span></div>' : '') +
         '<div class="sf-sum-row"><span>' + esc(t('delivery')) + (groups().length > 1 ? ' (' + groups().length + ')' : '') + '</span><span>' + money(fee) + '</span></div>' +
-        '<div class="sf-sum-row total"><span>' + esc(t('total')) + '</span><b>' + money(cartTotal() + fee) + '</b></div>' +
+        '<div class="sf-sum-row total"><span>' + esc(t('total')) + '</span><b>' + money(Math.max(0, cartTotal() + fee - totalDiscount())) + '</b></div>' +
       '</div>';
   }
 
   function bindBag(m) {
     var body = m.el.querySelector('.modal-body');
     if (!body) return;
+    var applyBtn = body.querySelector('[data-promo-apply]');
+    if (applyBtn) applyBtn.addEventListener('click', function () {
+      var input = body.querySelector('[data-promo-input]');
+      var code = input ? input.value.trim().toUpperCase() : '';
+      if (!code) { DS.store.set('ds_promo', ''); refreshBag(m); return; }
+      var check = DS.data.validateDiscount(code, cartTotal());
+      if (!check.ok) {
+        DS.store.set('ds_promo', code);
+        DS.toast(check.error === 'min'
+          ? (EN ? 'Minimum order for this code is ' + money(check.min_order) : 'الحد الأدنى لهذا الكود ' + money(check.min_order))
+          : (EN ? 'Invalid promo code' : 'كود الخصم غير صالح'), 'error');
+      } else {
+        DS.store.set('ds_promo', code);
+        DS.toast(EN ? 'Promo applied · −' + money(check.amount) : 'تم تطبيق الخصم · −' + money(check.amount), 'success');
+      }
+      refreshBag(m);
+    });
+    var input = body.querySelector('[data-promo-input]');
+    if (input) input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); if (applyBtn) applyBtn.click(); }
+    });
+    var removeBtn = body.querySelector('[data-promo-remove]');
+    if (removeBtn) removeBtn.addEventListener('click', function () {
+      DS.store.set('ds_promo', '');
+      DS.toast(EN ? 'Promo removed' : 'تم إزالة الكود', 'info');
+      refreshBag(m);
+    });
     DS.$$('[data-mq-plus]', body).forEach(function (b) {
       b.addEventListener('click', function () { var l = lineOf(b.getAttribute('data-mq-plus')); if (l) { setQty(l.id, l.qty + 1); refreshBag(m); } });
     });
@@ -257,7 +347,7 @@
     var head = vendors > 1
       ? (EN ? count + ' items from ' + vendors + ' stores' : count + ' منتجات من ' + vendors + ' متاجر')
       : count + ' ' + t('itemsInBag');
-    return esc(head) + ' · ' + esc(money(cartTotal() + deliveryFee()));
+    return esc(head) + ' · ' + esc(money(Math.max(0, cartTotal() + deliveryFee() - totalDiscount())));
   }
 
   function refreshBag(m) {
@@ -311,22 +401,49 @@
     bindBag(m);
   }
 
+  /* ── Saleor-style compare-at price ─────────────────────────────── */
+  function comparePrice(p) {
+    var price = Number(p.price) || 0;
+    var cp = Number(p.compare_price || p.old_price || p.comparePrice || 0);
+    if (cp > price) return cp;
+    /* Demo merchandising: best sellers show a realistic "was" price. */
+    if (p.best_seller) return Math.round(price * 1.18);
+    return 0;
+  }
+  function priceMarkup(p) {
+    var cp = comparePrice(p);
+    if (!cp) return '<span class="sf-price">' + money(p.price) + '</span>';
+    var pct = Math.max(1, Math.round((1 - (Number(p.price) || 0) / cp) * 100));
+    return '<span class="sf-price-wrap">' +
+      '<span class="sf-price">' + money(p.price) + '</span>' +
+      '<s class="sf-price-old">' + money(cp) + '</s>' +
+      '<span class="sf-off">−' + pct + '%</span>' +
+    '</span>';
+  }
+
+  /* ─────────────── UNIFIED CUSTOMER HEADER ──────────────────────── */
+  function headerMarkup() {
+    return DS.shell.customerHeader('home', { search: true, q: state.q });
+  }
+
   /* ─────────────────────────── PRODUCT CARD ─────────────────────── */
   function cardMarkup(p) {
     var tn = storeOf(p);
     var offline = tn ? !storeOpen(tn) : true;
     var out = (Number(p.stock) || 0) <= 0;
-    var badge = '';
-    if (offline) badge = '<span class="sf-badge danger">' + esc(EN ? 'Offline' : 'أوفلاين') + '</span>';
-    else if (out) badge = '<span class="sf-badge danger">' + esc(t('outOfStock')) + '</span>';
-    else if ((p.sold || 0) >= 300) badge = '<span class="sf-badge lime">' + esc(t('bestSeller')) + '</span>';
-    else if ((p.rating || 0) >= 4.9) badge = '<span class="sf-badge">' + esc(t('newArrival')) + '</span>';
+    var offBadge = offline ? '<span class="sf-badge danger">' + esc(EN ? 'Offline' : 'أوفلاين') + '</span>' : '';
+    var badges = offBadge + stockBadge(p);
+    if (!offline && !out) {
+      if (p.best_seller) badges += '<span class="sf-badge lime">🔥 ' + esc(t('bestSeller')) + '</span>';
+      else if (p.featured) badges += '<span class="sf-badge gold">⭐ ' + esc(EN ? 'Top rated' : 'الأعلى تقييماً') + '</span>';
+    }
     var inBag = lineOf(p.id);
     var disabled = offline || out;
+    var info = ratingInfo(p);
     return '<article class="sf-card' + (disabled ? ' is-out' : '') + (offline ? ' is-offline' : '') + '">' +
-      '<button type="button" class="sf-card-media" data-view="' + esc(p.id) + '" aria-label="' + esc(t('quickView')) + '">' +
+      '<button type="button" class="sf-card-media product-image-container" data-view="' + esc(p.id) + '" aria-label="' + esc(t('quickView')) + '">' +
         '<img src="' + esc(imgOf(p)) + '" alt="' + esc(pname(p)) + '" loading="lazy" onerror="this.onerror=null;this.src=\'' + esc(url('assets/product-placeholder.svg')) + '\'">' +
-        badge +
+        '<span class="sf-badge-stack">' + badges + '</span>' +
         '<span class="sf-quick">' + icon('eye') + '<i>' + esc(t('quickView')) + '</i></span>' +
       '</button>' +
       '<div class="sf-card-body">' +
@@ -334,10 +451,10 @@
         '<h3 class="sf-card-name">' + esc(pname(p)) + '</h3>' +
         '<a class="sf-card-store" href="#" data-store="' + esc(p.tenant_id) + '">' + icon('store') +
           '<span>' + esc(EN ? 'From ' : 'من متجر ') + '<b>' + esc(tname(tn)) + '</b></span></a>' +
-        '<div class="sf-card-meta">' + ratingMarkup(p.rating || 4.8, p.reviews) +
+        '<div class="sf-card-meta">' + ratingMarkup(info.value, info.count || null) +
           '<span class="sf-dot"></span><span>' + esc(offline ? (EN ? 'Offline' : 'أوفلاين') : out ? t('outOfStock') : t('inStock')) + '</span></div>' +
         '<div class="sf-card-foot">' +
-          '<span class="sf-price">' + money(p.price) + '</span>' +
+          priceMarkup(p) +
           '<button type="button" class="sf-add' + (inBag ? ' in-bag' : '') + '" data-add="' + esc(p.id) + '"' + (disabled ? ' disabled' : '') +
             ' aria-label="' + esc(t('addToBag')) + '" title="' + esc(offline ? (EN ? 'Store is offline' : 'المتجر أوفلاين الآن') : t('addToBag')) + '">' +
             (inBag ? '<b>' + inBag.qty + '</b>' : icon('plus')) +
@@ -417,6 +534,42 @@
     '</section>';
   }
 
+  /* ── Best Sellers + Top Rated rails ─────────────────────────────── */
+  function railCard(p) {
+    var info = ratingInfo(p);
+    var out = (Number(p.stock) || 0) <= 0;
+    return '<button type="button" class="sf-rail-card' + (out ? ' is-out' : '') + '" data-rail-view="' + esc(p.id) + '">' +
+      '<span class="sf-rail-media"><img src="' + esc(imgOf(p)) + '" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'' + esc(url('assets/product-placeholder.svg')) + '\'">' +
+        (out ? '<span class="sf-badge danger">' + esc(t('outOfStock')) + '</span>' : '') + '</span>' +
+      '<span class="sf-rail-name">' + esc(pname(p)) + '</span>' +
+      '<span class="sf-rail-foot">' + ratingMarkup(info.value, info.count || null) + '<b>' + money(p.price) + '</b></span>' +
+    '</button>';
+  }
+  function railsMarkup() {
+    var list = catalogProducts();
+    var best = list.filter(function (p) { return p.best_seller; });
+    if (!best.length) best = list.slice().sort(function (a, b) { return (b.sold || 0) - (a.sold || 0); }).slice(0, 8);
+    best = best.slice().sort(function (a, b) { return (b.sold || 0) - (a.sold || 0); }).slice(0, 8);
+    var top = list.filter(function (p) { return p.featured; });
+    if (!top.length) top = list.slice();
+    top = top.slice().sort(function (a, b) { return ratingInfo(b).value - ratingInfo(a).value; }).slice(0, 8);
+    if (!best.length && !top.length) return '';
+    function rail(title, sub, iconName, items, cls) {
+      if (!items.length) return '';
+      return '<section class="sf-rail-section ' + cls + '">' +
+        '<div class="sf-rail-head"><div><span class="sf-rail-kicker">' + icon(iconName) + '</span>' +
+          '<h2>' + esc(title) + '</h2><p>' + esc(sub) + '</p></div>' +
+          (state.store ? '' : '<button type="button" class="btn btn-ghost btn-sm" data-rail-all="' + (cls === 'is-best' ? 'best' : 'top') + '">' + esc(EN ? 'View all' : 'عرض الكل') + icon('arrowLeft') + '</button>') +
+        '</div>' +
+        '<div class="sf-rail-scroll">' + items.map(railCard).join('') + '</div>' +
+      '</section>';
+    }
+    return '<div class="sf-rails">' +
+      rail(EN ? 'Best sellers' : 'الأكثر مبيعاً', EN ? '🔥 What everyone is ordering right now' : '🔥 الأكثر طلباً هذا الأسبوع', 'flame', best, 'is-best') +
+      rail(EN ? 'Top rated' : 'الأعلى تقييماً', EN ? '⭐ Loved by verified customers' : '⭐ اختيار العملاء وتقييماتهم', 'star', top, 'is-top') +
+    '</div>';
+  }
+
   function storeDirectoryMarkup() {
     var tenants = catalog();
     var allActive = !state.store;
@@ -475,6 +628,45 @@
     '</section>';
   }
 
+  function footerMarkup() {
+    return DS.shell.customerFooter();
+  }
+
+  /* ── Customer support: store owner · rider · platform team ─────── */
+  function activeOrderForChat() {
+    var list = DS.data.visibleOrders(user).filter(function (o) {
+      return DS.isActiveOrderStatus(o.status);
+    });
+    return list.sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); })[0] || null;
+  }
+  function supportTenantId() {
+    if (state.store) return state.store;
+    var vendors = vendorIds();
+    if (vendors.length) return vendors[0];
+    var active = activeOrderForChat();
+    return active ? active.tenant_id : '';
+  }
+  function openSupport() {
+    var active = activeOrderForChat();
+    if (DS.openSupportHub) {
+      DS.openSupportHub({ tenantId: supportTenantId(), order: active });
+    } else {
+      location.href = url('auth/public-chat.html');
+    }
+  }
+  function mountSupportFab() {
+    if (document.querySelector('[data-support-fab]')) return;
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'sf-support-fab';
+    b.setAttribute('data-support-fab', '');
+    b.setAttribute('aria-label', EN ? 'Support' : 'الدعم');
+    b.innerHTML = (DS.icons && DS.icons.lifebuoy ? icon('lifebuoy') : icon('chat')) +
+      '<span>' + esc(EN ? 'Support' : 'الدعم') + '</span>';
+    b.addEventListener('click', openSupport);
+    document.body.appendChild(b);
+  }
+
   function render() {
     if (state.store && !DS.data.tenantById(state.store)) state.store = '';
     var note = preview ? '<div class="sf-preview-note">' +
@@ -484,8 +676,8 @@
       '<a class="btn btn-secondary btn-sm" href="' + url('admin/stores.html') + '">' + icon('arrowLeft') + esc(t('back')) + '</a>' +
     '</div>' : '';
 
-    page.setContent('<div class="sf-page">' + note + heroMarkup() + storeDirectoryMarkup() +
-      trustMarkup() + toolbarMarkup() + '</div>');
+    page.setContent(headerMarkup() + '<div class="sf-page">' + note + heroMarkup() + railsMarkup() + storeDirectoryMarkup() +
+      trustMarkup() + toolbarMarkup() + footerMarkup() + '</div>');
 
     bindStatic();
     renderGrid();
@@ -497,6 +689,15 @@
     /* Hero floating product cards open the same quick view as the grid. */
     DS.$$('.sf-float-card[data-view]', body).forEach(function (b) {
       b.addEventListener('click', function () { quickView(b.getAttribute('data-view')); });
+    });
+    DS.$$('[data-rail-view]', body).forEach(function (b) {
+      b.addEventListener('click', function () { quickView(b.getAttribute('data-rail-view')); });
+    });
+    DS.$$('[data-rail-all]', body).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var target = body.querySelector('#sfCatalog');
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
     });
     DS.$$('[data-store]', body).forEach(function (b) {
       b.addEventListener('click', function (e) {
@@ -514,14 +715,34 @@
     DS.$$('[data-cat]', body).forEach(function (b) {
       b.addEventListener('click', function () {
         state.cat = b.getAttribute('data-cat');
-        DS.$$('[data-cat]', body).forEach(function (x) { x.classList.toggle('active', x === b); });
+        DS.$$('[data-cat]', body).forEach(function (x) { x.classList.toggle('active', x.getAttribute('data-cat') === state.cat); });
         renderGrid();
       });
     });
 
+    /* Standalone header search mirrors the catalog search. */
+    var slSearch = body.querySelector('[data-sl-search]');
+    if (slSearch) {
+      var applySearch = DS.debounce(function () {
+        state.q = slSearch.value;
+        var q2 = body.querySelector('[data-q]');
+        if (q2 && q2.value !== state.q) q2.value = state.q;
+        renderGrid();
+      }, 150);
+      slSearch.addEventListener('input', applySearch);
+      slSearch.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          var target = body.querySelector('#sfCatalog');
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
+
     var qEl = body.querySelector('[data-q]');
     if (qEl) qEl.addEventListener('input', DS.debounce(function () {
       state.q = qEl.value;
+      if (slSearch && slSearch.value !== state.q) slSearch.value = state.q;
       renderGrid();
     }, 150));
 
@@ -536,6 +757,12 @@
       b.setAttribute('data-bag-bound', '1');
       b.addEventListener('click', openBagModal);
     });
+
+    /* Footer "Support" opens the same support hub as the floating button. */
+    DS.$$('[data-footer-support]', body).forEach(function (b) {
+      b.addEventListener('click', openSupport);
+    });
+
   }
 
   function renderGrid() {
@@ -589,6 +816,189 @@
     });
   }
 
+  /* ─────────────────────────── REVIEWS ─────────────────────────── */
+  function reviewStarsPicker(value) {
+    var out = '';
+    for (var i = 1; i <= 5; i++) {
+      out += '<button type="button" class="sf-rstar' + (i <= value ? ' on' : '') + '" data-rstar="' + i + '" aria-label="' + i + '">' + starSvg(true) + '</button>';
+    }
+    return '<div class="sf-rstar-row" data-rstar-row>' + out + '</div>';
+  }
+
+  function reviewListMarkup(p) {
+    var list = DS.data.reviewsFor ? DS.data.reviewsFor(p.id) : [];
+    if (!list.length) {
+      return '<div class="sf-rev-empty">' + icon('star') + '<b>' + esc(EN ? 'No reviews yet' : 'لا توجد تقييمات بعد') + '</b><span>' + esc(EN ? 'Be the first to review this product.' : 'كن أول من يقيّم هذا المنتج.') + '</span></div>';
+    }
+    var user = DS.session() || {};
+    var canModerate = DS.data.isAdmin && DS.data.isAdmin(user);
+    return '<div class="sf-rev-list">' + list.map(function (r, i) {
+      var name = EN ? (r.name_en || r.name) : (r.name || r.name_en);
+      var text = EN ? (r.text_en || r.text) : (r.text || r.text_en);
+      return '<article class="sf-rev">' +
+        '<div class="sf-rev-top"><span class="avatar sm" style="background:var(--surface-3);color:var(--text-primary)">' + esc(DS.initials(name || '?')) + '</span>' +
+          '<span class="sf-rev-id"><b>' + esc(name || '—') + '</b>' +
+            '<span>' + starsMarkup(r.rating) + (r.verified ? '<em class="sf-rev-verified">' + icon('checkCircle') + esc(EN ? 'Verified' : 'موثّق') + '</em>' : '') + '</span>' +
+          '</span>' +
+          '<span class="sf-rev-date">' + esc(DS.date(r.created_at)) + '</span>' +
+          (canModerate ? '<span class="sf-rev-actions">' +
+            '<button type="button" class="btn btn-ghost btn-sm" data-rev-edit="' + esc(r.id) + '" aria-label="edit">' + icon('edit') + '</button>' +
+            '<button type="button" class="btn btn-ghost btn-sm" style="color:var(--danger)" data-rev-del="' + esc(r.id) + '" aria-label="delete">' + icon('trash') + '</button>' +
+          '</span>' : '') +
+        '</div>' +
+        (text ? '<p class="sf-rev-text">' + esc(text) + '</p>' : '') +
+        (r.image ? '<button type="button" class="sf-rev-photo" data-rev-photo="' + i + '"><img src="' + esc(r.image) + '" alt=""></button>' : '') +
+      '</article>';
+    }).join('') + '</div>';
+  }
+
+  function reviewComposerMarkup(p) {
+    var user = DS.session() || {};
+    return '<div class="sf-rev-compose" data-rev-compose>' +
+      '<div class="sf-rev-compose-head"><b>' + esc(EN ? 'Write a review' : 'اكتب تقييمك') + '</b>' +
+        '<span>' + esc(EN ? 'Your feedback helps other shoppers.' : 'رأيك يساعد بقية العملاء.') + '</span></div>' +
+      reviewStarsPicker(5) +
+      '<div class="field-grid" style="margin-top:10px">' +
+        '<div class="field"><label>' + esc(EN ? 'Your name' : 'اسمك') + '</label>' +
+          '<input class="input" data-rev-name maxlength="60" value="' + esc(EN ? (user.name_en || user.name || '') : (user.name || '')) + '"></div>' +
+        '<div class="field"><label>' + esc(EN ? 'Photo (optional)' : 'صورة (اختياري)') + '</label>' +
+          '<label class="btn btn-secondary btn-sm" style="width:100%;justify-content:center">' + icon('upload') + esc(EN ? 'Upload' : 'رفع صورة') +
+            '<input type="file" accept="image/*" data-rev-file hidden></label></div>' +
+      '</div>' +
+      '<div class="field" style="margin-top:8px"><label>' + esc(EN ? 'Comment' : 'التعليق') + '</label>' +
+        '<textarea class="textarea" rows="3" data-rev-text maxlength="700" placeholder="' + esc(EN ? 'What did you like about it?' : 'ما الذي أعجبك في المنتج؟') + '"></textarea></div>' +
+      '<div class="sf-rev-file-preview" data-rev-preview hidden></div>' +
+      '<button type="button" class="btn btn-primary sf-rev-submit" data-rev-submit>' + icon('send') + esc(EN ? 'Publish review' : 'نشر التقييم') + '</button>' +
+    '</div>';
+  }
+
+  function openReviewEditor(r, p, refresh) {
+    var body = '<div class="field-grid">' +
+      '<div class="field"><label>' + esc(EN ? 'Rating' : 'التقييم') + '</label>' +
+        '<select class="select" id="rveRating">' + [5, 4, 3, 2, 1].map(function (n) {
+          return '<option value="' + n + '"' + (Number(r.rating) === n ? ' selected' : '') + '>' + n + ' ★</option>';
+        }).join('') + '</select></div>' +
+      '<div class="field"><label>' + esc(EN ? 'Name' : 'الاسم') + '</label><input class="input" id="rveName" value="' + esc(EN ? (r.name_en || r.name) : r.name) + '"></div>' +
+      '<div class="field" style="grid-column:1/-1"><label>' + esc(EN ? 'Comment' : 'التعليق') + '</label>' +
+        '<textarea class="textarea" id="rveText" rows="3">' + esc(EN ? (r.text_en || r.text) : r.text) + '</textarea></div>' +
+    '</div>';
+    DS.modal({
+      size: 'sm',
+      title: icon('edit') + ' ' + esc(EN ? 'Edit review' : 'تعديل التقييم'),
+      body: body,
+      actions: [
+        { label: t('cancel'), variant: 'btn-secondary' },
+        { label: t('save'), variant: 'btn-primary', icon: icon('check'), onClick: function (root) {
+          var rating = Number(root.querySelector('#rveRating').value) || 5;
+          var name = root.querySelector('#rveName').value.trim();
+          var text = root.querySelector('#rveText').value.trim();
+          DS.data.updateReview(r.id, { rating: rating, name: name, name_en: name, text: text, text_en: text });
+          DS.toast(EN ? 'Review updated' : 'تم تحديث التقييم', 'success');
+          refresh();
+          return true;
+        } }
+      ]
+    });
+  }
+
+  function openReviews(p) {
+    var current = { rating: 5, image: null };
+    var m = DS.modal({
+      size: 'lg',
+      title: icon('star') + ' ' + esc(EN ? 'Reviews' : 'التقييمات'),
+      sub: esc(pname(p)),
+      body: '<div class="sf-rev-body" data-rev-body>' +
+        '<div class="sf-rev-summary">' +
+          '<div class="sf-rev-score"><b>' + ratingInfo(p).value.toFixed(1) + '</b>' + starsMarkup(ratingInfo(p).value) +
+            '<span>' + (ratingInfo(p).count || 0) + ' ' + esc(EN ? 'reviews' : 'تقييم') + '</span></div>' +
+        '</div>' +
+        reviewListMarkup(p) + reviewComposerMarkup(p) +
+      '</div>',
+      actions: [{ label: t('close'), variant: 'btn-secondary' }]
+    });
+    m.el.classList.add('sf-modal-backdrop');
+    var box = m.el.querySelector('.modal');
+    if (box) box.classList.add('sf-modal');
+
+    function refresh() {
+      var body = m.el.querySelector('[data-rev-body]');
+      if (!body) return;
+      body.innerHTML = '<div class="sf-rev-summary"><div class="sf-rev-score"><b>' + ratingInfo(p).value.toFixed(1) + '</b>' +
+        starsMarkup(ratingInfo(p).value) + '<span>' + (ratingInfo(p).count || 0) + ' ' + esc(EN ? 'reviews' : 'تقييم') + '</span></div></div>' +
+        reviewListMarkup(p) + reviewComposerMarkup(p);
+      current = { rating: 5, image: null };
+      bind();
+    }
+
+    function bind() {
+      var root = m.el;
+      DS.$$('[data-rstar]', root).forEach(function (b) {
+        b.addEventListener('click', function () {
+          current.rating = Number(b.getAttribute('data-rstar')) || 5;
+          DS.$$('[data-rstar]', root).forEach(function (x) {
+            x.classList.toggle('on', Number(x.getAttribute('data-rstar')) <= current.rating);
+          });
+        });
+      });
+      var file = root.querySelector('[data-rev-file]');
+      if (file) file.addEventListener('change', function () {
+        var f = file.files && file.files[0];
+        if (!f) return;
+        if (f.size > 1.5 * 1024 * 1024) { DS.toast(EN ? 'Image must be under 1.5MB' : 'الصورة يجب أن تكون أقل من 1.5 ميجا', 'error'); return; }
+        var rd = new FileReader();
+        rd.onload = function (ev) {
+          current.image = ev.target.result;
+          var prev = root.querySelector('[data-rev-preview]');
+          if (prev) { prev.hidden = false; prev.innerHTML = '<img src="' + ev.target.result + '" alt=""><button type="button" data-rev-clear>' + icon('x') + '</button>'; }
+          var clr = root.querySelector('[data-rev-clear]');
+          if (clr) clr.addEventListener('click', function () { current.image = null; prev.hidden = true; prev.innerHTML = ''; });
+        };
+        rd.readAsDataURL(f);
+      });
+      var submit = root.querySelector('[data-rev-submit]');
+      if (submit) submit.addEventListener('click', function () {
+        var user = DS.session() || {};
+        var name = (root.querySelector('[data-rev-name]') || {}).value || user.name || 'Customer';
+        var text = (root.querySelector('[data-rev-text]') || {}).value || '';
+        if (!String(text).trim()) { DS.toast(EN ? 'Write a short comment first' : 'اكتب تعليقاً قصيراً أولاً', 'error'); return; }
+        DS.data.addReview({
+          product_id: p.id, name: name, name_en: name,
+          text: text, text_en: text,
+          rating: current.rating, image: current.image
+        });
+        DS.toast(EN ? 'Thanks! Your review is live.' : 'شكراً! تم نشر تقييمك.', 'success');
+        refresh();
+        renderGrid();
+      });
+      DS.$$('[data-rev-del]', root).forEach(function (b) {
+        b.addEventListener('click', function () {
+          DS.confirm({ title: t('confirmDelete'), text: EN ? 'Delete this review?' : 'حذف هذا التقييم؟', danger: true }).then(function (ok) {
+            if (!ok) return;
+            DS.data.deleteReview(b.getAttribute('data-rev-del'));
+            DS.toast(t('deleted'), 'success');
+            refresh();
+            renderGrid();
+          });
+        });
+      });
+      DS.$$('[data-rev-edit]', root).forEach(function (b) {
+        b.addEventListener('click', function () {
+          var r = (DS.data.reviewsFor(p.id) || []).filter(function (x) { return x.id === b.getAttribute('data-rev-edit'); })[0];
+          if (r) openReviewEditor(r, p, refresh);
+        });
+      });
+      DS.$$('[data-rev-photo]', root).forEach(function (b) {
+        b.addEventListener('click', function () {
+          var img = b.querySelector('img');
+          if (!img) return;
+          DS.modal({ size: 'lg', title: EN ? 'Customer photo' : 'صورة العميل', body: '<img src="' + img.src + '" alt="" style="width:100%;border-radius:12px">', actions: [{ label: t('close'), variant: 'btn-secondary' }] });
+        });
+      });
+    }
+    bind();
+    return m;
+  }
+
   function quickView(id) {
     var p = allProducts().filter(function (x) { return x.id === id; })[0];
     if (!p) return;
@@ -601,7 +1011,7 @@
       body: '<div class="sf-qv">' +
         '<div class="sf-qv-media"><img src="' + esc(imgOf(p)) + '" alt="" onerror="this.onerror=null;this.src=\'' + esc(url('assets/product-placeholder.svg')) + '\'"></div>' +
         '<div class="sf-qv-info">' +
-          '<div class="sf-qv-rating-line">' + ratingMarkup(p.rating || 4.8, p.reviews) +
+          '<div class="sf-qv-rating-line">' + ratingOf(p) +
             '<span class="sf-qv-sep">·</span>' +
             '<span class="sf-qv-stock' + (offline || out ? ' is-off' : '') + '">' +
               esc(offline ? (EN ? 'Store offline' : 'المتجر أوفلاين') : out ? t('outOfStock') : t('inStock')) +
@@ -619,6 +1029,8 @@
             '<span>' + icon('shield') + esc(t('qualityGuarantee')) + '</span>' +
             '<span>' + icon('box') + esc(out ? t('outOfStock') : p.stock + ' ' + t('units')) + '</span>' +
           '</div>' +
+          '<button type="button" class="sf-qv-reviews" data-open-reviews>' + icon('star') +
+            '<span>' + esc(EN ? 'Reviews' : 'التقييمات') + '</span><b>' + (ratingInfo(p).count || 0) + '</b>' + icon('chevronRight') + '</button>' +
         '</div></div>',
       actions: [
         { label: t('close'), variant: 'btn-secondary' },
@@ -631,6 +1043,11 @@
     m.el.classList.add('sf-modal-backdrop');
     var box = m.el.querySelector('.modal');
     if (box) box.classList.add('sf-modal');
+    var reviewBtn = m.el.querySelector('[data-open-reviews]');
+    if (reviewBtn) reviewBtn.addEventListener('click', function () {
+      m.close();
+      setTimeout(function () { openReviews(p); }, 140);
+    });
     var storeLink = m.el.querySelector('[data-qv-store]');
     if (storeLink) storeLink.addEventListener('click', function (e) {
       e.preventDefault();
@@ -661,7 +1078,11 @@
   }
 
   mountFloatingCart();
+  mountSupportFab();
   render();
+
+  /* Bottom-nav / header bag links land here with ?cart=1. */
+  if (params.get('cart') === '1') setTimeout(openBagModal, 220);
 
   /* ────────────────────── HARDWARE BARCODE SCANNER ────────────────────── */
   if (DS.mountBarcodeScanner) {
@@ -677,7 +1098,7 @@
         DS.toast(pname(p) + ' · ' + (EN ? 'scanned' : 'تم المسح'), 'success');
       },
       onNotFound: function () {
-        DS.toast(EN ? 'Barcode not found' : 'الباركود غير موجود', 'danger');
+        DS.toast(EN ? 'Barcode not found' : 'الباركود غير موجود', 'error');
       }
     });
   }

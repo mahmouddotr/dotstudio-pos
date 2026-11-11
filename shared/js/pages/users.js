@@ -12,7 +12,8 @@
     sub: DS.lang() === 'en'
       ? 'Every account in one place — log in as any user, duplicate, suspend or delete.'
       : 'كل الحسابات في مكان واحد — ادخل كأي مستخدم، انسخ، أوقف أو احذف.',
-    actions: '<span class="badge lime">' + icon('shield') + ' ' + esc(DS.lang() === 'en' ? 'God mode' : 'وضع الإدارة') + '</span>',
+    actions: '<button type="button" class="btn btn-primary" data-quick-add>' + icon('userPlus') + ' ' + esc(DS.lang() === 'en' ? 'Quick add' : 'إضافة سريعة') + '</button>' +
+      '<span class="badge lime">' + icon('shield') + ' ' + esc(DS.lang() === 'en' ? 'God mode' : 'وضع الإدارة') + '</span>',
     content: DS.skeleton.rows(6)
   });
   if (!page) return;
@@ -164,6 +165,82 @@
     return menuEl;
   }
 
+  /* ───────────────────── QUICK ADD (admin) ───────────────────── */
+  /* Name · Username · Password · Role → users array with tenant_id. */
+  function openQuickAdd() {
+    var en = DS.lang() === 'en';
+    var tenants = DS.data.tenants || [];
+    var storeOpts = tenants.map(function (tn) {
+      return '<option value="' + esc(tn.id) + '">' + esc(DS.loc(tn, 'name')) + '</option>';
+    }).join('');
+    var body = '<div class="field-grid">' +
+      '<div class="field"><label>' + esc(en ? 'Full name' : 'الاسم بالكامل') + ' *</label>' +
+        '<input class="input" id="qaName" maxlength="60" placeholder="' + esc(en ? 'Mahmoud Ali' : 'محمود علي') + '"></div>' +
+      '<div class="field"><label>' + esc(en ? 'Username' : 'اسم المستخدم') + ' *</label>' +
+        '<input class="input" id="qaUser" dir="ltr" maxlength="32" placeholder="owner2026"></div>' +
+      '<div class="field"><label>' + esc(en ? 'Password' : 'كلمة المرور') + ' *</label>' +
+        '<input class="input" id="qaPass" dir="ltr" type="password" maxlength="64" autocomplete="new-password" placeholder="••••••••"></div>' +
+      '<div class="field"><label>' + esc(en ? 'Role' : 'الدور') + '</label>' +
+        '<select class="select" id="qaRole">' +
+          '<option value="owner">' + esc(en ? 'Owner' : 'صاحب متجر') + '</option>' +
+          '<option value="cashier">' + esc(en ? 'Cashier' : 'كاشير') + '</option>' +
+          '<option value="delivery">' + esc(en ? 'Driver' : 'مندوب') + '</option>' +
+        '</select></div>' +
+      '<div class="field" id="qaStoreField" style="display:none"><label>' + esc(en ? 'Store' : 'المتجر') + ' *</label>' +
+        '<select class="select" id="qaStore">' + storeOpts + '</select></div>' +
+      '</div>' +
+      '<p style="font-size:11px;color:var(--text-tertiary);margin-top:6px">' + icon('shield') + ' ' +
+        esc(en ? 'A tenant_id is generated automatically for every new owner.' : 'يتم توليد tenant_id تلقائياً لكل صاحب متجر جديد.') + '</p>';
+
+    DS.modal({
+      title: icon('userPlus') + ' ' + esc(en ? 'Quick add' : 'إضافة سريعة'),
+      sub: esc(en ? 'Name, username, password and role — ready in seconds.' : 'الاسم، اسم المستخدم، كلمة المرور والدور — في ثوانٍ.'),
+      size: 'md',
+      body: body,
+      actions: [
+        { label: t('cancel'), variant: 'btn-secondary' },
+        { label: t('save'), variant: 'btn-primary', icon: icon('check'), close: false, onClick: function (root, close) {
+            var name = (root.querySelector('#qaName').value || '').trim();
+            var username = (root.querySelector('#qaUser').value || '').trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
+            var pass = root.querySelector('#qaPass').value || '';
+            var role = root.querySelector('#qaRole').value;
+            var storeEl = root.querySelector('#qaStore');
+            var tenantId = role === 'owner' ? ('tenant_' + Date.now()) : (storeEl ? storeEl.value : '');
+            if (!name || !username || pass.length < 6) {
+              DS.toast(en ? 'Name, username and a 6+ character password are required' : 'الاسم واسم المستخدم وكلمة مرور 6 أحرف مطلوبة', 'error');
+              return false;
+            }
+            if (DS.data.users.some(function (u) { return String(u.username || '').toLowerCase() === username; })) {
+              DS.toast(en ? 'Username already used' : 'اسم المستخدم مستخدم بالفعل', 'error');
+              return false;
+            }
+            DS.data.addUser({
+              username: username,
+              password: pass,
+              role: role,
+              name: name,
+              name_en: name,
+              tenant_id: tenantId,
+              avatar_id: role === 'delivery' ? 'av3' : (role === 'owner' ? 'av1' : 'av6'),
+              is_active: true
+            });
+            DS.toast(en ? 'Account created' : 'تم إنشاء الحساب', 'success');
+            window.dispatchEvent(new CustomEvent('ds:data-changed'));
+            render();
+            if (close) close();
+            return true;
+          } }
+      ],
+      onMount: function (root) {
+        var roleSel = root.querySelector('#qaRole');
+        var field = root.querySelector('#qaStoreField');
+        function sync() { if (field) field.style.display = roleSel && roleSel.value === 'owner' ? 'none' : ''; }
+        if (roleSel) roleSel.addEventListener('change', sync);
+        sync();
+      }
+    });
+  }
+
   function bind() {
     var q = page.body.querySelector('[data-user-q]');
     if (q) {
@@ -233,6 +310,9 @@
       render();
     });
   }
+
+  var quickBtn = page.actions && page.actions.querySelector('[data-quick-add]');
+  if (quickBtn) quickBtn.addEventListener('click', openQuickAdd);
 
   render();
 })();

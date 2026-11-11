@@ -23,17 +23,22 @@
   var state = { id: params.get('order') || '', gps: null };
 
   function mine() { return DS.data.visibleOrders(user).slice().sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); }); }
-  function activeOrders() { return mine().filter(function (o) { return ['pending', 'confirmed', 'preparing', 'delivering'].indexOf(o.status) > -1; }); }
+  function activeOrders() { return mine().filter(function (o) { return DS.isActiveOrderStatus(o.status); }); }
   function selected() {
     var list = activeOrders().length ? activeOrders() : mine();
     if (!list.length) return null;
     return list.filter(function (o) { return o.id === state.id || o.order_no === state.id; })[0] || list[0];
   }
 
+  var isOwner = DS.data.isCompanyOwner ? DS.data.isCompanyOwner(user) : false;
+
   function nextAction(o) {
-    if (o.status === 'pending' || o.status === 'confirmed') return { label: t('acceptTask'), next: 'preparing', variant: 'btn-primary', icon: 'check' };
-    if (o.status === 'preparing') return { label: t('markPicked'), next: 'delivering', variant: 'btn-primary', icon: 'package' };
-    if (o.status === 'delivering') return { label: t('markDelivered'), next: 'delivered', variant: 'btn-success', icon: 'checkCircle' };
+    if (isOwner) {
+      if (o.status === 'handed_to_company' && o.driver_id) return { label: t('startDelivery'), next: 'out_for_delivery', variant: 'btn-primary', icon: 'bike' };
+      return null;
+    }
+    if (o.status === 'handed_to_company' && o.driver_id === user.id) return { label: t('startDelivery'), next: 'out_for_delivery', variant: 'btn-primary', icon: 'bike' };
+    if (o.status === 'out_for_delivery' && o.driver_id === user.id) return { label: t('markDelivered'), next: 'delivered', variant: 'btn-success', icon: 'checkCircle' };
     return null;
   }
 
@@ -56,7 +61,7 @@
       }).join('') + '</select>' + DS.badge(o.status, meta.label) + '</div></div>';
 
     var map = '<div class="card"><div class="card-head"><div class="section-title">' + icon('navigation') + esc(o.order_no) + '</div>' +
-      '<span class="badge ' + (o.status === 'delivering' ? 'lime' : 'neutral') + '">' + icon('bike') + esc(o.status === 'delivering' ? t('live') : meta.label) + '</span></div>' +
+      '<span class="badge ' + (o.status === 'out_for_delivery' ? 'lime' : 'neutral') + '">' + icon('bike') + esc(o.status === 'out_for_delivery' ? t('live') : meta.label) + '</span></div>' +
       '<div class="card-body"><div id="gpsHost"></div>' +
         '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">' +
           (act ? '<button class="btn ' + act.variant + '" data-advance style="flex:1">' + icon(act.icon) + esc(act.label) + '</button>' : '') +
@@ -111,8 +116,10 @@
       var act = nextAction(o);
       if (!act) return;
       if (act.next === 'delivered') { openProof(o); return; }
-      DS.data.updateOrderStatus(o.id, act.next, { driver_name: DS.loc(user, 'name'), company_id: company.id, company_name: company.name });
-      DS.toast(t('statusUpdated'), act.next === 'delivering' ? 'success' : 'info');
+      if (!DS.data.updateOrderStatus(o.id, act.next, { driver_id: o.driver_id, driver_name: o.driver_name || DS.loc(user, 'name'), company_id: company.id, company_name: company.name })) {
+        DS.toast(t('noPermission'), 'error'); return;
+      }
+      DS.toast(t('statusUpdated'), 'success');
       window.dispatchEvent(new CustomEvent('ds:order-updated', { detail: { id: o.id } }));
       render();
     });
@@ -135,7 +142,7 @@
             var img = root.querySelector('[data-proof-preview] img');
             var src = img ? img.getAttribute('src') : '';
             if (!src) { DS.toast(t('proofRequired'), 'error'); return false; }
-            DS.data.updateOrderStatus(o.id, 'delivered', { proof: src, driver_name: DS.loc(user, 'name'), company_id: company.id, company_name: company.name });
+            DS.data.updateOrderStatus(o.id, 'delivered', { proof: src, driver_id: o.driver_id, driver_name: o.driver_name || DS.loc(user, 'name'), company_id: company.id, company_name: company.name });
             DS.toast(t('orderDeliveredMsg'), 'success');
             window.dispatchEvent(new CustomEvent('ds:order-updated', { detail: { id: o.id } }));
             setTimeout(render, 200);

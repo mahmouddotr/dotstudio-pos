@@ -5,6 +5,7 @@
   var t = DS.t, esc = DS.esc, icon = DS.icon, money = DS.money, url = DS.url;
   var user = DS.session();
   if (!user) return;
+  document.body.classList.add('saleor-store');
 
   var page = DS.shell.mount({
     roles: ['customer'],
@@ -20,13 +21,21 @@
 
   var state = { status: '', q: '' };
 
+  /* ── Unified customer header (same chrome as the storefront) ───── */
+  function headerMarkup(active) {
+    return DS.shell.customerHeader(active || 'my-orders', { search: false });
+  }
+  function bindChrome() {
+    /* Theme, language and logout are handled by the shared shell chrome. */
+  }
+
   function orders() {
     return DS.data.visibleOrders(user).slice().sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
   }
   function filtered() {
     var q = state.q.trim().toLowerCase();
     return orders().filter(function (o) {
-      if (state.status === 'active' && ['pending', 'confirmed', 'preparing', 'delivering'].indexOf(o.status) === -1) return false;
+      if (state.status === 'active' && !DS.isActiveOrderStatus(o.status)) return false;
       if (state.status && state.status !== 'active' && o.status !== state.status) return false;
       if (!q) return true;
       return (o.order_no + ' ' + (o.items || []).map(function (i) { return i.name; }).join(' ')).toLowerCase().indexOf(q) > -1;
@@ -38,55 +47,87 @@
   }
 
   function orderCard(o) {
+    var EN = DS.lang() === 'en';
     var tn = DS.data.tenantById(o.tenant_id) || {};
     var meta = DS.statusMeta(o.status);
-    var count = (o.items || []).reduce(function (s, i) { return s + i.qty; }, 0);
-    var thumbs = (o.items || []).slice(0, 3).map(function (i) {
-      return '<img src="' + esc(DS.data.img(i.image)) + '" alt="" style="width:38px;height:38px;border-radius:8px;object-fit:cover;border:1px solid var(--border);margin-inline-end:-10px;background:var(--surface-2)">';
+    var lines = o.items || [];
+    var count = lines.reduce(function (s, i) { return s + i.qty; }, 0);
+    var thumbs = lines.slice(0, 3).map(function (i) {
+      return '<img src="' + esc(DS.data.img(i.image)) + '" alt="">';
     }).join('');
-    return '<article class="card"><div class="card-body">' +
-      '<div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">' +
-        '<div style="flex:1;min-width:160px"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-family:var(--font-mono);font-size:12px;direction:ltr">' + esc(o.order_no) + '</b>' + DS.badge(o.status, meta.label) + '</div>' +
-          '<div style="font-size:11px;color:var(--text-tertiary);margin-top:4px">' + esc(tn.name || '') + ' · ' + esc(DS.datetime(o.created_at)) + '</div></div>' +
-        '<div style="text-align:end"><div style="font-family:var(--font-display);font-size:18px;font-weight:700">' + money(o.total) + '</div><div style="font-size:10px;color:var(--text-tertiary)">' + count + ' ' + esc(t('item')) + '</div></div>' +
+    var firstName = lines[0] ? (EN ? (lines[0].name_en || lines[0].name) : lines[0].name) : '';
+    var extra = lines.length > 1 ? ' +' + (lines.length - 1) : '';
+    var live = DS.isActiveOrderStatus(o.status);
+    return '<article class="ct-order">' +
+      '<div class="ct-order-top">' +
+        '<div class="ct-order-idwrap">' +
+          '<div class="ct-order-idrow"><span class="ct-order-no">' + esc(o.order_no) + '</span>' + DS.badge(o.status, meta.label) + '</div>' +
+          '<div class="ct-order-date">' + icon('clock') +
+            '<span>' + esc(DS.datetime(o.created_at)) + '</span>' +
+            '<span class="sep">·</span>' +
+            '<i>' + esc(tn.name || '') + '</i>' +
+          '</div>' +
+        '</div>' +
+        '<div class="ct-order-total">' +
+          '<span>' + esc(EN ? 'Total' : 'الإجمالي') + '</span>' +
+          '<b>' + money(o.total) + '</b>' +
+          '<i>' + count + ' ' + esc(t('item')) + '</i>' +
+        '</div>' +
       '</div>' +
-      '<div style="display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap">' +
-        '<div style="display:flex;align-items:center">' + thumbs + '<span style="margin-inline-start:14px;font-size:11px;color:var(--text-tertiary)">' + esc((o.items || [])[0] ? (DS.lang() === 'en' ? ((o.items[0].name_en || o.items[0].name)) : o.items[0].name) : '') + ((o.items || []).length > 1 ? ' +' + (o.items.length - 1) : '') + '</span></div>' +
-        '<div style="flex:1"></div>' +
-        '<button class="btn btn-secondary btn-sm" data-details="' + esc(o.id) + '">' + icon('eye') + esc(t('details')) + '</button>' +
-        (['pending', 'confirmed', 'preparing', 'delivering'].indexOf(o.status) > -1
-          ? '<a class="btn btn-primary btn-sm" href="' + url('customer/tracking.html?order=' + encodeURIComponent(o.id)) + '">' + icon('mapPin') + esc(t('trackOrder')) + '</a>'
-          : '<button class="btn btn-secondary btn-sm" data-reorder="' + esc(o.id) + '">' + icon('refresh') + esc(t('reorder')) + '</button>') +
+      '<div class="ct-order-mid">' +
+        '<div class="ct-order-items">' +
+          '<div class="ct-order-thumbs">' + thumbs + '</div>' +
+          '<div class="ct-order-itemtext"><b>' + esc(firstName) + extra + '</b>' +
+            esc(EN ? 'Order details and invoice' : 'تفاصيل الطلب والفاتورة') + '</div>' +
+        '</div>' +
+        '<div class="ct-order-actions">' +
+          '<button class="btn btn-secondary btn-sm" data-details="' + esc(o.id) + '">' + icon('eye') + esc(t('details')) + '</button>' +
+          (live
+            ? '<a class="btn btn-primary btn-sm" href="' + url('customer/tracking.html?order=' + encodeURIComponent(o.id)) + '">' + icon('mapPin') + esc(t('trackOrder')) + '</a>'
+            : '<button class="btn btn-primary btn-sm" data-reorder="' + esc(o.id) + '">' + icon('refresh') + esc(t('reorder')) + '</button>') +
+        '</div>' +
       '</div>' +
-    '</div></article>';
+    '</article>';
   }
 
   function render() {
     var all = orders();
-    var active = all.filter(function (o) { return ['pending', 'confirmed', 'preparing', 'delivering'].indexOf(o.status) > -1; });
+    var active = all.filter(function (o) { return DS.isActiveOrderStatus(o.status); });
     var delivered = all.filter(function (o) { return o.status === 'delivered'; });
     var spent = delivered.reduce(function (s, o) { return s + (Number(o.total) || 0); }, 0);
     var list = filtered();
 
-    var stats = '<div class="kpi-grid">' +
+    var head = '<div class="ct-page-head"><div>' +
+      '<div class="ct-eyebrow">' + icon('orders') + esc(t('store')) + '</div>' +
+      '<h1 class="ct-title">' + esc(t('myOrders')) + '</h1>' +
+      '<p class="ct-sub">' + esc(DS.lang() === 'en'
+        ? 'Every order you placed, with live status and one-tap reorder.'
+        : 'كل طلب قمت به، بحالته اللحظية وإعادة طلب بلمسة.') + '</p>' +
+      '</div><div class="ct-page-actions">' +
+        '<a class="btn btn-primary" href="' + url('customer/storefront.html') + '">' + icon('store') + esc(t('browseStore')) + '</a>' +
+      '</div></div>';
+
+    var stats = '<div class="kpi-grid ct-stats">' +
       stat(t('totalOrders'), String(all.length), 'orders', 'lime', t('all')) +
       stat(t('activeOrders'), String(active.length), 'bike', 'info', t('active')) +
       stat(t('deliveredOrders'), String(delivered.length), 'checkCircle', 'green', t('completed')) +
       stat(t('totalSpent'), money(spent), 'wallet', 'purple', t('spent')) +
     '</div>';
 
-    var toolbar = '<div class="card"><div class="card-body" style="padding:12px 14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">' +
+    var toolbar = '<div class="ct-toolbar">' +
       '<div class="search-mini" style="flex:1;min-width:200px">' + icon('search') + '<input data-q placeholder="' + esc(t('search')) + ' ' + esc(t('orders')) + '" value="' + esc(state.q) + '"></div>' +
       '<select class="select" data-status style="width:auto;min-width:160px"><option value="">' + esc(t('allStatuses')) + '</option>' +
         '<option value="active"' + (state.status === 'active' ? ' selected' : '') + '>' + esc(t('activeOrders')) + '</option>' +
         DS.statusFlow.map(function (s) { return '<option value="' + s + '"' + (state.status === s ? ' selected' : '') + '>' + esc(DS.statusMeta(s).label) + '</option>'; }).join('') +
-      '</select></div></div>';
+      '</select></div>';
 
-    var body = list.length ? '<div style="display:flex;flex-direction:column;gap:10px">' + list.map(orderCard).join('') + '</div>' :
+    var body = list.length ? '<div class="ct-orders">' + list.map(orderCard).join('') + '</div>' :
       DS.empty({ icon: 'orders', title: t('emptyOrders'), text: t('emptyOrdersText'), cta: { label: t('browseStore'), icon: 'store', onclick: "location.href='" + url('customer/storefront.html') + "'" } });
 
-    page.setContent(stats + toolbar + body);
+    page.setContent(headerMarkup('orders') + '<div class="ct-page">' + head +
+      '<div style="display:flex;flex-direction:column;gap:18px">' + stats + toolbar + body + '</div></div>');
     bind(list);
+    bindChrome();
   }
 
   function bind() {

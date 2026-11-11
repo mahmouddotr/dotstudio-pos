@@ -6,15 +6,18 @@
   var user = DS.session();
   if (!user) return;
   var isAdmin = DS.data.isAdmin(user);
+  var isCashier = user.role === 'cashier';
   var page = DS.shell.mount({
     roles: isAdmin ? ['superadmin', 'subadmin'] : ['owner', 'cashier'],
     permission: user.role === 'subadmin' ? 'orders' : null,
     active: 'orders',
-    title: t('orders'),
+    title: isCashier ? (DS.lang() === 'en' ? 'Order tracking' : 'تتبع الطلبات') : t('orders'),
     eyebrow: isAdmin ? t('admin') : (DS.data.tenantById(user.tenant_id) || {}).name,
     icon: 'orders',
-    sub: DS.lang() === 'en' ? 'Every order with items, customer, payment, proof and timeline.' : 'كل طلب بتفاصيله الكاملة: المنتجات، العميل، الدفع، الإثبات والمراحل.',
-    actions: '<button class="btn btn-secondary" data-export>' + icon('download') + esc(t('exportCsv')) + '</button>' +
+    sub: isCashier
+      ? (DS.lang() === 'en' ? 'Follow every order from the counter — status and delivery only.' : 'تابع كل طلب من الكاشير — الحالة والتوصيل فقط.')
+      : (DS.lang() === 'en' ? 'Every order with items, customer, payment, proof and timeline.' : 'كل طلب بتفاصيله الكاملة: المنتجات، العميل، الدفع، الإثبات والمراحل.'),
+    actions: (isCashier ? '' : '<button class="btn btn-secondary" data-export>' + icon('download') + esc(t('exportCsv')) + '</button>') +
       '<button class="btn btn-primary" data-refresh>' + icon('refresh') + esc(t('refresh')) + '</button>',
     content: DS.skeleton.rows(9)
   });
@@ -47,13 +50,13 @@
     var list = filtered();
     var revenue = DS.data.revenueOf(all);
     var pending = all.filter(function (o) { return o.status === 'pending'; }).length;
-    var active = all.filter(function (o) { return ['confirmed', 'preparing', 'delivering'].indexOf(o.status) > -1; }).length;
+    var active = all.filter(function (o) { return DS.isActiveOrderStatus(o.status); }).length;
 
     var stats = '<div class="kpi-grid">' +
       stat(t('totalOrdersLabel'), String(all.length), 'orders', 'lime', all.filter(function (o) { return o.status === 'delivered'; }).length + ' ' + t('delivered')) +
       stat(t('pendingNow'), String(pending), 'clock', pending ? 'orange' : 'green', t('pending')) +
-      stat(t('activeOrders'), String(active), 'bike', 'info', t('delivering') + ': ' + all.filter(function (o) { return o.status === 'delivering'; }).length) +
-      stat(t('revenue'), money(revenue), 'wallet', 'purple', t('delivered') + ' ' + t('orders')) +
+      stat(t('activeOrders'), String(active), 'bike', 'info', t('delivering') + ': ' + all.filter(function (o) { return o.status === 'out_for_delivery'; }).length) +
+      (isCashier ? '' : stat(t('revenue'), money(revenue), 'wallet', 'purple', t('delivered') + ' ' + t('orders'))) +
     '</div>';
 
     var toolbar = '<div class="card"><div class="card-body" style="padding:12px 14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">' +

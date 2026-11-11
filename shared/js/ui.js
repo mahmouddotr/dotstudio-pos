@@ -19,11 +19,67 @@
 
   /* ────────────────────────── ORDER DETAILS ──────────────────────── */
   var STATUS_ACTIONS = {
-    pending: { next: 'confirmed', labelKey: 'orderConfirmed', variant: 'btn-primary', icon: 'check' },
-    confirmed: { next: 'preparing', labelKey: 'preparing', variant: 'btn-primary', icon: 'package' },
-    preparing: { next: 'delivering', labelKey: 'orderDelivering', variant: 'btn-primary', icon: 'bike' },
-    delivering: { next: 'delivered', labelKey: 'markDelivered', variant: 'btn-success', icon: 'checkCircle' }
+    pending: { next: 'preparing', labelKey: 'startPreparing', variant: 'btn-primary', icon: 'check' },
+    confirmed: { next: 'preparing', labelKey: 'startPreparing', variant: 'btn-primary', icon: 'check' },
+    preparing: { next: 'handed_to_company', labelKey: 'handToCompany', variant: 'btn-primary', icon: 'truck' },
+    /* Store work ends here. Only the delivery company can move on. */
+    handed_to_company: null,
+    out_for_delivery: { next: 'delivered', labelKey: 'markDelivered', variant: 'btn-success', icon: 'checkCircle', proof: true }
   };
+
+  /* Who may advance an order at each step. */
+  function canAdvanceOrder(user, order) {
+    if (!user || !order) return false;
+    if (user.role === 'superadmin' || user.role === 'subadmin') return true;
+    var store = (user.role === 'owner' || user.role === 'cashier') && user.tenant_id && DS.data.orderHasTenant(order, user.tenant_id);
+    if (order.status === 'out_for_delivery') return user.role === 'delivery' || user.role === 'driver';
+    return store;
+  }
+
+  /* Delivery cannot be completed without a proof photo (driver requirement). */
+  function openProofUpload(order, after) {
+    DS.modal({
+      title: t('proofUpload'),
+      sub: order.order_no + ' · ' + (order.customer ? DS.loc(order.customer, 'name') : ''),
+      body: '<div class="field"><label>' + esc(t('proof')) + ' *</label>' +
+          '<label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px dashed var(--border-strong);border-radius:var(--radius-lg);padding:26px;background:var(--surface-2);cursor:pointer;text-align:center">' +
+            '<span style="width:48px;height:48px;border-radius:13px;background:var(--lime-soft);color:var(--success);display:grid;place-items:center">' + icon('image') + '</span>' +
+            '<b style="font-size:13px">' + esc(t('uploadImage')) + '</b><span style="font-size:11px;color:var(--text-tertiary)">PNG / JPG · ≤ 800KB</span>' +
+            '<input type="file" id="proofPhoto" accept="image/*" capture="environment" hidden></label>' +
+          '<div data-proof-preview style="margin-top:10px;display:none"><img alt="proof" style="width:100%;max-height:220px;object-fit:cover;border-radius:var(--radius-md);border:1px solid var(--border)"></div>' +
+          '<p style="font-size:11px;color:var(--text-tertiary);margin-top:8px">' + esc(t('proofRequired')) + '</p></div>',
+      actions: [
+        { label: t('cancel'), variant: 'btn-secondary' },
+        { label: t('markDelivered'), variant: 'btn-success', icon: icon('checkCircle'), onClick: function (root) {
+            var img = root.querySelector('[data-proof-preview] img');
+            var src = img ? img.getAttribute('src') : '';
+            if (!src) { DS.toast(t('proofRequired'), 'error'); return false; }
+            var res = DS.data.updateOrderStatus(order.id, 'delivered', { proof: src, driver_name: order.driver_name });
+            if (!res) { DS.toast(t('error'), 'error'); return false; }
+            DS.toast(t('orderDeliveredMsg'), 'success');
+            window.dispatchEvent(new CustomEvent('ds:order-updated', { detail: { id: order.id } }));
+            if (after) setTimeout(after, 160);
+            return true;
+          } }
+      ],
+      onMount: function (root) {
+        var input = root.querySelector('#proofPhoto');
+        if (!input) return;
+        input.addEventListener('change', function () {
+          var f = input.files && input.files[0];
+          if (!f) return;
+          if (f.size > 800 * 1024) { DS.toast('≤ 800KB', 'error'); input.value = ''; return; }
+          var r = new FileReader();
+          r.onload = function (ev) {
+            var box = root.querySelector('[data-proof-preview]');
+            box.style.display = '';
+            box.querySelector('img').src = ev.target.result;
+          };
+          r.readAsDataURL(f);
+        });
+      }
+    });
+  }
 
   function timelineMarkup(order) {
     var flow = DS.statusFlow;
@@ -69,7 +125,7 @@
         '<div class="order-items">' + itemsHtml + '</div>' +
         '<div class="cart-summary" style="margin-top:12px">' +
           '<div class="cart-row"><span>' + esc(t('subtotal')) + '</span><span>' + money(order.subtotal) + '</span></div>' +
-          (order.discount ? '<div class="cart-row"><span>' + esc(t('discount')) + '</span><span style="color:var(--lime)">− ' + money(order.discount) + '</span></div>' : '') +
+          (order.discount ? '<div class="cart-row"><span>' + esc(t('discount')) + '</span><span style="color:var(--success)">− ' + money(order.discount) + '</span></div>' : '') +
           '<div class="cart-row"><span>' + esc(t('delivery')) + '</span><span>' + money(order.delivery_fee) + '</span></div>' +
           '<div class="cart-row total"><span>' + esc(t('total')) + '</span><span class="num">' + money(order.total) + '</span></div>' +
         '</div>' +
@@ -82,10 +138,115 @@
           '<div class="order-detail-box"><div class="l">' + esc(t('paymentMethod')) + '</div><div class="v">' + esc(t(order.payment_method || 'cash')) + '</div></div>' +
           '<div class="order-detail-box"><div class="l">' + esc(t('deliveryCompany')) + '</div><div class="v">' + esc(order.delivery_company_name || t('noCompany')) + '</div></div>' +
         '</div>' +
+        '<div class="order-detail-box" style="margin-top:10px"><div class="l">' + esc(t('driver')) + '</div><div class="v">' +
+          esc(order.driver_name || t('noDriverAssigned')) +
+          (order.driver_id && DS.data.userById ? (function () {
+            var dv = DS.data.userById(order.driver_id);
+            return dv && dv.phone ? '<span style="display:block;direction:ltr;text-align:start;font-size:11px;color:var(--text-tertiary);font-weight:500">' + esc(dv.phone) + '</span>' : '';
+          })() : '') +
+        '</div></div>' +
         '<div style="margin-top:12px">' + proof + '</div>' +
         '<div class="section-title" style="font-size:var(--fs-md);margin:14px 0 8px">' + icon('activity') + esc(t('timeline')) + '</div>' +
         timelineMarkup(order) +
       '</div></div>';
+  }
+
+  function openOrderEditor(order) {
+    var EN = DS.lang() === 'en';
+    var statuses = ['pending', 'preparing', 'handed_to_company', 'out_for_delivery', 'delivered', 'cancelled'].filter(function (s) {
+      if (s === order.status) return true;
+      if (!DS.data.canTransition(order.status, s)) return false;
+      return !DS.data.canTransitionForUser || DS.data.canTransitionForUser(DS.session(), order, s);
+    });
+    var sub = Number(order.subtotal) || 0;
+    var body = '<div class="field-grid">' +
+      '<div class="field"><label>' + esc(t('status')) + '</label><select class="select" id="oeStatus">' +
+        statuses.map(function (s) { return '<option value="' + s + '"' + (s === order.status ? ' selected' : '') + '>' + esc(DS.statusMeta(s).label) + '</option>'; }).join('') +
+      '</select></div>' +
+      '<div class="field"><label>' + esc(t('discount')) + ' (EGP)</label><input class="input" id="oeDiscount" type="number" min="0" step="1" dir="ltr" value="' + esc(Number(order.discount) || 0) + '"></div>' +
+      '<div class="field"><label>' + esc(t('delivery')) + ' (EGP)</label><input class="input" id="oeFee" type="number" min="0" step="1" dir="ltr" value="' + esc(Number(order.delivery_fee) || 0) + '"></div>' +
+      '<div class="field"><label>' + esc(t('subtotal')) + '</label><input class="input" value="' + esc(money(sub)) + '" disabled></div>' +
+      '<div class="field" style="grid-column:1/-1"><label>' + esc(t('notes')) + '</label><textarea class="textarea" id="oeNotes" rows="2">' + esc(order.notes || '') + '</textarea></div>' +
+    '</div>' +
+    '<div class="cart-summary" style="margin-top:12px"><div class="cart-row total"><span>' + esc(t('total')) + '</span><b class="num" data-oe-total>' + money(order.total) + '</b></div></div>';
+    DS.modal({
+      size: 'md',
+      title: icon('edit') + ' ' + esc(EN ? 'Edit order' : 'تعديل الطلب'),
+      sub: esc(order.order_no),
+      body: body,
+      actions: [
+        { label: t('cancel'), variant: 'btn-secondary' },
+        { label: t('saveChanges'), variant: 'btn-primary', icon: icon('check'), onClick: function (root) {
+          var disc = Math.max(0, Number(root.querySelector('#oeDiscount').value) || 0);
+          var fee = Math.max(0, Number(root.querySelector('#oeFee').value) || 0);
+          if (disc > sub) { DS.toast(EN ? 'Discount cannot exceed the subtotal' : 'الخصم أكبر من المجموع', 'error'); return false; }
+          var status = root.querySelector('#oeStatus').value;
+          var res = DS.data.updateOrder(order.id, {
+            status: status, discount: disc, delivery_fee: fee,
+            notes: root.querySelector('#oeNotes').value.trim()
+          });
+          if (!res) { DS.toast(EN ? 'This status transition is not allowed' : 'هذا الانتقال في الحالة غير مسموح', 'error'); return false; }
+          DS.toast(t('updated'), 'success');
+          window.dispatchEvent(new CustomEvent('ds:order-updated', { detail: { id: order.id } }));
+          return true;
+        } }
+      ],
+      onMount: function (root) {
+        function recalc() {
+          var disc = Math.max(0, Number(root.querySelector('#oeDiscount').value) || 0);
+          var fee = Math.max(0, Number(root.querySelector('#oeFee').value) || 0);
+          var el = root.querySelector('[data-oe-total]');
+          if (el) el.textContent = money(Math.max(0, sub - disc + fee));
+        }
+        root.querySelector('#oeDiscount').addEventListener('input', recalc);
+        root.querySelector('#oeFee').addEventListener('input', recalc);
+      }
+    });
+  }
+
+  function openAssignDriver(order) {
+    var user = DS.session() || {};
+    var EN = DS.lang() === 'en';
+    var riders = (DS.data.companyDrivers ? DS.data.companyDrivers(user.delivery_company) : []).filter(function (u) {
+      return DS.data.isRider(u) && u.is_active !== false;
+    });
+    if (!riders.length) {
+      DS.toast(EN ? 'Add a rider first.' : 'أضف مندوباً أولاً.', 'warning');
+      return;
+    }
+    var body = '<div class="assign-driver-glass">' +
+      '<div class="assign-driver-head"><span class="assign-driver-ico">' + icon('bike') + '</span>' +
+        '<div><b>' + esc(order.order_no) + '</b><span>' + esc(order.customer ? DS.loc(order.customer, 'name') : '') + '</span></div>' +
+        DS.badge(order.status, DS.statusMeta(order.status).label) + '</div>' +
+      '<div class="field" style="margin-top:14px"><label>' + esc(t('assignDriver')) + '</label>' +
+        '<select class="select assign-driver-select" data-assign-driver>' +
+          '<option value="">' + esc(t('noDriverAssigned')) + '</option>' +
+          riders.map(function (d) {
+            return '<option value="' + esc(d.id) + '"' + (order.driver_id === d.id ? ' selected' : '') + '>' +
+              esc(DS.loc(d, 'name')) + (d.phone ? ' · ' + esc(d.phone) : '') + (d.online === false ? ' · ' + esc(t('offline')) : '') + '</option>';
+          }).join('') +
+        '</select></div>' +
+      '<p class="assign-driver-hint">' + esc(t('assignDriverHint')) + '</p></div>';
+    DS.modal({
+      size: 'sm',
+      title: icon('userPlus') + ' ' + esc(t('assignDriver')),
+      sub: esc(order.order_no),
+      body: body,
+      actions: [
+        { label: t('cancel'), variant: 'btn-secondary' },
+        { label: t('save'), variant: 'btn-primary', icon: icon('check'), onClick: function (root) {
+            var sel = root.querySelector('[data-assign-driver]');
+            var driverId = sel ? sel.value : '';
+            if (!driverId) { DS.toast(t('noDriverAssigned'), 'error'); return false; }
+            var res = DS.data.assignOrder(order.id, driverId);
+            if (!res) { DS.toast(t('noPermission'), 'error'); return false; }
+            DS.toast(t('driverAssigned'), 'success');
+            window.dispatchEvent(new CustomEvent('ds:order-updated', { detail: { id: order.id } }));
+            setTimeout(function () { openOrder(order.id); }, 180);
+            return true;
+          } }
+      ]
+    });
   }
 
   function openOrder(id) {
@@ -93,29 +254,75 @@
     if (!order) { DS.toast(t('noData'), 'error'); return; }
     var user = DS.session() || {};
     var actions = [];
-    var canAdvance = ['superadmin', 'subadmin', 'owner', 'cashier'].indexOf(user.role) > -1 || user.role === 'delivery';
+    var isRider = DS.data.isRider ? DS.data.isRider(user) : (user.role === 'delivery' || user.role === 'driver');
+    var isCompanyOwner = DS.data.isCompanyOwner ? DS.data.isCompanyOwner(user) : false;
+    var canAdvance = canAdvanceOrder(user, order);
     var flow = STATUS_ACTIONS[order.status];
-    if (canAdvance && flow) {
+    /* Delivered belongs exclusively to the rider assigned to this order. */
+    if (flow && flow.proof && (!isRider || order.driver_id !== user.id)) flow = null;
+    if (!canAdvance) flow = null;
+    if (flow) {
       actions.push({
         label: t(flow.labelKey), variant: flow.variant, icon: icon(flow.icon),
         onClick: function () {
-          DS.data.updateOrderStatus(order.id, flow.next, { driver_name: order.driver_name || user.name });
+          if (flow.proof) {
+            openProofUpload(order, function () { openOrder(order.id); });
+            return;
+          }
+          var res = DS.data.updateOrderStatus(order.id, flow.next, { driver_name: order.driver_name || user.name });
+          if (!res) { DS.toast(t('noPermission'), 'error'); return; }
           DS.toast(t('statusUpdated'), 'success');
           window.dispatchEvent(new CustomEvent('ds:order-updated', { detail: { id: order.id } }));
           setTimeout(function () { openOrder(order.id); }, 120);
         }
       });
     }
-    if (canAdvance && order.status !== 'cancelled' && order.status !== 'delivered' && user.role !== 'delivery') {
+    /* Delivery company owner: assign a rider once the store handed the order. */
+    if (isCompanyOwner && order.status === 'handed_to_company' && order.delivery_company_id === user.delivery_company) {
+      actions.push({
+        label: t('assignDriver'), variant: 'btn-primary', icon: icon('userPlus'),
+        onClick: function (root, close) {
+          close();
+          setTimeout(function () { openAssignDriver(order); }, 140);
+          return false;
+        }
+      });
+    }
+    /* Assigned rider (or the company dispatching) starts the live route. */
+    if (order.status === 'handed_to_company' && order.driver_id && (isCompanyOwner || order.driver_id === user.id)) {
+      actions.push({
+        label: t('startDelivery'), variant: 'btn-primary', icon: icon('bike'),
+        onClick: function () {
+          var res = DS.data.updateOrderStatus(order.id, 'out_for_delivery', { driver_id: order.driver_id, driver_name: order.driver_name });
+          if (!res) { DS.toast(t('noPermission'), 'error'); return; }
+          DS.toast(t('statusUpdated'), 'success');
+          window.dispatchEvent(new CustomEvent('ds:order-updated', { detail: { id: order.id } }));
+          setTimeout(function () { openOrder(order.id); }, 120);
+        }
+      });
+    }
+    if (canAdvance && ['pending', 'preparing', 'handed_to_company'].indexOf(order.status) > -1 && !isRider) {
       actions.push({
         label: t('cancelled'), variant: 'btn-danger', icon: icon('x'),
         onClick: function () {
           DS.confirm({ title: t('confirm'), text: t('confirmDeleteText'), danger: true }).then(function (ok) {
             if (!ok) return;
-            DS.data.updateOrderStatus(order.id, 'cancelled');
+            var res = DS.data.updateOrderStatus(order.id, 'cancelled');
+            if (!res) { DS.toast(t('noPermission'), 'error'); return; }
             DS.toast(t('orderCancelled'), 'warning');
             window.dispatchEvent(new CustomEvent('ds:order-updated', { detail: { id: order.id } }));
           });
+        }
+      });
+    }
+    /* Admin / owner can edit the discount, delivery fee, notes and status. */
+    if ((user.role === 'superadmin' || user.role === 'subadmin' || user.role === 'owner') && DS.data.updateOrder) {
+      actions.push({
+        label: DS.lang() === 'en' ? 'Edit order' : 'تعديل الطلب', variant: 'btn-secondary', icon: icon('edit'),
+        onClick: function (root, close) {
+          close();
+          setTimeout(function () { openOrderEditor(order); }, 140);
+          return false;
         }
       });
     }
@@ -168,7 +375,11 @@
         '<div style="display:flex;gap:8px;margin-top:8px;align-items:center"><input class="input" id="pImage" value="' + esc(selectedImage) + '" placeholder="products/... or https://" style="direction:ltr">' +
         '<label class="btn btn-secondary btn-sm" style="flex-shrink:0">' + icon('upload') + esc(t('uploadImage')) + '<input type="file" id="pUpload" accept="image/*" hidden></label></div>' +
       '</div>' +
-      '<label class="check" style="margin-top:12px;display:flex"><input type="checkbox" id="pActive" ' + (!product || product.is_active !== false ? 'checked' : '') + '><span>' + esc(t('active')) + '</span></label>';
+      '<label class="check" style="margin-top:12px;display:flex"><input type="checkbox" id="pActive" ' + (!product || product.is_active !== false ? 'checked' : '') + '><span>' + esc(t('active')) + '</span></label>' +
+      '<div class="field-grid" style="margin-top:8px">' +
+        '<label class="check" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:12px"><input type="checkbox" id="pFeatured" ' + (product && product.featured ? 'checked' : '') + '><span>' + esc(DS.lang() === 'en' ? '⭐ Featured (Top Rated)' : '⭐ مميز (الأعلى تقييماً)') + '</span></label>' +
+        '<label class="check" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:12px"><input type="checkbox" id="pBest" ' + (product && product.best_seller ? 'checked' : '') + '><span>' + esc(DS.lang() === 'en' ? '🔥 Best seller' : '🔥 الأكثر مبيعاً') + '</span></label>' +
+      '</div>';
 
     var m = DS.modal({
       size: 'lg',
@@ -192,7 +403,9 @@
               min_stock: Number(root.querySelector('#pMin').value) || 0,
               image: root.querySelector('#pImage').value.trim() || selectedImage,
               tenant_id: tenantId,
-              is_active: root.querySelector('#pActive').checked
+              is_active: root.querySelector('#pActive').checked,
+              featured: root.querySelector('#pFeatured').checked,
+              best_seller: root.querySelector('#pBest').checked
             };
             if (product) DS.data.updateProduct(product.id, data);
             else DS.data.addProduct(data);
@@ -322,9 +535,9 @@
     var pctX = 17 + (progress / 100) * 52;
     var pctY = 79 - (progress / 100) * 50;
     return '<div class="map-card" style="height:' + (opts.height || 340) + 'px" data-map>' + svg +
-      '<div class="map-pin store" style="left:17.5%;top:79%"><div class="pin"><span>🏬</span></div><div class="lbl">' + esc(opts.storeLabel || t('store')) + '</div></div>' +
-      '<div class="map-pin customer" style="left:82.5%;top:27%"><div class="pin"><span>🏠</span></div><div class="lbl">' + esc(opts.customerLabel || t('customerLabel')) + '</div></div>' +
-      '<div class="moto-marker' + (opts.animate ? '' : ' static') + '" data-moto style="left:' + pctX + '%;top:' + pctY + '%">🛵</div>' +
+      '<div class="map-pin store" style="left:17.5%;top:79%"><div class="pin">' + icon('store') + '</div><div class="lbl">' + esc(opts.storeLabel || t('store')) + '</div></div>' +
+      '<div class="map-pin customer" style="left:82.5%;top:27%"><div class="pin">' + icon('home') + '</div><div class="lbl">' + esc(opts.customerLabel || t('customerLabel')) + '</div></div>' +
+      '<div class="moto-marker' + (opts.animate ? '' : ' static') + '" data-moto style="left:' + pctX + '%;top:' + pctY + '%">' + icon('bike') + '</div>' +
       '<div class="map-badge"><span class="dot"></span>' + esc(opts.badge || t('live')) + '</div>' +
       '<div class="map-eta"><div class="lbl">' + esc(t('eta')) + '</div><div class="val" data-eta>' + esc(opts.etaText || ((opts.eta || 12) + ' ' + (DS.lang() === 'ar' ? 'دقيقة' : 'min'))) + '</div><div class="sub" data-distance>' + esc(opts.distanceText || ((opts.distance || '2.0') + ' ' + (DS.lang() === 'ar' ? 'كم' : 'km'))) + '</div></div>' +
       (opts.legend === false ? '' : '<div class="map-legend"><span><i style="background:#82FF1F"></i>' + esc(t('store')) + '</span><span><i style="background:#fff"></i>' + esc(t('customerLabel')) + '</span><span><i style="background:#64D2FF"></i>' + esc(t('driver')) + '</span></div>') +
@@ -368,24 +581,96 @@
     }
   }
 
-  function thermalInvoice(data) {
+  function absoluteUrl(path) {
+    try { return new URL(DS.url(path), window.location.href).href; }
+    catch (e) { return DS.url(path); }
+  }
+
+  function tenantOf(id) {
+    return (DS.data && DS.data.tenantById) ? (DS.data.tenantById(id) || null) : null;
+  }
+
+  /* One authoritative receipt model.
+     invoice → linked order → customer user → live catalogue.
+     This is what guarantees the printed paper shows the real order,
+     store and customer instead of half-empty snapshots.              */
+  function resolveReceipt(input) {
+    var data = Object.assign({}, input || {});
+    var orders = (DS.data && DS.data.orders) || [];
+    var order = null;
+
+    if (data.order_id) order = orders.filter(function (o) { return o.id === data.order_id; })[0] || null;
+    if (!order && data.order_no) order = orders.filter(function (o) { return o.order_no === data.order_no; })[0] || null;
+
+    if (order) {
+      if (!data.order_id) data.order_id = order.id;
+      if (!data.order_no) data.order_no = order.order_no;
+      if (!data.items || !data.items.length) data.items = order.items;
+      if (!data.tenant_id) data.tenant_id = order.tenant_id;
+      if (data.subtotal == null) data.subtotal = order.subtotal;
+      if (data.discount == null) data.discount = order.discount || 0;
+      if (data.delivery_fee == null) data.delivery_fee = order.delivery_fee || 0;
+      if (data.total == null) data.total = order.total;
+      if (!data.payment_method) data.payment_method = order.payment_method;
+      if (!data.created_at) data.created_at = order.created_at;
+      if (!data.cashier_name) data.cashier_name = order.cashier_name || (order.source === 'pos' ? order.driver_name : '') || '';
+    }
+
+    if (!data.customer || !data.customer.name) {
+      var customer = (data.customer && data.customer.name) ? data.customer : (order && order.customer) || null;
+      if (!customer && order && order.customer_id && DS.data && DS.data.userById) {
+        var byId = DS.data.userById(order.customer_id);
+        if (byId) customer = { name: byId.name, name_en: byId.name_en, phone: byId.phone, address: byId.address, city: byId.city };
+      }
+      if (!customer && data.customer_id && DS.data && DS.data.users) {
+        var u = DS.data.users.filter(function (x) { return x.id === data.customer_id; })[0];
+        if (u) customer = { name: u.name, name_en: u.name_en, phone: u.phone, address: u.address, city: u.city };
+      }
+      data.customer = customer ? Object.assign({}, customer) : null;
+    }
+
+    /* Fill missing product names / images from the live catalogue. */
+    data.items = (data.items || []).map(function (it) {
+      it = Object.assign({}, it);
+      if (it.product_id && DS.data && DS.data.products) {
+        var p = DS.data.products.filter(function (x) { return x.id === it.product_id; })[0];
+        if (p) {
+          if (!it.name) it.name = p.name;
+          if (!it.name_en) it.name_en = p.name_en;
+          if (!it.image) it.image = p.image;
+        }
+      }
+      return it;
+    });
+
+    data.tenant = tenantOf(data.tenant_id) || {};
+    return data;
+  }
+  DS.resolveReceipt = resolveReceipt;
+
+  function thermalInvoice(raw) {
+    var data = resolveReceipt(raw);
     var EN = DS.lang() === 'en';
     var settings = receiptSettings();
-    var tenant = (DS.data && DS.data.tenantById) ? (DS.data.tenantById(data.tenant_id) || {}) : {};
+    var tenant = data.tenant || {};
     var storeName = settings.name || DS.loc(tenant, 'name') || tenant.name || 'DotStudio POS';
     var footer = settings.footer || (EN ? 'Thank you for shopping with us' : 'شكراً لتعاملكم معنا');
     var no = data.order_no || data.invoice_no || '—';
     var trackingUrl = receiptTrackingUrl(no);
     var items = data.items || [];
 
+    var storeLine = [];
+    if (tenant.phone) storeLine.push(tenant.phone);
+    if (DS.loc(tenant, 'address')) storeLine.push(DS.loc(tenant, 'address'));
+    if (DS.loc(tenant, 'city')) storeLine.push(DS.loc(tenant, 'city'));
+
     var meta = function (label, value, cls) {
+      if (value == null || value === '') return '';
       return '<div class="ipa-meta-row' + (cls ? ' ' + cls : '') + '"><span>' + esc(label) + '</span><b>' + esc(value) + '</b></div>';
     };
 
     var rows = items.map(function (it) {
       var name = EN ? (it.name_en || it.name) : it.name;
-      /* Old invoice snapshots only stored the Arabic name — resolve the
-         English product name by id so EN receipts stay fully English. */
       if (EN && !it.name_en && it.product_id && DS.data && DS.data.products) {
         var prod = DS.data.products.filter(function (p) { return p.id === it.product_id; })[0];
         if (prod && prod.name_en) name = prod.name_en;
@@ -393,20 +678,23 @@
       var vendor = it.tenant_id && it.tenant_id !== data.tenant_id && DS.data.tenantById ? DS.data.tenantById(it.tenant_id) : null;
       var vendorName = vendor ? DS.loc(vendor, 'name') : '';
       return '<tr>' +
-        '<td class="ipa-item-name">' + esc(name) + (vendorName ? '<small>' + esc(EN ? 'from ' + vendorName : 'من متجر ' + vendorName) + '</small>' : '') + '</td>' +
+        '<td class="ipa-item-name">' + esc(name || '—') + (vendorName ? '<small>' + esc(EN ? 'from ' + vendorName : 'من متجر ' + vendorName) + '</small>' : '') + '</td>' +
         '<td class="ipa-num">' + (Number(it.qty) || 0) + '</td>' +
         '<td class="ipa-num">' + money(it.price) + '</td>' +
         '<td class="ipa-num ipa-line-total">' + money((Number(it.qty) || 0) * (Number(it.price) || 0)) + '</td>' +
       '</tr>';
     }).join('');
 
-    var subtotal = data.subtotal != null ? data.subtotal : items.reduce(function (s, it) { return s + (Number(it.qty) || 0) * (Number(it.price) || 0); }, 0);
+    var subtotal = data.subtotal != null ? Number(data.subtotal) : items.reduce(function (s, it) { return s + (Number(it.qty) || 0) * (Number(it.price) || 0); }, 0);
     var delivery = Number(data.delivery_fee) || 0;
     var discount = Number(data.discount) || 0;
+    var grand = data.total != null ? Number(data.total) : subtotal + delivery - discount;
+    var customer = data.customer || null;
 
     return '<div class="invoice-print-area" id="print-invoice-area" dir="' + (EN ? 'ltr' : 'rtl') + '">' +
       (settings.logo ? '<div class="ipa-logo"><img src="' + esc(settings.logo) + '" alt=""></div>' : '') +
       '<div class="ipa-store">' + esc(storeName) + '</div>' +
+      (storeLine.length ? '<div class="ipa-store-sub">' + esc(storeLine.join(' · ')) + '</div>' : '') +
       '<div class="ipa-tax">' + esc(EN ? 'TAX INVOICE' : 'فاتورة ضريبية') + '</div>' +
       '<div class="ipa-sep"></div>' +
       '<div class="ipa-meta">' +
@@ -414,7 +702,8 @@
         (data.invoice_no && data.invoice_no !== no ? meta(EN ? 'Invoice' : 'الفاتورة', data.invoice_no) : '') +
         meta(t('date'), DS.datetime(data.created_at || Date.now())) +
         (data.cashier_name ? meta(t('cashier'), data.cashier_name) : '') +
-        (data.customer && data.customer.name ? meta(t('customerLabel'), DS.loc(data.customer, 'name')) : '') +
+        (customer && customer.name ? meta(t('customerLabel'), DS.loc(customer, 'name')) : '') +
+        (customer && customer.phone && customer.phone !== '—' ? meta(t('phone'), customer.phone) : '') +
         meta(t('paymentMethod'), t(data.payment_method || data.method || 'cash')) +
       '</div>' +
       '<div class="ipa-sep dashed"></div>' +
@@ -423,13 +712,13 @@
         '<th class="ipa-num">' + esc(t('quantity')) + '</th>' +
         '<th class="ipa-num">' + esc(t('price')) + '</th>' +
         '<th class="ipa-num">' + esc(t('total')) + '</th>' +
-      '</tr></thead><tbody>' + rows + '</tbody></table>' +
+      '</tr></thead><tbody>' + (rows || '<tr><td colspan="4" class="ipa-num">—</td></tr>') + '</tbody></table>' +
       '<div class="ipa-sep dashed"></div>' +
       '<div class="ipa-totals">' +
         '<div class="ipa-sum"><span>' + esc(t('subtotal')) + '</span><b>' + money(subtotal) + '</b></div>' +
         (discount ? '<div class="ipa-sum"><span>' + esc(t('discount')) + '</span><b>− ' + money(discount) + '</b></div>' : '') +
         (delivery ? '<div class="ipa-sum"><span>' + esc(t('delivery')) + '</span><b>' + money(delivery) + '</b></div>' : '') +
-        '<div class="ipa-sum ipa-grand"><span>' + esc(t('total')) + '</span><b>' + money(data.total != null ? data.total : subtotal + delivery - discount) + '</b></div>' +
+        '<div class="ipa-sum ipa-grand"><span>' + esc(t('total')) + '</span><b>' + money(grand) + '</b></div>' +
       '</div>' +
       '<div class="ipa-sep dashed"></div>' +
       '<div class="ipa-qr">' +
@@ -444,11 +733,11 @@
   DS.thermalInvoice = thermalInvoice;
 
   var THERMAL_CSS = [
-    '@page { size: 80mm auto; margin: 0; }',
     '.invoice-print-area { width: 80mm; box-sizing: border-box; margin: 0 auto; padding: 5mm; background: #ffffff; color: #000000; font-family: "Courier New", Courier, monospace; font-size: 11px; line-height: 1.45; -webkit-print-color-adjust: exact; print-color-adjust: exact; }',
     '.invoice-print-area .ipa-logo { text-align: center; margin-bottom: 2mm; }',
     '.invoice-print-area .ipa-logo img { max-height: 12mm; max-width: 46mm; object-fit: contain; }',
     '.invoice-print-area .ipa-store { text-align: center; font-size: 17px; font-weight: 700; letter-spacing: .04em; line-height: 1.2; word-break: break-word; }',
+    '.invoice-print-area .ipa-store-sub { text-align: center; font-size: 8.5px; color: #333; margin-top: 1mm; line-height: 1.45; word-break: break-word; }',
     '.invoice-print-area .ipa-tax { text-align: center; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; margin-top: 1mm; }',
     '.invoice-print-area .ipa-sep { border-top: 1px dashed #000; margin: 2.5mm 0; }',
     '.invoice-print-area .ipa-sep.dashed { border-top: 1px dashed #000; }',
@@ -476,6 +765,7 @@
     '.invoice-print-area .ipa-qr-url { font-size: 7px; color: #333; word-break: break-all; direction: ltr; max-width: 100%; }',
     '.invoice-print-area .ipa-footer { text-align: center; font-size: 9px; line-height: 1.5; }',
     '@media print {',
+    '  @page { size: 80mm auto; margin: 0; }',
     '  html, body { margin: 0 !important; padding: 0 !important; background: #ffffff !important; }',
     '  body * { visibility: hidden !important; }',
     '  .invoice-print-area, .invoice-print-area * { visibility: visible !important; }',
@@ -484,20 +774,22 @@
   ].join('\n');
   DS.thermalCss = THERMAL_CSS;
 
-  function printReceipt(data, kind) {
+  function printReceipt(raw, kind) {
+    var data = resolveReceipt(raw);
     var no = data.order_no || data.invoice_no || '—';
     var trackingUrl = receiptTrackingUrl(no);
+    var qrLib = absoluteUrl('shared/vendor/qrcode.min.js');
     var html = '<!DOCTYPE html><html lang="' + DS.lang() + '" dir="' + (DS.lang() === 'ar' ? 'rtl' : 'ltr') + '">' +
       '<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">' +
       '<title>' + esc(no) + '</title>' +
       '<style>body{margin:0;padding:0;background:#fff;display:flex;justify-content:center}' + THERMAL_CSS + '</style>' +
-      '<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>' +
+      '<script src="' + esc(qrLib) + '"><\/script>' +
       '</head><body>' + thermalInvoice(data) +
       '<script>' +
       'function dsThermalPrint(){' +
       '  var box=document.getElementById("invoiceQrBox");' +
       '  if(window.QRCode&&box&&!box.firstChild){try{new QRCode(box,{text:' + JSON.stringify(trackingUrl) + ',width:88,height:88,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});}catch(e){}}' +
-      '  setTimeout(function(){try{window.focus();window.print();}catch(e){}},320);' +
+      '  setTimeout(function(){try{window.focus();window.print();}catch(e){}},420);' +
       '}' +
       'window.onload=dsThermalPrint;' +
       '<\/script></body></html>';
@@ -506,6 +798,39 @@
     else DS.toast(t('error'), 'error');
   }
   DS.printReceipt = printReceipt;
+
+  /* ───────────────────── 60×40mm PRODUCT LABEL ───────────────────── */
+  function printProductLabel(p) {
+    if (!p) return;
+    var tn = DS.data.tenantById(p.tenant_id) || (DS.session() && DS.data.tenantById((DS.session() || {}).tenant_id)) || {};
+    var store = DS.loc(tn, 'name') || tn.name || 'DotStudio®';
+    var name = DS.loc(p, 'name') || p.name || '';
+    var barcode = p.barcode || p.sku || '';
+    var bars = '';
+    var hash = 0;
+    String(barcode).split('').forEach(function (ch) { hash = ((hash << 5) - hash) + ch.charCodeAt(0); });
+    for (var x = 4; x < 176;) {
+      var w = 1 + (Math.abs(hash = (hash * 9301 + 49297) % 233280) % 3);
+      bars += '<rect x="' + x + '" y="0" width="' + w + '" height="34" fill="#000"/>';
+      x += w + 1 + (Math.abs(hash = (hash * 9301 + 49297) % 233280) % 2);
+    }
+    var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + esc(name) + '</title>' +
+      '<style>@page{size:50mm 30mm;margin:0}html,body{margin:0;padding:0;background:#fff}' +
+      '.lb{width:50mm;height:30mm;box-sizing:border-box;padding:2mm 3mm;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;font-family:Arial,sans-serif;color:#000}' +
+      '.st{font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px dashed #bbb;width:100%;padding-bottom:2px}' +
+      '.nm{font-size:11px;font-weight:700;line-height:1.2;max-height:26px;overflow:hidden;margin:2px 0}' +
+      '.pr{font-size:12px;font-weight:800;margin:1px 0}' +
+      '.bc{width:80%}.bc svg{width:100%;height:26px;display:block}.cd{font-family:monospace;font-size:9px;letter-spacing:.12em;font-weight:700}' +
+      '</style></head><body><div class="lb"><div class="st">' + esc(store) + '</div>' +
+      '<div class="nm">' + esc(name) + '</div><div class="pr">' + esc(money(p.price)) + '</div>' +
+      '<div class="bc"><svg viewBox="0 0 180 34" preserveAspectRatio="none">' + bars + '</svg>' +
+      '<div class="cd">' + esc(barcode) + '</div></div></div>' +
+      '<script>window.onload=function(){setTimeout(function(){window.print();},260);};<\/script></body></html>';
+    var w = window.open('', '_blank', 'width=420,height=360');
+    if (w) { w.document.open(); w.document.write(html); w.document.close(); }
+    else DS.toast(t('error'), 'error');
+  }
+  DS.printProductLabel = printProductLabel;
 
   /* ─────────────────────────── SMALL PARTS ───────────────────────── */
   DS.productCard = function (p, opts) {
@@ -516,7 +841,7 @@
     var stockCls = p.stock <= 0 ? 'stock-out' : p.stock <= (p.min_stock || 0) ? 'stock-low' : 'stock-ok';
     var stockTxt = p.stock <= 0 ? t('outOfStock') : p.stock + ' ' + t('units');
     return '<article class="product-card" data-product="' + esc(p.id) + '">' +
-      '<div class="product-media"><img src="' + esc(DS.data.img(p.image)) + '" alt="' + esc(name) + '" loading="lazy" onerror="this.onerror=null;this.src=\'' + esc(url('assets/product-placeholder.svg')) + '\'">' +
+      '<div class="product-media product-image-container"><img src="' + esc(DS.data.img(p.image)) + '" alt="' + esc(name) + '" loading="lazy" onerror="this.onerror=null;this.src=\'' + esc(url('assets/product-placeholder.svg')) + '\'">' +
         '<div class="product-badges">' + (p.stock <= 0 ? '<span class="badge danger">' + esc(t('out')) + '</span>' : p.stock <= (p.min_stock || 0) ? '<span class="badge warning">' + esc(t('lowStockShort')) + '</span>' : '') + '</div></div>' +
       '<div class="product-body"><div class="product-cat">' + esc(cat || '') + '</div>' +
         '<div class="product-name">' + esc(name) + '</div>' +

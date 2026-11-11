@@ -9,7 +9,7 @@
   var isSuper = user.role === 'superadmin';
   var isOwner = user.role === 'owner';
   var page = DS.shell.mount({
-    roles: isAdmin ? ['superadmin', 'subadmin'] : (user.role === 'delivery' ? ['delivery'] : [user.role]),
+    roles: isAdmin ? ['superadmin', 'subadmin'] : (user.role === 'cashier' ? ['owner'] : (user.role === 'delivery' ? ['delivery'] : [user.role])),
     active: 'settings',
     title: t('settings'),
     eyebrow: isAdmin ? t('admin') : (user.role === 'delivery' ? t('delivery') : (DS.data.tenantById(user.tenant_id) || {}).name),
@@ -152,7 +152,9 @@
       DS.data.saveUser(patch);
       var fresh = DS.data.userById(user.id);
       delete fresh.password;
-      localStorage.setItem('cz_user', JSON.stringify(fresh));
+      delete fresh.password_hash;
+      if (DS.writeSession) DS.writeSession(fresh);
+      else localStorage.setItem('cz_user', JSON.stringify(fresh));
       DS.toast(t('settingsSaved'), 'success');
       DS.shell.refreshUser();
       render();
@@ -212,7 +214,9 @@
       var np = page.body.querySelector('#secNew').value;
       var np2 = page.body.querySelector('#secNew2').value;
       var dbUser = DS.data.users.filter(function (u) { return u.id === user.id; })[0];
-      if (!dbUser || dbUser.password !== oldP) { DS.toast(t('invalidLogin'), 'error'); return; }
+      var stored = dbUser && (dbUser.password_hash || dbUser.password);
+      var okOld = dbUser && DS.security ? DS.security.verifyPassword(oldP, stored) : dbUser && String(dbUser.password) === String(oldP);
+      if (!okOld) { DS.toast(t('invalidLogin'), 'error'); return; }
       if (np.length < 6) { DS.toast(t('required'), 'error'); return; }
       if (np !== np2) { DS.toast(t('required'), 'error'); return; }
       DS.data.saveUser({ id: user.id, password: np });

@@ -10,7 +10,7 @@
   if (!DS) { console.error('[DS] core.js must load before data.js'); return; }
 
   var KEY = 'ds_db_v1';
-  var VERSION = 1;
+  var VERSION = 2;
   var WHATSAPP = '201226770582';
 
   /* ───────────────────────────── HELPERS ───────────────────────────── */
@@ -85,7 +85,7 @@
   ];
 
   /* ─────────────────────────────── USERS ───────────────────────────── */
-  var PERMISSIONS_ALL = ['products', 'orders', 'customers', 'cashiers', 'delivery-companies', 'chats', 'jobs', 'reports', 'subscriptions', 'audit', 'settings', 'stores', 'sub-admins'];
+  var PERMISSIONS_ALL = ['products', 'orders', 'customers', 'cashiers', 'delivery-companies', 'chats', 'jobs', 'reports', 'subscriptions', 'discounts', 'audit', 'settings', 'stores', 'sub-admins'];
 
   var USERS = [
     { id: 'u-admin', username: 'admin', password: 'admin2026', role: 'superadmin', name: 'System Admin', name_en: 'System Admin', email: 'admin@dotstudio.app', phone: '01226770582', avatar_id: 'av9', is_active: true, created_at: daysAgo(500) },
@@ -101,15 +101,24 @@
     { id: 'u-owner-mastore', username: 'mastore', password: 'mastore2026', role: 'owner', name: 'محمود علي', name_en: 'Mahmoud Ali', tenant_id: 't-mastore', avatar_id: 'av4', is_active: true, created_at: daysAgo(210) },
 
     { id: 'u-cashier-caznova', username: 'ca_cashier', password: 'ca_cashier2026', role: 'cashier', name: 'كاشير Caznova', name_en: 'Caznova Cashier', tenant_id: 't-caznova', avatar_id: 'av5', is_active: true, created_at: daysAgo(200) },
+    { id: 'u-del-caznova', username: 'caznova_driver', password: 'caznova_driver2026', role: 'delivery', name: 'مندوب كازنوفا', name_en: 'Caznova Driver', tenant_id: 't-caznova', phone: '01000000011', avatar_id: 'av4', is_active: true, online: true, company_id: 'in_house', delivery_company: null, delivery_company_name: 'توصيل المحل (داخلي)', created_at: daysAgo(60) },
     { id: 'u-cashier-smozy', username: 'sm_cashier', password: 'sm_cashier2026', role: 'cashier', name: 'كاشير Smozy', name_en: 'Smozy Cashier', tenant_id: 't-smozy', avatar_id: 'av6', is_active: true, created_at: daysAgo(190) },
     { id: 'u-cashier-bnsheikh', username: 'bn_cashier', password: 'bn_cashier2026', role: 'cashier', name: 'كاشير Bn Alsheikh', name_en: 'Bn Alsheikh Cashier', tenant_id: 't-bnsheikh', avatar_id: 'av7', is_active: true, created_at: daysAgo(180) },
     { id: 'u-cashier-mastore', username: 'ma_cashier', password: 'ma_cashier2026', role: 'cashier', name: 'كاشير MA Store', name_en: 'MA Store Cashier', tenant_id: 't-mastore', avatar_id: 'av8', is_active: true, created_at: daysAgo(170) },
 
-    { id: 'u-del-talqa', username: 'talqa', password: 'talqa2026', role: 'delivery', name: 'طلقة', name_en: 'Talqa', delivery_company: 'dc-talqa', delivery_company_name: 'طلقة', avatar_id: 'av3', is_active: true, created_at: daysAgo(150) },
-    { id: 'u-del-hala', username: 'hala', password: 'hala2026', role: 'delivery', name: 'حالا', name_en: 'Hala', delivery_company: 'dc-hala', delivery_company_name: 'حالا', avatar_id: 'av6', is_active: true, created_at: daysAgo(140) },
-    { id: 'u-del-ahla', username: 'ahla', password: 'ahla2026', role: 'delivery', name: 'أهلا', name_en: 'Ahla', delivery_company: 'dc-ahla', delivery_company_name: 'أهلا', avatar_id: 'av9', is_active: true, created_at: daysAgo(130) },
+    { id: 'u-del-talqa', username: 'talqa', password: 'talqa2026', role: 'delivery', name: 'طلقة', name_en: 'Talqa', delivery_company: 'dc-talqa', company_id: 'dc-talqa', delivery_company_name: 'طلقة', company_owner: true, avatar_id: 'av3', is_active: true, online: true, created_at: daysAgo(150) },
+    { id: 'u-del-hala', username: 'hala', password: 'hala2026', role: 'delivery', name: 'حالا', name_en: 'Hala', delivery_company: 'dc-hala', company_id: 'dc-hala', delivery_company_name: 'حالا', company_owner: true, avatar_id: 'av6', is_active: true, online: true, created_at: daysAgo(140) },
+    { id: 'u-del-ahla', username: 'ahla', password: 'ahla2026', role: 'delivery', name: 'أهلا', name_en: 'Ahla', delivery_company: 'dc-ahla', company_id: 'dc-ahla', delivery_company_name: 'أهلا', company_owner: true, avatar_id: 'av9', is_active: true, online: true, created_at: daysAgo(130) },
 
-    { id: 'u-customer', username: 'customer', password: 'customer2026', role: 'customer', name: 'ياسمين محمد', name_en: 'Yasmin Mohamed', tenant_id: 't-caznova', phone: '01123456789', city: 'القاهرة', city_en: 'Cairo', address: 'مدينة نصر · شارع مصطفى النحاس · عمارة 12', address_en: 'Nasr City · Mostafa El Nahas St. · Building 12', avatar_id: 'av5', is_active: true, created_at: daysAgo(90) }
+    /* B2B sub-drivers working for a delivery company (managed by its owner). */
+    { id: 'u-del-talqa-ahmed', username: 'ahmed', password: 'ahmed2026', role: 'driver', name: 'أحمد', name_en: 'Ahmed', delivery_company: 'dc-talqa', company_id: 'dc-talqa', delivery_company_name: 'طلقة', parent_id: 'u-del-talqa', company_owner: false, phone: '01011110001', avatar_id: 'av1', is_active: true, online: true, created_at: daysAgo(45) },
+    { id: 'u-del-talqa-mostafa', username: 'mostafa', password: 'mostafa2026', role: 'driver', name: 'مصطفى', name_en: 'Mostafa', delivery_company: 'dc-talqa', company_id: 'dc-talqa', delivery_company_name: 'طلقة', parent_id: 'u-del-talqa', company_owner: false, phone: '01011110002', avatar_id: 'av2', is_active: true, online: true, created_at: daysAgo(40) },
+
+    { id: 'u-customer', username: 'customer', password: 'customer2026', role: 'customer', name: 'ياسمين محمد', name_en: 'Yasmin Mohamed', tenant_id: 't-caznova', phone: '01123456789', city: 'القاهرة', city_en: 'Cairo', address: 'مدينة نصر · شارع مصطفى النحاس · عمارة 12', address_en: 'Nasr City · Mostafa El Nahas St. · Building 12', avatar_id: 'av5', is_active: true, created_at: daysAgo(90),
+      addresses: [
+        { id: 'addr-home', label: 'المنزل', label_en: 'Home', address: 'مدينة نصر · شارع مصطفى النحاس · عمارة 12', address_en: 'Nasr City · Mostafa El Nahas St. · Building 12', city: 'القاهرة', city_en: 'Cairo', lat: 30.0601, lng: 31.3488, phone: '01123456789', is_default: true },
+        { id: 'addr-work', label: 'العمل', label_en: 'Work', address: 'التجمع الخامس · شارع التسعين · برج بلاتينيوم', address_en: 'Fifth Settlement · 90th Street · Platinum Tower', city: 'القاهرة', city_en: 'Cairo', lat: 30.0070, lng: 31.4910, phone: '01123456789', is_default: false }
+      ] }
   ];
 
   /* ─────────────────────────────── PLANS ───────────────────────────── */
@@ -196,6 +205,10 @@
           tenant_id: tid,
           barcode: p.barcode || defBarcode,
           is_active: true,
+          /* Admin-controllable merchandising flags. */
+          featured: p.featured != null ? p.featured : (Number(p.rating) || 0) >= 4.9,
+          best_seller: p.best_seller != null ? p.best_seller : (Number(p.sold) || 0) >= 250,
+          review_count: Number(p.review_count) || 0,
           created_at: daysAgo(200 - i * 3),
           updated_at: daysAgo(4 + i)
         }));
@@ -238,13 +251,13 @@
   function buildOrders(products) {
     var out = [];
     var statusPlan = [
-      'delivering', 'delivering', 'delivering', 'delivering',
+      'out_for_delivery', 'out_for_delivery', 'out_for_delivery', 'out_for_delivery',
       'delivered', 'delivered', 'delivered', 'delivered', 'delivered', 'delivered', 'delivered', 'delivered',
+      'handed_to_company', 'handed_to_company', 'handed_to_company', 'handed_to_company',
       'preparing', 'preparing', 'preparing', 'preparing',
-      'confirmed', 'confirmed', 'confirmed', 'confirmed',
       'pending', 'pending', 'pending', 'pending',
       'cancelled', 'cancelled', 'cancelled',
-      'delivered', 'delivered', 'delivering', 'preparing', 'pending'
+      'delivered', 'delivered', 'out_for_delivery', 'handed_to_company', 'pending'
     ];
     var companies = DELIVERY_COMPANIES;
     statusPlan.forEach(function (status, i) {
@@ -262,16 +275,19 @@
       var discount = i % 7 === 0 ? 50 : 0;
       var fee = tn.delivery_fee;
       var total = Math.max(0, subtotal - discount) + fee;
-      var company = status === 'delivering' || status === 'delivered' ? companies[i % companies.length] : null;
+      var deliverableCompanies = companies.filter(function (c) {
+        return USERS.some(function (u) { return isRider(u) && u.delivery_company === c.id && u.is_active !== false; });
+      });
+      var company = ['handed_to_company', 'out_for_delivery', 'delivered'].indexOf(status) > -1 ? (deliverableCompanies[i % deliverableCompanies.length] || companies[i % companies.length]) : null;
       var created;
       if (status === 'pending') created = hoursAgo(0.1 + i * 0.12);
-      else if (status === 'confirmed') created = hoursAgo(0.7 + i * 0.1);
       else if (status === 'preparing') created = hoursAgo(0.5 + i * 0.08);
-      else if (status === 'delivering') created = hoursAgo(0.5 + i * 0.09);
+      else if (status === 'handed_to_company') created = hoursAgo(0.45 + i * 0.09);
+      else if (status === 'out_for_delivery') created = hoursAgo(0.35 + i * 0.09);
       else if (status === 'delivered') created = hoursAgo(4 + i * 3.2);
       else created = hoursAgo(30 + i * 4);
       var timeline = buildTimeline(status, created);
-      var driver = company ? USERS.filter(function (u) { return u.role === 'delivery' && u.delivery_company === company.id; })[0] : null;
+      var driver = company && status !== 'handed_to_company' ? USERS.filter(function (u) { return isDeliveryRole(u) && u.delivery_company === company.id && !isCompanyOwner(u); })[0] : null;
       out.push({
         id: 'ord-' + (1001 + i),
         order_no: 'ORD-' + (1001 + i),
@@ -302,8 +318,8 @@
   }
 
   function buildTimeline(status, created) {
-    var flow = ['pending', 'confirmed', 'preparing', 'delivering', 'delivered'];
-    var labels = { pending: 'تم إنشاء الطلب', confirmed: 'تم تأكيد الطلب', preparing: 'جاري تجهيز الطلب', delivering: 'المندوب في الطريق', delivered: 'تم تسليم الطلب', cancelled: 'تم إلغاء الطلب' };
+    var flow = ['pending', 'preparing', 'handed_to_company', 'out_for_delivery', 'delivered'];
+    var labels = { pending: 'تم إنشاء الطلب', preparing: 'جاري تجهيز الطلب', handed_to_company: 'تم التسليم لشركة التوصيل', out_for_delivery: 'المندوب في الطريق', delivered: 'تم تسليم الطلب', cancelled: 'تم إلغاء الطلب' };
     var base = new Date(created).getTime();
     if (status === 'cancelled') {
       return [
@@ -319,30 +335,66 @@
     return out;
   }
 
-  function buildInvoices(products) {
+  /* Invoices mirror real orders (same order number, customer, items and
+     totals) so the printed 80 mm receipt always shows authentic data. */
+  function buildInvoices(products, orders) {
     var out = [];
     var methods = ['cash', 'card', 'vodafone'];
     TENANTS.forEach(function (tn, ti) {
+      var tOrders = (orders || []).filter(function (o) {
+        return o.tenant_id === tn.id && o.status !== 'cancelled';
+      });
       var tProducts = products.filter(function (p) { return p.tenant_id === tn.id; });
       for (var i = 0; i < 8; i++) {
-        var p1 = tProducts[(i * 3) % tProducts.length];
-        var p2 = tProducts[(i * 3 + 2) % tProducts.length];
-        var q1 = 1 + (i % 3);
-        var items = [{ product_id: p1.id, name: p1.name, image: p1.image, price: p1.price, qty: q1 }];
-        if (i % 2 === 0) items.push({ product_id: p2.id, name: p2.name, image: p2.image, price: p2.price, qty: 1 });
-        var total = items.reduce(function (s, it) { return s + it.price * it.qty; }, 0);
+        var order = tOrders[i % Math.max(1, tOrders.length)] || null;
+        var items, subtotal, discount, delivery, total, customer, orderId, orderNo, createdAt, method;
+
+        if (order) {
+          items = (order.items || []).map(function (it) { return Object.assign({}, it); });
+          subtotal = order.subtotal;
+          discount = order.discount || 0;
+          delivery = order.delivery_fee || 0;
+          total = order.total;
+          customer = order.customer;
+          orderId = order.id;
+          orderNo = order.order_no;
+          createdAt = order.created_at;
+          method = order.payment_method || methods[i % 3];
+        } else {
+          var p1 = tProducts[(i * 3) % tProducts.length];
+          var p2 = tProducts[(i * 3 + 2) % tProducts.length];
+          var q1 = 1 + (i % 3);
+          items = [{ product_id: p1.id, name: p1.name, name_en: p1.name_en, image: p1.image, price: p1.price, qty: q1 }];
+          if (i % 2 === 0) items.push({ product_id: p2.id, name: p2.name, name_en: p2.name_en, image: p2.image, price: p2.price, qty: 1 });
+          subtotal = items.reduce(function (s, it) { return s + it.price * it.qty; }, 0);
+          discount = 0;
+          delivery = 0;
+          total = subtotal;
+          customer = null;
+          orderId = null;
+          orderNo = null;
+          createdAt = hoursAgo(0.2 + i * 0.9);
+          method = methods[i % 3];
+        }
+
         out.push({
           id: 'inv-' + (2001 + ti * 20 + i),
           invoice_no: 'INV-' + (2001 + ti * 20 + i),
           tenant_id: tn.id,
+          order_id: orderId,
+          order_no: orderNo,
+          customer: customer,
           cashier_id: 'u-cashier-' + tn.slug,
           cashier_name: tn.name + ' Cashier',
           items: items,
-          subtotal: total,
-          discount: 0,
+          subtotal: subtotal,
+          discount: discount,
+          delivery_fee: delivery,
           total: total,
-          method: methods[i % 3],
-          created_at: hoursAgo(0.2 + i * 0.9)
+          payment_method: method,
+          method: method,
+          status: 'paid',
+          created_at: createdAt
         });
       }
     });
@@ -353,7 +405,7 @@
      Hierarchical inbox: support agents · stores · delivery companies.
      Every channel opens a focused direct conversation with the chosen peer.
      The old "General / عام" room is intentionally gone.                       */
-  var CHAT_SCOPES = ['support', 'stores', 'delivery', 'driver'];
+  var CHAT_SCOPES = ['support', 'stores', 'delivery', 'driver', 'team'];
 
   function pairKey(a, b) { return [String(a), String(b)].sort().join('--'); }
   function supportRoomId(a, b) { return 'dm-support-' + pairKey(a, b); }
@@ -364,8 +416,26 @@
   function deliveryRoomId(companyId, personId) { return 'dm-delivery-' + pairKey('company-' + companyId, personId); }
   /* Customer ↔ assigned rider: a private pair thread created from tracking. */
   function driverRoomId(a, b) { return 'dm-driver-' + pairKey(a, b); }
+  /* Delivery company owner ↔ company rider: internal team thread. */
+  function teamRoomId(a, b) { return 'dm-team-' + pairKey(a, b); }
   function isStoreStaff(user) { return !!user && (user.role === 'owner' || user.role === 'cashier') && !!user.tenant_id; }
-  function isDeliveryStaff(user) { return !!user && user.role === 'delivery' && !!user.delivery_company; }
+  function isDeliveryRole(user) { return !!user && (user.role === 'delivery' || user.role === 'driver'); }
+  function isDeliveryStaff(user) { return isDeliveryRole(user) && !!user.delivery_company; }
+  /* Company owners manage the fleet; sub-drivers only see their own tasks. */
+  function isCompanyOwner(user) { return isDeliveryStaff(user) && !user.tenant_id && user.company_owner !== false && !user.parent_id; }
+  /* A rider who actually performs the hand-off (company sub-driver or an
+     in-house store driver). Company owners never close a delivery. */
+  function isRider(user) { return isDeliveryRole(user) && !isCompanyOwner(user); }
+  function isSubDriver(user) {
+    if (!isDeliveryRole(user)) return false;
+    if (user.role === 'driver' || user.parent_id || user.company_owner === false) return true;
+    return !!user.delivery_company && !user.tenant_id && !isCompanyOwner(user);
+  }
+  function companyDrivers(companyId) {
+    return DB.users.filter(function (u) {
+      return isDeliveryRole(u) && u.delivery_company === companyId && u.is_active !== false;
+    });
+  }
   function deliveryPair(user, peerId) {
     return isDeliveryStaff(user)
       ? { companyId: user.delivery_company, personId: String(peerId), staff: true }
@@ -438,7 +508,7 @@
 
     /* Delivery — one private thread per person, shared with the company team. */
     DELIVERY_COMPANIES.forEach(function (dc, i) {
-      var driver = USERS.filter(function (u) { return u.role === 'delivery' && u.delivery_company === dc.id; })[0];
+      var driver = USERS.filter(function (u) { return isDeliveryRole(u) && u.delivery_company === dc.id; })[0];
       var person = adminUser ? adminUser.id : (driver ? driver.id : 'u-admin');
       chats.push({
         id: deliveryRoomId(dc.id, person),
@@ -482,7 +552,7 @@
     }
     function deliveryPerson(room, companyId) {
       return personFor(room, users.filter(function (u) {
-        return u.role === 'delivery' && u.delivery_company === companyId;
+        return isDeliveryRole(u) && u.delivery_company === companyId;
       }).map(function (u) { return u.id; }));
     }
 
@@ -594,29 +664,328 @@
     return base.map(function (x, i) { return Object.assign({ id: 'log-' + (i + 1) }, x); });
   }
 
+  /* ─────────────────────────── DISCOUNTS ─────────────────────────── */
+  function seedDiscounts() {
+    var in30 = daysAhead(30);
+    return [
+      { id: 'disc-save20', code: 'SAVE20', type: 'percent', value: 20, min_order: 0, max_uses: 0, used: 0,
+        active: true, expires_at: in30, created_at: nowISO(),
+        note: 'خصم افتتاحي 20%', note_en: 'Launch offer · 20% off' }
+    ];
+  }
+
+  /* ─────────────────────────── REVIEWS ─────────────────────────── */
+  /* Seeded reviews keep the storefront alive from the first visit. Each
+     review can carry a customer-uploaded photo (data URL). */
+  var REVIEW_SEED = [
+    { p: 0, name: 'سارة ع.', name_en: 'Sara A.', rating: 5, text: 'جودة ممتازة والتغليف أنيق جداً. وصل قبل الميعاد.', text_en: 'Excellent quality and beautiful packaging. Arrived early.' },
+    { p: 1, name: 'محمد ك.', name_en: 'Mohamed K.', rating: 5, text: 'ريحته تدوم طول اليوم. هطلب تاني أكيد.', text_en: 'The scent lasts all day. Definitely reordering.' },
+    { p: 4, name: 'ياسمين م.', name_en: 'Yasmin M.', rating: 5, text: 'الساعة أجمل من الصور بمراحل. خدمة عملاء محترمة.', text_en: 'The watch looks even better than the photos. Great support.' },
+    { p: 10, name: 'كريم ح.', name_en: 'Karim H.', rating: 5, text: 'أحلى مانجو في القاهرة، طازة وباردة.', text_en: 'Best mango in Cairo — fresh and cold.' },
+    { p: 13, name: 'منى ع.', name_en: 'Mona A.', rating: 4, text: 'طعم رائع لكن كنت أتمنى حجم أكبر.', text_en: 'Great taste, wish the size was bigger.' },
+    { p: 16, name: 'أحمد ف.', name_en: 'Ahmed F.', rating: 5, text: 'أوريو ميلك شيك مفيش زيه. التوصيل سريع.', text_en: 'The Oreo milkshake is unmatched. Fast delivery too.' },
+    { p: 20, name: 'نور الدين', name_en: 'Nour Eldin', rating: 5, text: 'قهوة تركي مضبوطة زي بتاعة البيت.', text_en: 'Turkish coffee brewed exactly right.' },
+    { p: 22, name: 'هبة س.', name_en: 'Heba S.', rating: 5, text: 'الكابتشينو رغوة مثالية وطعم غني.', text_en: 'Perfect cappuccino foam and a rich taste.' },
+    { p: 27, name: 'مصطفى ع.', name_en: 'Mostafa A.', rating: 4, text: 'خامة التيشيرت ممتازة والمقاس مظبوط.', text_en: 'Great fabric and true to size.' },
+    { p: 32, name: 'دينا ر.', name_en: 'Dina R.', rating: 5, text: 'الجاكيت جلد حقيقي وشكله فخم جداً.', text_en: 'Real leather jacket and looks very premium.' },
+    { p: 35, name: 'ريم خ.', name_en: 'Reem K.', rating: 5, text: 'نظارة شمس خفيفة وأنيقة.', text_en: 'Lightweight and stylish sunglasses.' }
+  ];
+  function seedReviews(products) {
+    return REVIEW_SEED.map(function (r, i) {
+      var p = products[r.p % products.length] || products[0];
+      var at = daysAgo(i + 2);
+      return {
+        id: 'rev-' + (i + 1),
+        product_id: p.id,
+        tenant_id: p.tenant_id,
+        user_id: 'seed-' + i,
+        name: r.name, name_en: r.name_en,
+        rating: r.rating,
+        text: r.text, text_en: r.text_en,
+        image: null,
+        verified: true,
+        created_at: at,
+        updated_at: at
+      };
+    });
+  }
+
+  function normalizeCode(code) {
+    return String(code == null ? '' : code).trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 24);
+  }
+
+  function findDiscount(code) {
+    var c = normalizeCode(code);
+    if (!c) return null;
+    return (DB.discounts || []).filter(function (d) { return normalizeCode(d.code) === c; })[0] || null;
+  }
+
+  function validateDiscount(code, subtotal) {
+    var d = findDiscount(code);
+    if (!d) return { ok: false, error: 'invalid' };
+    if (d.active === false) return { ok: false, error: 'inactive' };
+    if (d.expires_at && new Date(d.expires_at).getTime() < Date.now()) return { ok: false, error: 'expired' };
+    if (Number(d.max_uses) > 0 && Number(d.used) >= Number(d.max_uses)) return { ok: false, error: 'used' };
+    var sub = Number(subtotal);
+    if (subtotal != null && !isFinite(sub)) sub = 0;
+    if (isFinite(sub) && Number(d.min_order) > 0 && sub < Number(d.min_order)) return { ok: false, error: 'min', min_order: Number(d.min_order) };
+    var amount = 0;
+    if (isFinite(sub) && sub > 0) {
+      amount = d.type === 'fixed' ? Number(d.value) || 0 : sub * (Number(d.value) || 0) / 100;
+      amount = Math.max(0, Math.min(sub, Math.round(amount * 100) / 100));
+    }
+    return { ok: true, discount: d, amount: amount };
+  }
+
+  function addDiscount(data) {
+    var clean = Object.assign({}, data || {});
+    clean.code = normalizeCode(clean.code);
+    if (!clean.code) return null;
+    clean.id = DS.uid('disc');
+    clean.type = clean.type === 'fixed' ? 'fixed' : 'percent';
+    clean.value = Math.max(0, Number(clean.value) || 0);
+    clean.min_order = Math.max(0, Number(clean.min_order) || 0);
+    clean.max_uses = Math.max(0, Number(clean.max_uses) || 0);
+    clean.used = 0;
+    clean.active = clean.active !== false;
+    clean.created_at = nowISO();
+    DB.discounts = DB.discounts || [];
+    DB.discounts.unshift(clean);
+    commit();
+    return clean;
+  }
+
+  function saveDiscount(patch) {
+    if (!patch || !patch.id) return null;
+    var idx = (DB.discounts || []).findIndex(function (d) { return d.id === patch.id; });
+    if (idx === -1) return null;
+    var next = Object.assign({}, DB.discounts[idx], patch);
+    next.code = normalizeCode(next.code);
+    next.value = Math.max(0, Number(next.value) || 0);
+    next.min_order = Math.max(0, Number(next.min_order) || 0);
+    next.max_uses = Math.max(0, Number(next.max_uses) || 0);
+    DB.discounts[idx] = next;
+    commit();
+    return next;
+  }
+
+  function deleteDiscount(id) {
+    DB.discounts = (DB.discounts || []).filter(function (d) { return d.id !== id; });
+    commit();
+    return true;
+  }
+
+  function consumeDiscount(code) {
+    var d = findDiscount(code);
+    if (!d) return null;
+    d.used = (Number(d.used) || 0) + 1;
+    commit();
+    return d;
+  }
+
+  /* ─────────────────────── REVIEWS + RATINGS ─────────────────────── */
+  function reviewsFor(productId) {
+    return (DB.reviews || []).filter(function (r) { return r.product_id === productId; })
+      .sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+  }
+
+  /* Weighted average: the seeded product rating counts as 10 votes so a
+     single new review nudges the score instead of flipping it. */
+  function ratingFor(productId) {
+    var p = DB.products.filter(function (x) { return x.id === productId; })[0];
+    var base = p ? (Number(p.rating) || 4.8) : 4.8;
+    var rs = reviewsFor(productId);
+    if (!rs.length) return { rating: base, count: Number(p && p.review_count) || 0, reviews: rs };
+    var sum = base * 10, n = 10;
+    rs.forEach(function (r) { sum += Math.max(1, Math.min(5, Number(r.rating) || 5)); n++; });
+    return { rating: Math.round((sum / n) * 10) / 10, count: rs.length, reviews: rs };
+  }
+
+  function refreshProductRating(productId) {
+    var p = DB.products.filter(function (x) { return x.id === productId; })[0];
+    if (!p) return;
+    var r = ratingFor(productId);
+    p.rating = r.rating;
+    p.review_count = r.count;
+    p.updated_at = nowISO();
+  }
+
+  function addReview(data) {
+    data = data || {};
+    var p = DB.products.filter(function (x) { return x.id === data.product_id; })[0];
+    if (!p) return null;
+    var s = DS.session() || {};
+    var clean = {
+      id: DS.uid('rev'),
+      product_id: p.id,
+      tenant_id: p.tenant_id,
+      user_id: data.user_id || s.id || 'guest',
+      name: DS.sanitize ? DS.sanitize(data.name || s.name || 'Customer', 60) : (data.name || s.name || 'Customer'),
+      name_en: DS.sanitize ? DS.sanitize(data.name_en || s.name_en || data.name || s.name || 'Customer', 60) : (data.name_en || data.name || 'Customer'),
+      rating: Math.max(1, Math.min(5, Math.round(Number(data.rating) || 5))),
+      text: DS.sanitize ? DS.sanitize(data.text || '', 700) : String(data.text || '').slice(0, 700),
+      text_en: DS.sanitize ? DS.sanitize(data.text_en || data.text || '', 700) : String(data.text_en || data.text || '').slice(0, 700),
+      image: typeof data.image === 'string' && /^data:image\//.test(data.image) ? data.image : null,
+      verified: !!s.id,
+      created_at: nowISO(),
+      updated_at: nowISO()
+    };
+    DB.reviews = DB.reviews || [];
+    DB.reviews.unshift(clean);
+    refreshProductRating(p.id);
+    audit('أضاف تقييم ' + clean.rating + '★ لمنتج «' + p.name + '»', 'Reviewed “' + (p.name_en || p.name) + '” · ' + clean.rating + '★', 'star');
+    commit();
+    return clean;
+  }
+
+  function updateReview(id, patch) {
+    var idx = (DB.reviews || []).findIndex(function (r) { return r.id === id; });
+    if (idx === -1) return null;
+    var next = Object.assign({}, DB.reviews[idx], patch || {}, { updated_at: nowISO() });
+    next.rating = Math.max(1, Math.min(5, Math.round(Number(next.rating) || 5)));
+    next.text = String(next.text || '').slice(0, 700);
+    next.text_en = String(next.text_en || next.text || '').slice(0, 700);
+    if (next.image && !/^data:image\//.test(next.image)) next.image = null;
+    DB.reviews[idx] = next;
+    refreshProductRating(next.product_id);
+    commit();
+    return next;
+  }
+
+  function deleteReview(id) {
+    var r = (DB.reviews || []).filter(function (x) { return x.id === id; })[0];
+    if (!r) return false;
+    DB.reviews = DB.reviews.filter(function (x) { return x.id !== id; });
+    refreshProductRating(r.product_id);
+    audit('حذف تقييم منتج', 'Deleted a product review', 'trash');
+    commit();
+    return true;
+  }
+
+  /* ─────────────────── CUSTOMER SAVED ADDRESSES ─────────────────── */
+  function addressesFor(user) {
+    var u = user && user.id ? (DB.users.filter(function (x) { return x.id === user.id; })[0] || user) : (DS.session() || {});
+    if (Array.isArray(u.addresses) && u.addresses.length) return u.addresses;
+    var fallback = u.address ? [{
+      id: 'addr-default', label: 'المنزل', label_en: 'Home',
+      address: u.address, address_en: u.address_en || u.address,
+      city: u.city, city_en: u.city_en || u.city,
+      phone: u.phone, is_default: true
+    }] : [];
+    return fallback;
+  }
+
+  function saveAddress(data) {
+    var s = DS.session();
+    if (!s) return null;
+    var u = DB.users.filter(function (x) { return x.id === s.id; })[0];
+    if (!u) return null;
+    var list = Array.isArray(u.addresses) ? u.addresses.slice() : addressesFor(u).slice();
+    var item = {
+      id: data.id || DS.uid('addr'),
+      label: DS.sanitize ? DS.sanitize(data.label || 'المنزل', 24) : (data.label || 'المنزل'),
+      label_en: DS.sanitize ? DS.sanitize(data.label_en || data.label || 'Home', 24) : (data.label_en || data.label || 'Home'),
+      address: DS.sanitize ? DS.sanitize(data.address || '', 240) : String(data.address || '').slice(0, 240),
+      address_en: DS.sanitize ? DS.sanitize(data.address_en || data.address || '', 240) : String(data.address_en || data.address || '').slice(0, 240),
+      city: DS.sanitize ? DS.sanitize(data.city || '', 80) : String(data.city || '').slice(0, 80),
+      city_en: DS.sanitize ? DS.sanitize(data.city_en || data.city || '', 80) : String(data.city_en || data.city || '').slice(0, 80),
+      phone: String(data.phone || u.phone || '').slice(0, 20),
+      lat: Number(data.lat) || u.lat || null,
+      lng: Number(data.lng) || u.lng || null,
+      is_default: !!data.is_default
+    };
+    if (!item.address) return null;
+    var idx = -1;
+    list.forEach(function (a, i) { if (a.id === item.id) idx = i; });
+    if (idx > -1) list[idx] = item; else list.push(item);
+    if (item.is_default) list.forEach(function (a) { a.is_default = a.id === item.id; });
+    u.addresses = list;
+    try {
+      var sess = (DS.session && DS.session()) || JSON.parse((DS.sessionGet ? DS.sessionGet('cz_user') : localStorage.getItem('cz_user')) || '{}');
+      sess.addresses = list;
+      if (DS.writeSession) DS.writeSession(sess);
+      else localStorage.setItem('cz_user', JSON.stringify(sess));
+    } catch (e) {}
+    commit();
+    return item;
+  }
+
+  function deleteAddress(id) {
+    var s = DS.session();
+    if (!s) return false;
+    var u = DB.users.filter(function (x) { return x.id === s.id; })[0];
+    if (!u || !Array.isArray(u.addresses)) return false;
+    u.addresses = u.addresses.filter(function (a) { return a.id !== id; });
+    try {
+      var sess = (DS.session && DS.session()) || JSON.parse((DS.sessionGet ? DS.sessionGet('cz_user') : localStorage.getItem('cz_user')) || '{}');
+      sess.addresses = u.addresses;
+      if (DS.writeSession) DS.writeSession(sess);
+      else localStorage.setItem('cz_user', JSON.stringify(sess));
+    } catch (e) {}
+    commit();
+    return true;
+  }
+
+  /* ───────────────────── FREE DELIVERY SETTINGS ───────────────────── */
+  function freeDelivery() {
+    return (DB.settings && DB.settings.free_delivery) || { enabled: false };
+  }
+  function saveFreeDelivery(patch) {
+    DB.settings = DB.settings || {};
+    DB.settings.free_delivery = Object.assign({ enabled: false, mode: 'threshold', min_order: 0, company_id: '', note: '', note_en: '', until: null }, DB.settings.free_delivery || {}, patch || {});
+    commit();
+    return DB.settings.free_delivery;
+  }
+  /* Returns 0 when the rule applies, otherwise null (caller keeps its fee). */
+  function freeDeliveryFee(subtotal) {
+    var f = freeDelivery();
+    if (!f.enabled) return null;
+    if (f.until && new Date(f.until).getTime() < Date.now()) return null;
+    var sub = Number(subtotal) || 0;
+    if (f.mode === 'threshold' && sub < (Number(f.min_order) || 0)) return null;
+    if (f.mode === 'companies' && f.company_id) return null; /* handled by company */
+    return 0;
+  }
+
+  /* ─────────────────── STORE-WIDE SALE SETTINGS ─────────────────── */
+  function storeSale() {
+    return (DB.settings && DB.settings.store_sale) || { enabled: false, percent: 0 };
+  }
+  function saveStoreSale(patch) {
+    DB.settings = DB.settings || {};
+    DB.settings.store_sale = Object.assign({ enabled: false, percent: 10, label: 'تخفيضات المتجر', label_en: 'Store sale' }, DB.settings.store_sale || {}, patch || {});
+    DB.settings.store_sale.percent = Math.max(0, Math.min(90, Number(DB.settings.store_sale.percent) || 0));
+    commit();
+    return DB.settings.store_sale;
+  }
+  function storeSaleAmount(subtotal) {
+    var s = storeSale();
+    if (!s.enabled || !(Number(s.percent) > 0)) return 0;
+    return Math.round((Number(subtotal) || 0) * Number(s.percent)) / 100;
+  }
+
   function seed() {
+    /* CLEAN INSTALL — brand-new demo database.
+       Only the 18 default accounts, the 36-product catalogue, the four stores,
+       the delivery companies and the (empty) chat rooms are created.
+       No orders, sales, invoices, audit noise or chat history. */
     var products = buildProducts();
-    var orders = buildOrders(products);
-    var invoices = buildInvoices(products);
     var db = {
       version: VERSION,
       created_at: nowISO(),
       tenants: TENANTS,
       users: USERS,
       products: products,
-      orders: orders,
-      invoices: invoices,
+      orders: [],
+      invoices: [],
       delivery_companies: DELIVERY_COMPANIES,
-      chats: buildChats(),
+      chats: buildChats().map(function (room) { return Object.assign({}, room, { messages: [] }); }),
       jobs: buildJobs(),
       applications: [],
-      audit_logs: buildAudit(),
-      payments: [
-        { id: 'pay-1', tenant_id: 't-caznova', plan: 'yearly', amount: 2499, method: 'whatsapp', status: 'paid', at: daysAgo(120) },
-        { id: 'pay-2', tenant_id: 't-smozy', plan: 'monthly', amount: 299, method: 'whatsapp', status: 'paid', at: daysAgo(20) },
-        { id: 'pay-3', tenant_id: 't-bnsheikh', plan: 'sixmonths', amount: 1499, method: 'whatsapp', status: 'paid', at: daysAgo(80) },
-        { id: 'pay-4', tenant_id: 't-mastore', plan: 'monthly', amount: 299, method: 'whatsapp', status: 'paid', at: daysAgo(12) }
-      ],
+      audit_logs: [],
+      payments: [],
+      discounts: seedDiscounts(),
+      reviews: seedReviews(products),
       settings: {
         platform_name: 'DotStudio® POS',
         whatsapp: WHATSAPP,
@@ -624,7 +993,9 @@
         support_email: 'hello@dotstudio.app',
         maintenance: false,
         allow_signups: true,
-        default_delivery_fee: 30
+        default_delivery_fee: 30,
+        store_sale: { enabled: false, percent: 10, label: 'تخفيضات المتجر', label_en: 'Store sale' },
+        free_delivery: { enabled: false, mode: 'threshold', min_order: 500, company_id: '', note: '', note_en: '', until: null }
       }
     };
     return db;
@@ -669,6 +1040,20 @@
       db.migrations.allDayStores = true;
       changed = true;
     }
+    /* Migration — remove the legacy demo orders ORD-1001 … ORD-1003 once.
+       Match the seeded ids only: a real first order can legitimately reuse
+       the ORD-1001 order number, so order_no must never be the filter. */
+    if (!db.migrations.demoOrdersPurged) {
+      var LEGACY_IDS = { 'ord-1001': 1, 'ord-1002': 1, 'ord-1003': 1 };
+      db.orders = (db.orders || []).filter(function (o) {
+        return o && !LEGACY_IDS[o.id];
+      });
+      db.invoices = (db.invoices || []).filter(function (inv) {
+        return inv && !LEGACY_IDS[inv.order_id];
+      });
+      db.migrations.demoOrdersPurged = true;
+      changed = true;
+    }
     if (Array.isArray(db.products)) {
       db.products.forEach(function (p, i) {
         if (!p.barcode) {
@@ -682,11 +1067,184 @@
         }
       });
     }
+    if (!Array.isArray(db.discounts) || !db.discounts.length) { db.discounts = seedDiscounts(); changed = true; }
+    if (!Array.isArray(db.reviews)) { db.reviews = seedReviews(db.products || []); changed = true; }
+    if (!db.settings) db.settings = {};
+    if (!db.settings.free_delivery) {
+      db.settings.free_delivery = { enabled: false, mode: 'threshold', min_order: 500, company_id: '', note: '', note_en: '', until: null };
+      changed = true;
+    }
+    if (!db.settings.store_sale) {
+      db.settings.store_sale = { enabled: false, percent: 10, label: 'تخفيضات المتجر', label_en: 'Store sale' };
+      changed = true;
+    }
+    /* Merchandising flags for databases created before they existed. */
+    (db.products || []).forEach(function (p) {
+      if (typeof p.featured !== 'boolean') { p.featured = (Number(p.rating) || 0) >= 4.9; changed = true; }
+      if (typeof p.best_seller !== 'boolean') { p.best_seller = (Number(p.sold) || 0) >= 250; changed = true; }
+      if (p.review_count == null) { p.review_count = 0; changed = true; }
+    });
     var before = (db.chats || []).map(function (c) { return c.id; }).join('|');
     ensureChats(db);
     var after = (db.chats || []).map(function (c) { return c.id; }).join('|');
+    if (ensureDeliveryTeams(db)) changed = true;
+    if (migrateOrderLifecycle(db)) changed = true;
     if (before !== after || changed) save(db);
+    if (migrateSecurity(db) || ensureInvoiceLinks(db)) save(db);
     return db;
+  }
+
+  /* ───────────────────── SECURITY MIGRATIONS ─────────────────────
+     Passwords are never kept in plain text. Legacy demo databases are
+     upgraded in place: every `password` becomes a salted SHA-256 hash. */
+  function migrateSecurity(db) {
+    if (!db || !Array.isArray(db.users) || !DS.security) return false;
+    var changed = false;
+    db.users.forEach(function (u) {
+      if (!u) return;
+      if (typeof u.password === 'string' && u.password) {
+        if (!u.password_hash) u.password_hash = DS.security.hashPassword(u.password);
+        delete u.password;
+        changed = true;
+      } else if (Object.prototype.hasOwnProperty.call(u, 'password')) {
+        delete u.password;
+        changed = true;
+      }
+    });
+    return changed;
+  }
+
+  /* Strict delivery lifecycle — upgrades legacy statuses in place:
+     confirmed → preparing, delivering → out_for_delivery.
+     A live rider task must have a real sub-driver, otherwise it goes back
+     to «handed to company» so the owner can assign one. */
+  function migrateOrderLifecycle(db) {
+    if (!db || !Array.isArray(db.orders)) return false;
+    db.migrations = db.migrations || {};
+    var changed = false;
+    var LEGACY = { confirmed: 'preparing', delivering: 'out_for_delivery' };
+    var KNOWN = ['pending', 'preparing', 'handed_to_company', 'out_for_delivery', 'delivered', 'cancelled'];
+    db.orders.forEach(function (o) {
+      if (!o) return;
+      if (LEGACY[o.status]) { o.status = LEGACY[o.status]; changed = true; }
+      if (KNOWN.indexOf(o.status) === -1) { o.status = 'pending'; changed = true; }
+      (o.timeline || []).forEach(function (ev) {
+        if (ev && LEGACY[ev.status]) { ev.status = LEGACY[ev.status]; changed = true; }
+      });
+      if (o.status === 'out_for_delivery') {
+        var rider = o.driver_id ? db.users.filter(function (u) { return u.id === o.driver_id && isDeliveryRole(u) && !isCompanyOwner(u); })[0] : null;
+        if (!rider && o.delivery_company_id) {
+          rider = db.users.filter(function (u) {
+            return isDeliveryRole(u) && !isCompanyOwner(u) && u.is_active !== false && u.delivery_company === o.delivery_company_id;
+          })[0] || null;
+          if (rider) { o.driver_id = rider.id; o.driver_name = rider.name; changed = true; }
+        }
+        if (!rider) { o.status = 'handed_to_company'; changed = true; }
+      }
+    });
+    if (!db.migrations.strictOrderLifecycle) { db.migrations.strictOrderLifecycle = true; changed = true; }
+    return changed;
+  }
+
+  /* B2B delivery teams — make sure company owners keep their owner flag,
+     Talqa has two demo sub-drivers, and active Talqa tasks are dispatched
+     between them so the rider dashboard is never empty on a legacy install. */
+  function ensureDeliveryTeams(db) {
+    if (!db || !Array.isArray(db.users)) return false;
+    var changed = false;
+    var driverSeeds = [
+      { id: 'u-del-talqa-ahmed', username: 'ahmed', password: 'ahmed2026', name: 'أحمد', name_en: 'Ahmed', phone: '01011110001', avatar_id: 'av1' },
+      { id: 'u-del-talqa-mostafa', username: 'mostafa', password: 'mostafa2026', name: 'مصطفى', name_en: 'Mostafa', phone: '01011110002', avatar_id: 'av2' }
+    ];
+    var talqa = db.users.filter(function (u) { return u.username === 'talqa'; })[0];
+    if (talqa) {
+      if (talqa.company_owner !== true) { talqa.company_owner = true; changed = true; }
+      if (talqa.company_id !== 'dc-talqa') { talqa.company_id = 'dc-talqa'; changed = true; }
+      if (typeof talqa.online !== 'boolean') { talqa.online = true; changed = true; }
+    }
+    driverSeeds.forEach(function (seed) {
+      if (db.users.some(function (u) { return u.id === seed.id || u.username === seed.username; })) return;
+      var hash = null;
+      try { hash = DS.security && DS.security.hashPassword ? DS.security.hashPassword(seed.password) : null; } catch (e) {}
+      db.users.push({
+        id: seed.id, username: seed.username, role: 'driver',
+        name: seed.name, name_en: seed.name_en, phone: seed.phone,
+        delivery_company: 'dc-talqa', company_id: 'dc-talqa', delivery_company_name: 'طلقة',
+        parent_id: 'u-del-talqa', company_owner: false,
+        avatar_id: seed.avatar_id, is_active: true, online: true,
+        created_at: nowISO(), password_hash: hash
+      });
+      changed = true;
+    });
+    /* Caznova in-house rider — seeded once for legacy installs. */
+    db.migrations = db.migrations || {};
+    if (!db.migrations.caznovaInHouseDriver) {
+      if (!db.users.some(function (u) { return u.id === 'u-del-caznova' || u.username === 'caznova_driver'; })) {
+        var caznovaHash = null;
+        try { caznovaHash = DS.security && DS.security.hashPassword ? DS.security.hashPassword('caznova_driver2026') : null; } catch (e) {}
+        db.users.push({
+          id: 'u-del-caznova', username: 'caznova_driver', role: 'delivery',
+          name: 'مندوب كازنوفا', name_en: 'Caznova Driver', phone: '01000000011',
+          tenant_id: 't-caznova', company_id: 'in_house', delivery_company: null,
+          delivery_company_name: 'توصيل المحل (داخلي)',
+          avatar_id: 'av4', is_active: true, online: true,
+          created_at: nowISO(), password_hash: caznovaHash
+        });
+      }
+      db.migrations.caznovaInHouseDriver = true;
+      changed = true;
+    }
+    /* Normalise company ids on every delivery account. */
+    db.users.forEach(function (u) {
+      if (!u || (u.role !== 'delivery' && u.role !== 'driver')) return;
+      if (u.delivery_company && u.company_id !== u.delivery_company) { u.company_id = u.delivery_company; changed = true; }
+      if (typeof u.online !== 'boolean' && u.is_active !== false) { u.online = true; changed = true; }
+    });
+    /* One-time dispatch so a legacy Talqa install has live rider tasks. */
+    db.migrations = db.migrations || {};
+    if (!db.migrations.b2bDeliveryTeams) {
+      var riders = db.users.filter(function (u) { return u.role === 'driver' && u.delivery_company === 'dc-talqa'; });
+      if (riders.length) {
+        var idx = 0;
+        (db.orders || []).forEach(function (o) {
+          if (!o || o.delivery_company_id !== 'dc-talqa') return;
+          if (['pending', 'preparing', 'handed_to_company', 'out_for_delivery', 'delivering'].indexOf(o.status) === -1) return;
+          if (o.driver_id && o.driver_id !== 'u-del-talqa') return;
+          var rider = riders[idx % riders.length]; idx++;
+          o.driver_id = rider.id;
+          o.driver_name = rider.name;
+          changed = true;
+        });
+      }
+      db.migrations.b2bDeliveryTeams = true;
+      changed = true;
+    }
+    return changed;
+  }
+
+  /* Older demo databases shipped invoices without an order link, which
+     made the printed receipt show empty customer / store details. */
+  function ensureInvoiceLinks(db) {
+    if (!db || !Array.isArray(db.invoices) || !Array.isArray(db.orders)) return false;
+    var changed = false;
+    db.invoices.forEach(function (inv) {
+      if (!inv) return;
+      var order = null;
+      if (inv.order_id) order = db.orders.filter(function (o) { return o.id === inv.order_id; })[0];
+      if (!order && inv.order_no) order = db.orders.filter(function (o) { return o.order_no === inv.order_no; })[0];
+      if (!order) {
+        order = db.orders.filter(function (o) {
+          return o.tenant_id === inv.tenant_id && Number(o.total) === Number(inv.total);
+        })[0];
+      }
+      if (!order) return;
+      if (!inv.order_id) { inv.order_id = order.id; changed = true; }
+      if (!inv.order_no) { inv.order_no = order.order_no; changed = true; }
+      if (!inv.customer && order.customer) { inv.customer = order.customer; changed = true; }
+      if (inv.delivery_fee == null && order.delivery_fee != null) { inv.delivery_fee = order.delivery_fee; changed = true; }
+      if (!inv.created_at) { inv.created_at = order.created_at; changed = true; }
+    });
+    return changed;
   }
 
   function save(db) {
@@ -726,7 +1284,12 @@
       username = entered;
     }
     var user = DB.users.filter(function (u) { return String(u.username).toLowerCase() === username; })[0];
-    if (!user || (user.password !== password && password !== aliasPassword)) return { ok: false, error: 'invalid' };
+    if (!user) return { ok: false, error: 'invalid' };
+    /* Passwords are salted hashes; legacy plaintext values still validate. */
+    var stored = user.password_hash || user.password;
+    var ok = DS.security ? DS.security.verifyPassword(password, stored) : String(password) === String(stored);
+    if (!ok && aliasPassword && DS.security) ok = DS.security.verifyPassword(aliasPassword, stored);
+    if (!ok) return { ok: false, error: 'invalid' };
     if (user.is_active === false) return { ok: false, error: 'suspended' };
     if (user.tenant_id && (user.role === 'owner' || user.role === 'cashier')) {
       var tn = tenantById(user.tenant_id);
@@ -734,6 +1297,7 @@
     }
     var clean = Object.assign({}, user);
     delete clean.password;
+    delete clean.password_hash;
     try {
       localStorage.setItem('cz_session', clean.id);
       localStorage.setItem('cz_user', JSON.stringify(clean));
@@ -799,14 +1363,14 @@
   function canAccessTenant(user, tenantId) {
     if (!user) return false;
     if (isAdmin(user)) return true;
-    if (user.role === 'delivery') return true;
+    if (isDeliveryRole(user)) return true;
     return user.tenant_id === tenantId || (user.role === 'customer' && currentStoreId(user) === tenantId);
   }
 
   function visibleProducts(user, tenantId) {
     user = user || DS.session();
     if (!user) return [];
-    if (user.role === 'delivery') return [];
+    if (isDeliveryRole(user)) return [];
     if (isAdmin(user)) {
       return tenantId ? DB.products.filter(function (p) { return p.tenant_id === tenantId; }) : DB.products.slice();
     }
@@ -829,8 +1393,22 @@
       if (user.role === 'subadmin' && user.permissions && user.permissions.indexOf('orders') === -1) return [];
       return DB.orders.slice();
     }
-    if (user.role === 'delivery') {
-      return DB.orders.filter(function (o) { return o.delivery_company_id === user.delivery_company; });
+    if (isDeliveryRole(user)) {
+      /* B2B sub-driver: created by a delivery company → only sees the orders
+         assigned to him. Company owners see their whole company queue. */
+      if (isSubDriver(user)) {
+        return DB.orders.filter(function (o) { return o.driver_id && o.driver_id === user.id; });
+      }
+      /* Store-managed driver: only that store's orders. */
+      if (user.tenant_id) {
+        return DB.orders.filter(function (o) {
+          return orderHasTenant(o, user.tenant_id) || (o.driver_id && o.driver_id === user.id);
+        });
+      }
+      return DB.orders.filter(function (o) {
+        if (o.driver_id && o.driver_id === user.id) return true;
+        return !!(user.delivery_company && o.delivery_company_id === user.delivery_company);
+      });
     }
     if (user.role === 'customer') {
       return DB.orders.filter(function (o) { return (o.customer && o.customer.phone === user.phone) || o.customer_id === user.id; });
@@ -842,7 +1420,7 @@
     user = user || DS.session();
     if (!user) return [];
     if (isAdmin(user)) return DB.invoices.slice();
-    if (user.role === 'delivery' || user.role === 'customer') return [];
+    if (user.role === 'delivery' || user.role === 'driver' || user.role === 'customer') return [];
     return DB.invoices.filter(function (i) { return i.tenant_id === user.tenant_id; });
   }
 
@@ -869,7 +1447,7 @@
   function customersFor(user) {
     var all = customers();
     if (!user || isAdmin(user)) return all;
-    if (user.role === 'delivery') return all;
+    if (isDeliveryRole(user)) return all;
     return all.filter(function (c) { return c.tenant_ids.indexOf(user.tenant_id) > -1; });
   }
 
@@ -881,7 +1459,7 @@
   function statsFor(tenantId) {
     var orders = tenantId ? ordersByTenant(tenantId) : DB.orders.slice();
     var delivered = orders.filter(function (o) { return o.status === 'delivered'; });
-    var active = orders.filter(function (o) { return ['pending', 'confirmed', 'preparing', 'delivering'].indexOf(o.status) > -1; });
+    var active = orders.filter(function (o) { return ['pending', 'preparing', 'handed_to_company', 'out_for_delivery'].indexOf(o.status) > -1; });
     var today = new Date(); today.setHours(0, 0, 0, 0);
     var todayOrders = orders.filter(function (o) { return new Date(o.created_at) >= today; });
     var revenue = revenueOf(orders);
@@ -897,7 +1475,9 @@
       active: active.length,
       pending: orders.filter(function (o) { return o.status === 'pending'; }).length,
       preparing: orders.filter(function (o) { return o.status === 'preparing'; }).length,
-      delivering: orders.filter(function (o) { return o.status === 'delivering'; }).length,
+      handedToCompany: orders.filter(function (o) { return o.status === 'handed_to_company'; }).length,
+      outForDelivery: orders.filter(function (o) { return o.status === 'out_for_delivery'; }).length,
+      delivering: orders.filter(function (o) { return o.status === 'out_for_delivery'; }).length,
       cancelled: orders.filter(function (o) { return o.status === 'cancelled'; }).length,
       todayOrders: todayOrders.length,
       todayRevenue: revenueOf(todayOrders),
@@ -983,7 +1563,12 @@
     if (!patch || !patch.id) return null;
     var idx = DB.users.findIndex(function (u) { return u.id === patch.id; });
     if (idx === -1) return null;
-    DB.users[idx] = Object.assign({}, DB.users[idx], patch);
+    var next = Object.assign({}, DB.users[idx], patch);
+    if (Object.prototype.hasOwnProperty.call(patch, 'password')) {
+      if (patch.password) next.password_hash = DS.security.hashPassword(String(patch.password));
+      delete next.password;
+    }
+    DB.users[idx] = next;
     commit();
     return DB.users[idx];
   }
@@ -998,7 +1583,12 @@
   }
 
   function addUser(data) {
-    var user = Object.assign({ id: DS.uid('u'), is_active: true, created_at: nowISO(), avatar_id: 'av1' }, data);
+    var clean = Object.assign({}, data);
+    if (clean.password) {
+      clean.password_hash = DS.security.hashPassword(String(clean.password));
+      delete clean.password;
+    }
+    var user = Object.assign({ id: DS.uid('u'), is_active: true, created_at: nowISO(), avatar_id: 'av1' }, clean);
     DB.users.push(user);
     audit('أضاف مستخدم «' + user.name + '»', 'Added user “' + user.name + '”', 'user');
     commit();
@@ -1192,15 +1782,93 @@
     return order;
   }
 
+  /* Strict pipeline — an order can only move one step forward and every
+     step belongs to exactly one side of the hand-off:
+     pending → preparing (store) → handed_to_company (store stops here)
+     → out_for_delivery (delivery company / rider) → delivered (rider only). */
+  var NEXT_STATUS = { pending: 'preparing', confirmed: 'preparing', preparing: 'handed_to_company', handed_to_company: 'out_for_delivery', out_for_delivery: 'delivered' };
+  function canTransition(from, to) {
+    if (to === 'cancelled') return ['pending', 'preparing', 'handed_to_company'].indexOf(from) > -1;
+    return NEXT_STATUS[from] === to;
+  }
+
+  /* Role-aware permission check used by both the UI and the data layer. */
+  function canTransitionForUser(user, order, to) {
+    user = user || DS.session();
+    order = order || {};
+    if (!user || !order) return false;
+    var admin = isAdmin(user);
+    var storeSide = (user.role === 'owner' || user.role === 'cashier') && !!user.tenant_id && orderHasTenant(order, user.tenant_id);
+    var rider = isRider(user);
+    var companyOwner = isCompanyOwner(user);
+    /* Nobody, not even the assigned rider, may skip a lifecycle step. */
+    if (order.status && order.status !== to && !canTransition(order.status, to)) return false;
+    if (to === 'cancelled') return admin || storeSide;
+    if (to === 'preparing') return admin || storeSide;
+    if (to === 'handed_to_company') return admin || storeSide;
+    if (to === 'out_for_delivery') {
+      if (!order.driver_id) return false;
+      if (admin) return true;
+      if (companyOwner) return order.delivery_company_id === user.delivery_company;
+      return rider && order.driver_id === user.id;
+    }
+    /* Delivered is exclusive to the assigned rider — never the store, never
+       the delivery company owner, never an admin override. */
+    if (to === 'delivered') return rider && !!order.driver_id && order.driver_id === user.id;
+    return false;
+  }
+
+  /* Admin edit: discount, notes and status in one save. Status still uses the
+     strict pipeline; a direct jump is rejected instead of silently corrupting
+     the order. */
+  function updateOrder(id, patch) {
+    var order = DB.orders.filter(function (o) { return o.id === id; })[0];
+    if (!order) return null;
+    patch = patch || {};
+    if (patch.status && patch.status !== order.status) {
+      if (!canTransition(order.status, patch.status)) return null;
+      var moved = updateOrderStatus(id, patch.status, {});
+      if (!moved) return null;
+    }
+    var sub = Number(order.subtotal) || (order.items || []).reduce(function (s, it) { return s + (Number(it.price) || 0) * (Number(it.qty) || 0); }, 0);
+    var disc = patch.discount != null ? Math.max(0, Math.min(sub, Number(patch.discount) || 0)) : Number(order.discount) || 0;
+    var fee = patch.delivery_fee != null ? Math.max(0, Number(patch.delivery_fee) || 0) : Number(order.delivery_fee) || 0;
+    order.subtotal = sub;
+    order.discount = disc;
+    order.delivery_fee = fee;
+    order.total = Math.max(0, sub - disc + fee);
+    if (patch.notes != null) order.notes = String(patch.notes).slice(0, 500);
+    order.updated_at = nowISO();
+    audit('تعديل الطلب ' + order.order_no, 'Edited order ' + order.order_no, 'edit');
+    commit();
+    return order;
+  }
+
   function updateOrderStatus(id, status, meta) {
     var order = DB.orders.filter(function (o) { return o.id === id; })[0];
     if (!order) return null;
     meta = meta || {};
     var previous = order.status;
+    if (previous === status) return order;
+    if (!canTransition(previous, status)) {
+      console.warn('[DS] refused status jump ' + previous + ' → ' + status);
+      return null;
+    }
+    var actor = meta.actor || DS.session();
+    if (actor && !canTransitionForUser(actor, order, status)) {
+      console.warn('[DS] role is not allowed to move ' + order.order_no + ' to ' + status);
+      return null;
+    }
+    var proofUrl = meta.proof && (typeof meta.proof === 'string' ? meta.proof : meta.proof.url);
+    if (status === 'delivered' && !proofUrl && !meta.force) {
+      console.warn('[DS] delivery proof photo is required');
+      return null;
+    }
     order.status = status;
     order.updated_at = nowISO();
-    if (meta.proof) order.proof = { url: meta.proof, at: nowISO(), by: (DS.session() || {}).name || 'Delivery' };
+    if (proofUrl) order.proof = { url: proofUrl, at: nowISO(), by: (DS.session() || {}).name || 'Delivery' };
     if (meta.company_id) { order.delivery_company_id = meta.company_id; order.delivery_company_name = meta.company_name || order.delivery_company_name; }
+    if (meta.driver_id) order.driver_id = meta.driver_id;
     if (meta.driver_name) order.driver_name = meta.driver_name;
     /* Cancelling returns the units to inventory (once). */
     if (status === 'cancelled' && previous !== 'cancelled') {
@@ -1212,11 +1880,49 @@
         p.updated_at = nowISO();
       });
     }
-    var labels = { pending: 'تم إنشاء الطلب', confirmed: 'تم تأكيد الطلب', preparing: 'جاري تجهيز الطلب', delivering: 'المندوب في الطريق', delivered: 'تم تسليم الطلب', cancelled: 'تم إلغاء الطلب' };
+    var labels = { pending: 'تم إنشاء الطلب', confirmed: 'تم تأكيد الطلب', preparing: 'جاري تجهيز الطلب', handed_to_company: 'تم التسليم لشركة التوصيل', out_for_delivery: 'المندوب في الطريق', delivering: 'المندوب في الطريق', delivered: 'تم تسليم الطلب', cancelled: 'تم إلغاء الطلب' };
     if (!order.timeline) order.timeline = [];
     var last = order.timeline[order.timeline.length - 1];
     if (!last || last.status !== status) order.timeline.push({ status: status, at: nowISO(), label: labels[status] || status });
     audit('تحديث الطلب ' + order.order_no + ' إلى «' + (labels[status] || status) + '»', 'Order ' + order.order_no + ' → ' + status, 'orders');
+    commit();
+    return order;
+  }
+
+  /* B2B dispatch — the delivery company owner assigns one of the company's
+     active sub-drivers once the store has handed the order over. A rider can
+     still transfer his own task to a teammate while it is on the way. */
+  function assignOrder(id, driverId) {
+    var order = DB.orders.filter(function (o) { return o.id === id; })[0];
+    var driver = userById(driverId);
+    var actor = DS.session();
+    if (!order || !isRider(driver) || driver.is_active === false) return null;
+    if (!isSubDriver(driver) && !driver.tenant_id) return null;
+    if (order.delivery_company_id && driver.delivery_company && order.delivery_company_id !== driver.delivery_company) return null;
+    if (actor) {
+      var allowed = isAdmin(actor)
+        || (isCompanyOwner(actor) && actor.delivery_company === driver.delivery_company)
+        || (isRider(actor) && order.driver_id === actor.id);
+      if (!allowed) return null;
+      if (!isAdmin(actor) && ['handed_to_company', 'out_for_delivery'].indexOf(order.status) === -1) return null;
+    }
+    order.driver_id = driver.id;
+    order.driver_name = driver.name;
+    order.delivery_company_id = driver.delivery_company || order.delivery_company_id;
+    order.delivery_company_name = driver.delivery_company_name || order.delivery_company_name;
+    order.updated_at = nowISO();
+    audit('إسناد الطلب ' + order.order_no + ' إلى «' + driver.name + '»', 'Assigned ' + order.order_no + ' to “' + (driver.name_en || driver.name) + '”', 'bike');
+    commit();
+    return order;
+  }
+
+  function unassignOrder(id) {
+    var order = DB.orders.filter(function (o) { return o.id === id; })[0];
+    if (!order) return null;
+    order.driver_id = null;
+    order.driver_name = null;
+    order.updated_at = nowISO();
+    audit('إلغاء إسناد الطلب ' + order.order_no, 'Unassigned ' + order.order_no, 'bike');
     commit();
     return order;
   }
@@ -1288,6 +1994,7 @@
     owner: ['صاحب متجر', 'Store owner'],
     cashier: ['كاشير', 'Cashier'],
     delivery: ['مندوب توصيل', 'Delivery rider'],
+    driver: ['مندوب توصيل', 'Delivery rider'],
     customer: ['عميل', 'Customer']
   };
 
@@ -1300,13 +2007,15 @@
     if (!user) return false;
     if (scope === 'support') return true;
     if (scope === 'driver') return true;
-    if (scope === 'stores') return user.role !== 'delivery';
-    if (scope === 'delivery') return user.role !== 'customer';
+    if (scope === 'team') return isDeliveryStaff(user);
+    if (scope === 'stores') return !isDeliveryRole(user);
+    if (scope === 'delivery') return ['customer', 'owner', 'cashier', 'delivery', 'driver', 'subadmin', 'superadmin'].indexOf(user.role) > -1;
     return false;
   }
 
   function chatPeerFor(scope, peerId) {
     if (scope === 'driver') return userById(peerId);
+    if (scope === 'team') return userById(peerId);
     if (scope === 'support') return userById(peerId);
     /* Store / company peers may be the entity (customer view) or a person
        (the business team's view); resolve whichever exists. */
@@ -1322,6 +2031,7 @@
     if (!user) return null;
     if (scope === 'support') return supportRoomId(user.id, peerId);
     if (scope === 'driver') return driverRoomId(user.id, peerId);
+    if (scope === 'team') return teamRoomId(user.id, peerId);
     if (scope === 'stores') {
       var pair = storePair(user, peerId);
       return storeRoomId(pair.tenantId, pair.personId);
@@ -1467,9 +2177,31 @@
           roomId: room.id,
           name: person.name, name_en: person.name_en || person.name,
           avatar_id: person.avatar_id, avatar: null,
-          subtitle: person.role === 'delivery' ? 'مندوب التوصيل' : 'عميل',
-          subtitle_en: person.role === 'delivery' ? 'Delivery rider' : 'Customer',
+          subtitle: isDeliveryRole(person) ? 'مندوب التوصيل' : 'عميل',
+          subtitle_en: isDeliveryRole(person) ? 'Delivery rider' : 'Customer',
           tone: 'orange', last_at: lastAt(room)
+        });
+      });
+      out.sort(function (a, b) { return (b.last_at || '').localeCompare(a.last_at || '') || String(a.name).localeCompare(String(b.name)); });
+      return out;
+    }
+    if (scope === 'team') {
+      /* Delivery company internal team: owner ↔ riders, rider ↔ owner/mates. */
+      var teamPeers = companyDrivers(user.delivery_company).filter(function (u) {
+        if (!isRider(u) || u.id === user.id) return false;
+        if (isCompanyOwner(user)) return true;
+        return isCompanyOwner(u) || isSubDriver(u);
+      });
+      teamPeers.forEach(function (u) {
+        var room = DB.chats.filter(function (r) { return r && r.id === teamRoomId(user.id, u.id); })[0];
+        out.push({
+          key: u.id, type: 'user', id: u.id,
+          roomId: teamRoomId(user.id, u.id),
+          name: u.name, name_en: u.name_en || u.name,
+          avatar_id: u.avatar_id, avatar: null,
+          subtitle: isCompanyOwner(u) ? (en ? 'Company owner' : 'صاحب الشركة') : (en ? 'Delivery rider' : 'مندوب توصيل'),
+          subtitle_en: isCompanyOwner(u) ? 'Company owner' : 'Delivery rider',
+          tone: 'teal', last_at: lastAt(room)
         });
       });
       out.sort(function (a, b) { return (b.last_at || '').localeCompare(a.last_at || '') || String(a.name).localeCompare(String(b.name)); });
@@ -1514,6 +2246,14 @@
         peer_id: driver.id, users: [user.id, driver.id].sort(),
         title: 'المندوب · ' + (driver.name || ''), title_en: 'Rider · ' + (driver.name_en || driver.name || ''),
         messages: []
+      };
+    } else if (scope === 'team') {
+      var mate = userById(peerId);
+      if (!mate || !isDeliveryStaff(user) || mate.delivery_company !== user.delivery_company) return null;
+      room = {
+        id: roomId, scope: 'team', peer_type: 'user',
+        peer_id: mate.id, users: [user.id, mate.id].sort(),
+        title: (mate.name || ''), title_en: (mate.name_en || mate.name || ''), messages: []
       };
     } else if (scope === 'delivery') {
       var dpair = deliveryPair(user, peerId);
@@ -1701,13 +2441,16 @@
         out.push({ icon: 'card', title: (en ? t.name + ' subscription expires soon' : 'اشتراك ' + t.name + ' ينتهي قريباً'), text: (en ? Math.max(0, Math.ceil((new Date(t.subscription_end) - Date.now()) / 86400000)) + ' days left' : 'متبقي ' + Math.max(0, Math.ceil((new Date(t.subscription_end) - Date.now()) / 86400000)) + ' يوم'), at: nowISO(), href: 'admin/subscriptions.html' });
       });
     } else if (user.role === 'owner') {
-      DB.orders.filter(function (o) { return orderHasTenant(o, user.tenant_id) && (o.status === 'pending' || o.status === 'delivering'); }).slice(0, 4).forEach(function (o) {
+      DB.orders.filter(function (o) { return orderHasTenant(o, user.tenant_id) && (o.status === 'pending' || o.status === 'preparing'); }).slice(0, 4).forEach(function (o) {
         out.push({ icon: 'receipt', title: (en ? 'Order ' : 'طلب ') + o.order_no + ' · ' + tStatus(o.status), text: DS.loc(o.customer, 'name') + ' · ' + DS.money(o.total), at: o.created_at, href: 'owner/orders.html' });
       });
       var prods = productsByTenant(user.tenant_id).filter(function (p) { return p.stock <= p.min_stock; });
       if (prods.length) out.push({ icon: 'box', title: en ? 'Low stock' : 'مخزون منخفض', text: en ? prods.length + ' products need restocking' : prods.length + ' منتجات تحتاج إعادة تخزين', at: nowISO(), href: 'owner/products.html' });
-    } else if (user.role === 'delivery') {
-      DB.orders.filter(function (o) { return o.delivery_company_id === user.delivery_company && o.status === 'delivering'; }).slice(0, 4).forEach(function (o) {
+    } else if (isDeliveryRole(user)) {
+      var feed = isSubDriver(user)
+        ? DB.orders.filter(function (o) { return o.driver_id === user.id; })
+        : DB.orders.filter(function (o) { return o.delivery_company_id === user.delivery_company; });
+      feed.filter(function (o) { return ['handed_to_company', 'out_for_delivery'].indexOf(o.status) > -1; }).slice(0, 4).forEach(function (o) {
         out.push({ icon: 'truck', title: (en ? 'Delivery ' : 'توصيل ') + o.order_no, text: DS.loc(o.customer, 'address'), at: o.created_at, href: 'delivery/orders.html' });
       });
     } else if (user.role === 'customer') {
@@ -1718,31 +2461,70 @@
     return out.sort(function (a, b) { return new Date(b.at) - new Date(a.at); }).slice(0, 8);
   }
 
-  /* Assigned rider for an order (used by "Chat with driver"). */
+  /* Assigned rider for an order (used by "Chat with driver"). Only the rider
+     explicitly assigned by the delivery company is returned — never a guess. */
   function driverForOrder(order) {
+    if (!order || !order.driver_id) return null;
+    var byId = userById(order.driver_id);
+    return isRider(byId) ? byId : null;
+  }
+
+  function customerUserForOrder(order) {
     if (!order) return null;
-    if (order.driver_id) {
-      var byId = userById(order.driver_id);
-      if (byId && byId.role === 'delivery') return byId;
+    if (order.customer_id) {
+      var byId = userById(order.customer_id);
+      if (byId && byId.role === 'customer') return byId;
     }
-    if (order.delivery_company_id) {
-      var rider = DB.users.filter(function (u) {
-        return u.role === 'delivery' && u.delivery_company === order.delivery_company_id && u.is_active !== false;
-      })[0];
-      if (rider) return rider;
-    }
-    return DB.users.filter(function (u) { return u.role === 'delivery' && u.is_active !== false; })[0] || null;
+    var phone = order.customer && order.customer.phone;
+    if (!phone) return null;
+    return DB.users.filter(function (u) { return u.role === 'customer' && u.phone === phone; })[0] || null;
+  }
+
+  function monitorDriverRoom(order) {
+    var driver = driverForOrder(order);
+    var customer = customerUserForOrder(order);
+    if (!driver || !customer) return null;
+    return DB.chats.filter(function (c) { return c.id === driverRoomId(driver.id, customer.id); })[0] || null;
   }
 
   function tStatus(status) {
     var map = {
-      pending: DS.t('pending'), confirmed: DS.t('confirmed'), preparing: DS.t('preparing'),
-      delivering: DS.t('delivering'), delivered: DS.t('delivered'), cancelled: DS.t('cancelled')
+      pending: DS.t('pending'), confirmed: DS.t('preparing'), preparing: DS.t('preparing'),
+      handed_to_company: DS.t('handed_to_company'), out_for_delivery: DS.t('out_for_delivery'),
+      delivering: DS.t('out_for_delivery'), delivered: DS.t('delivered'), cancelled: DS.t('cancelled')
     };
     return map[status] || status;
   }
 
   /* ───────────────────────────── API ───────────────────────────── */
+  /* CLEAN SLATE builder — kept for Settings → Reset demo database. */
+  function cleanSlate() {
+    var db = seed();
+    /* Keep every default demo account, the 36-product catalogue, the four
+       stores and the delivery companies. Wipe the noisy test data only. */
+    var KEEP = ['admin', 'dina', 'amal', 'fatma', 'nada', 'basmala',
+      'caznova', 'smozy', 'bnsheikh', 'mastore',
+      'ca_cashier', 'sm_cashier', 'bn_cashier', 'ma_cashier', 'caznova_driver',
+      'talqa', 'hala', 'ahla', 'customer', 'ahmed', 'mostafa'];
+    db.users = (db.users || []).filter(function (u) { return KEEP.indexOf(u.username) > -1; });
+    db.orders = [];
+    db.sales = [];
+    db.invoices = [];
+    db.payments = [];
+    db.applications = [];
+    db.audit_logs = [];
+    db.chats = [];
+    db.reviews = [];
+    /* Clear the merchandising counters that the test orders inflated. */
+    (db.products || []).forEach(function (p) {
+      p.sold = 0;
+      p.review_count = 0;
+      p.updated_at = nowISO();
+    });
+    db.created_at = nowISO();
+    return db;
+  }
+
   DS.data = {
     KEY: KEY,
     WHATSAPP: WHATSAPP,
@@ -1769,6 +2551,14 @@
     isStoreOpen: isStoreOpen,
     nextOpenLabel: nextOpenLabel,
     driverForOrder: driverForOrder,
+    customerUserForOrder: customerUserForOrder,
+    monitorDriverRoom: monitorDriverRoom,
+    isDeliveryRole: isDeliveryRole,
+    isCompanyOwner: isCompanyOwner,
+    isSubDriver: isSubDriver,
+    isRider: isRider,
+    canTransitionForUser: canTransitionForUser,
+    companyDrivers: companyDrivers,
     orderHasTenant: orderHasTenant,
     userById: userById,
     userByUsername: userByUsername,
@@ -1779,6 +2569,29 @@
     visibleProducts: visibleProducts,
     visibleOrders: visibleOrders,
     visibleInvoices: visibleInvoices,
+    get discounts() { return DB.discounts || []; },
+    findDiscount: findDiscount,
+    validateDiscount: validateDiscount,
+    addDiscount: addDiscount,
+    saveDiscount: saveDiscount,
+    deleteDiscount: deleteDiscount,
+    consumeDiscount: consumeDiscount,
+    get reviews() { return DB.reviews || []; },
+    reviewsFor: reviewsFor,
+    ratingFor: ratingFor,
+    addReview: addReview,
+    updateReview: updateReview,
+    deleteReview: deleteReview,
+    addressesFor: addressesFor,
+    saveAddress: saveAddress,
+    deleteAddress: deleteAddress,
+    freeDelivery: freeDelivery,
+    saveFreeDelivery: saveFreeDelivery,
+    freeDeliveryFee: freeDeliveryFee,
+    storeSale: storeSale,
+    saveStoreSale: saveStoreSale,
+    storeSaleAmount: storeSaleAmount,
+    canTransition: canTransition,
     ordersByTenant: ordersByTenant,
     productsByTenant: productsByTenant,
     customers: customers,
@@ -1802,6 +2615,9 @@
     nextOrderNo: nextOrderNo,
     createOrder: createOrder,
     updateOrderStatus: updateOrderStatus,
+    assignOrder: assignOrder,
+    unassignOrder: unassignOrder,
+    updateOrder: updateOrder,
     addInvoice: addInvoice,
     saveCompany: saveCompany,
     saveJob: saveJob,
@@ -1836,8 +2652,14 @@
       return DS.url(src);
     },
     reset: function () {
+      /* CLEAN SLATE — admin + caznova only, the 36 default products,
+         and empty orders / chats / sales arrays. */
       try { localStorage.removeItem(KEY); } catch (e) {}
-      DB = seed();
+      try {
+        if (DS.firebase && DS.firebase.clearRemoteData) DS.firebase.clearRemoteData();
+      } catch (e) {}
+      try { localStorage.removeItem('ds_cart'); localStorage.removeItem('ds_promo'); } catch (e) {}
+      DB = cleanSlate();
       save(DB);
       location.reload();
     }

@@ -13,16 +13,20 @@
   var LS_GEO = 'ds_geo';
   var LS_ORDERS = 'ds_order_status';
   var STAGES = [
-    { k: 'preparing', ar: 'قيد التحضير', en: 'Preparing', ic: '👨‍🍳', pct: 15 },
-    { k: 'ready', ar: 'جاهز للتوصيل', en: 'Ready', ic: '📦', pct: 35 },
-    { k: 'on_way', ar: 'في الطريق إليك', en: 'On the way', ic: '🚚', pct: 70 },
-    { k: 'delivered', ar: 'تم التسليم', en: 'Delivered', ic: '✅', pct: 100 }
+    { k: 'preparing', ar: 'قيد التحضير', en: 'Preparing', icon: 'clock', ic: '👨‍🍳', pct: 15 },
+    { k: 'ready', ar: 'جاهز للتوصيل', en: 'Ready', icon: 'box', ic: '📦', pct: 35 },
+    { k: 'on_way', ar: 'في الطريق إليك', en: 'On the way', icon: 'bike', ic: '🚚', pct: 70 },
+    { k: 'delivered', ar: 'تم التسليم', en: 'Delivered', icon: 'checkCircle', ic: '✅', pct: 100 }
   ];
   var ORDER = STAGES.map(function (s) { return s.k; });
 
+  function svgIcon(name, cls) {
+    return (window.DS && DS.icon) ? DS.icon(name, cls) : '';
+  }
+
   function ls(k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
   function ss(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
-  function user() { return ls('cz_user', null) || {}; }
+  function user() { return (window.DS && DS.session && DS.session()) || ls('cz_user', null) || {}; }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 
   /* ─── styles (injected once) ─── */
@@ -42,6 +46,7 @@
 .dsg-benefits{display:flex;flex-direction:column;gap:10px;text-align:start;margin-bottom:22px}\
 .dsg-benefit{display:flex;align-items:center;gap:11px;font-size:13px;color:#C9C9CF;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:11px 13px}\
 .dsg-benefit b{color:#82FF1F}\
+.dsg-benefit svg{width:18px;height:18px;color:#82FF1F;flex-shrink:0}\
 .dsg-actions{display:flex;gap:10px}\
 .dsg-btn{flex:1;border:none;border-radius:13px;padding:14px;font-size:14px;font-weight:900;font-family:inherit;cursor:pointer;transition:.18s}\
 .dsg-btn.allow{background:#82FF1F;color:#0A0A0B}\
@@ -62,6 +67,10 @@
 .dst-msg-btn:hover{background:#82FF1F;color:#0A0A0B}\
 .dst-moto-bubble{width:38px;height:38px;border-radius:50%;background:#82FF1F;border:3px solid #0A0A0B;display:grid;place-items:center;box-shadow:0 0 0 6px rgba(130,255,31,.16),0 8px 20px rgba(0,0,0,.55);overflow:hidden}\
 .dst-moto-bubble img{width:27px;height:27px;object-fit:contain;display:block}\
+.dst-moto-bubble svg{width:21px;height:21px;color:#0A0A0B}\
+.dst-house-pin svg{width:19px;height:19px;color:#2563EB}\
+.dst-dot svg{width:17px;height:17px}\
+.dsg-ic svg{width:34px;height:34px;color:#82FF1F}\
 .dst-moto-bubble.fallback{font-size:20px;color:#0A0A0B}\
 .dst-house-pin{width:38px;height:38px;border-radius:50%;background:#fff;border:3px solid #60A5FA;display:grid;place-items:center;font-size:19px;box-shadow:0 0 0 6px rgba(96,165,250,.15),0 8px 20px rgba(0,0,0,.55)}\
 .dst-track{display:flex;flex-direction:column;gap:0}\
@@ -89,16 +98,16 @@
     injectCSS();
     var existing = document.getElementById('dsgBg');
     if (existing) { existing.classList.add('open'); return; }
-    var isDriver = role === 'delivery';
+    var isDriver = role === 'delivery' || role === 'driver';
     var benefits = isDriver
-      ? [['📍', 'تحديث موقعك <b>لحظياً</b> لشركة التوصيل'], ['🗺️', 'عرض <b>مسار الطلب</b> على الخريطة'], ['🔔', 'إشعار العميل عند <b>الاقتراب</b>']]
-      : [['📦', 'تتبّع طلبك <b>خطوة بخطوة</b>'], ['🚚', 'شوف المندوب على <b>الخريطة</b>'], ['⏱️', 'وقت وصول <b>دقيق</b> ومحدّث']];
+      ? [['mapPin', 'تحديث موقعك <b>لحظياً</b> لشركة التوصيل'], ['navigation', 'عرض <b>مسار الطلب</b> على الخريطة'], ['bell', 'إشعار العميل عند <b>الاقتراب</b>']]
+      : [['box', 'تتبّع طلبك <b>خطوة بخطوة</b>'], ['bike', 'شوف المندوب على <b>الخريطة</b>'], ['clock', 'وقت وصول <b>دقيق</b> ومحدّث']];
     var bg = document.createElement('div'); bg.className = 'dsg-bg'; bg.id = 'dsgBg';
     bg.innerHTML = '<div class="dsg-card">' +
-      '<div class="dsg-ic">📍</div>' +
+      '<div class="dsg-ic">' + svgIcon('mapPin') + '</div>' +
       '<h3>' + (isDriver ? 'تفعيل تتبّع الموقع' : 'فعّل تتبّع طلبك') + '</h3>' +
       '<p>نحتاج صلاحية الوصول لموقعك عشان ' + (isDriver ? 'نوصل الطلبات بدقة' : 'نتابع طلبك لحظة بلحظة') + '. موقعك محمي ومش بنشاركه مع حد.</p>' +
-      '<div class="dsg-benefits">' + benefits.map(function (b) { return '<div class="dsg-benefit"><span>' + b[0] + '</span><span>' + b[1] + '</span></div>'; }).join('') + '</div>' +
+      '<div class="dsg-benefits">' + benefits.map(function (b) { return '<div class="dsg-benefit"><span>' + svgIcon(b[0]) + '</span><span>' + b[1] + '</span></div>'; }).join('') + '</div>' +
       '<div class="dsg-actions"><button class="dsg-btn deny" id="dsgDeny">لاحقاً</button><button class="dsg-btn allow" id="dsgAllow">السماح بالموقع</button></div>' +
       '<div class="dsg-status" id="dsgStatus"></div>' +
       '</div>';
@@ -141,6 +150,34 @@
 
   function getLocation() { return ls(LS_GEO, null); }
 
+  /* Ask the browser for location straight away (native permission prompt).
+     Used by the tracking page on mount so the customer never has to hunt
+     for a button. Denials are remembered and never nag the user again.  */
+  function requestLocation(role, onDone) {
+    role = role || (user().role || 'customer');
+    var finish = function (result) { if (typeof onDone === 'function') { try { onDone(result); } catch (e) {} } };
+    if (!navigator.geolocation) { finish({ ok: false, reason: 'unsupported' }); return; }
+    var stored = ls(LS_GEO, null);
+    if (stored && stored.granted) { startWatch(); finish({ ok: true, cached: true, lat: stored.lat, lng: stored.lng }); return; }
+    navigator.geolocation.getCurrentPosition(function (p) {
+      var g = stored || {};
+      g.granted = true; g.denied = false; g.mock = false;
+      g.lat = p.coords.latitude; g.lng = p.coords.longitude; g.acc = p.coords.accuracy;
+      g.role = role; g.ts = Date.now();
+      ss(LS_GEO, g);
+      startWatch();
+      try { window.dispatchEvent(new CustomEvent('ds:location-update')); } catch (e) {}
+      finish({ ok: true, lat: g.lat, lng: g.lng, accuracy: g.acc });
+    }, function (err) {
+      var g = stored || {};
+      g.granted = false;
+      if (err && err.code === 1) g.denied = true; else g.mock = true;
+      g.role = role; g.ts = Date.now();
+      ss(LS_GEO, g);
+      finish({ ok: false, reason: err && err.code === 1 ? 'denied' : 'unavailable' });
+    }, { enableHighAccuracy: true, timeout: 9000, maximumAge: 30000 });
+  }
+
   /* ─── order status pipeline ─── */
   function statusOf(orderId) {
     var all = ls(LS_ORDERS, {});
@@ -171,16 +208,16 @@
     var bg = document.createElement('div'); bg.className = 'dsg-bg'; bg.id = 'dstBg';
     bg.innerHTML = '<div class="dsg-card" style="max-width:440px;text-align:start">' +
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><h3 style="margin:0">تتبّع الطلب</h3><button id="dstClose" style="background:none;border:none;color:#98989F;font-size:22px;cursor:pointer">×</button></div>' +
-      '<p style="text-align:start;margin-bottom:16px">رقم الطلب: <b style="color:#82FF1F">#' + esc(String(orderId).slice(-6)) + '</b> · <span id="dstStage" style="color:#82FF1F;font-weight:800">' + meta.ic + ' ' + meta.ar + '</span></p>' +
+      '<p style="text-align:start;margin-bottom:16px">رقم الطلب: <b style="color:#82FF1F">#' + esc(String(orderId).slice(-6)) + '</b> · <span id="dstStage" style="color:#82FF1F;font-weight:800;display:inline-flex;align-items:center;gap:6px">' + svgIcon(meta.icon) + ' ' + meta.ar + '</span></p>' +
       '<div id="dstBar" style="height:7px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;margin-bottom:20px"><div style="height:100%;width:' + meta.pct + '%;background:linear-gradient(90deg,#82FF1F,#46C400);border-radius:4px;transition:width .6s"></div></div>' +
       '<div class="dst-track" id="dstTrack">' + STAGES.map(function (s) {
         var idx = ORDER.indexOf(s.k), cur = ORDER.indexOf(st.stage);
         var cls = cur >= idx ? 'done' : '';
         if (s.k === st.stage) cls += ' active';
-        return '<div class="dst-step ' + cls + '"><div class="dst-dot">' + s.ic + '</div><div class="dst-info"><b>' + s.ar + '</b></div></div>';
+        return '<div class="dst-step ' + cls + '"><div class="dst-dot">' + svgIcon(s.icon) + '</div><div class="dst-info"><b>' + s.ar + '</b></div></div>';
       }).join('') + '</div>' +
       '<div style="margin-top:20px"><div class="dsg-map" id="dstMap" style="height:220px"><div class="dsg-map-badge">📍 موقع المندوب مباشر</div></div><div id="dstEta" class="dsg-eta" role="status" aria-live="polite">ETA: —</div></div>' +
-      (role === 'delivery'
+      (role === 'delivery' || role === 'driver'
         ? '<div class="dsg-actions" style="margin-top:16px"><button class="dsg-btn deny" id="dstPrev">↩ السابق</button><button class="dsg-btn allow" id="dstNext">الخطوة التالية ←</button></div>'
         : '') +
       '</div>';
@@ -188,7 +225,7 @@
     requestAnimationFrame(function () { bg.classList.add('open'); });
     document.getElementById('dstClose').onclick = function () { bg.classList.remove('open'); setTimeout(function () { bg.remove(); }, 300); };
     bg.addEventListener('click', function (e) { if (e.target === bg) { bg.classList.remove('open'); setTimeout(function () { bg.remove(); }, 300); } });
-    if (role === 'delivery') {
+    if (role === 'delivery' || role === 'driver') {
       document.getElementById('dstNext').onclick = function () { setStatus(orderId, nextStage(statusOf(orderId).stage)); refresh(); };
       document.getElementById('dstPrev').onclick = function () {
         var i = ORDER.indexOf(statusOf(orderId).stage); setStatus(orderId, ORDER[Math.max(i - 1, 0)]); refresh();
@@ -197,7 +234,7 @@
     renderMap(document.getElementById('dstMap'), role);
     function refresh() {
       var s = statusOf(orderId), m = stageMeta(s.stage);
-      document.getElementById('dstStage').textContent = m.ic + ' ' + m.ar;
+      document.getElementById('dstStage').innerHTML = svgIcon(m.icon) + ' ' + m.ar;
       document.getElementById('dstBar').firstChild.style.width = m.pct + '%';
       document.querySelectorAll('#dstTrack .dst-step').forEach(function (el, i) {
         el.className = 'dst-step' + (ORDER.indexOf(s.stage) >= i ? ' done' : '') + (ORDER[i] === s.stage ? ' active' : '');
@@ -219,10 +256,20 @@
     leafletCallbacks.push(cb);
     if (leafletLoading) return;
     leafletLoading = true;
-    var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'; document.head.appendChild(css);
-    var js = document.createElement('script'); js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    /* Vendored Leaflet first (works fully offline); CDN only as a fallback. */
+    var localCss = (window.DS && DS.url) ? DS.url('shared/vendor/leaflet.css') : '../shared/vendor/leaflet.css';
+    var localJs = (window.DS && DS.url) ? DS.url('shared/vendor/leaflet.js') : '../shared/vendor/leaflet.js';
+    var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = localCss; document.head.appendChild(css);
+    var js = document.createElement('script'); js.src = localJs;
     function finish(ok) { leafletLoading = false; leafletCallbacks.splice(0).forEach(function (fn) { try { fn(ok); } catch (e) {} }); }
-    js.onload = function () { finish(true); }; js.onerror = function () { finish(false); };
+    js.onload = function () { finish(true); };
+    js.onerror = function () {
+      var cdn = document.createElement('script');
+      cdn.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      cdn.onload = function () { finish(true); };
+      cdn.onerror = function () { finish(false); };
+      document.head.appendChild(cdn);
+    };
     document.head.appendChild(js);
   }
   function distanceKm(a, b) {
@@ -301,7 +348,7 @@
       if (window.DSOrders && typeof window.DSOrders.all === 'function') {
         var all = window.DSOrders.all() || [];
         if (all.length) {
-          return all.some(function (o) { return o.status === 'delivering'; });
+          return all.some(function (o) { return o.status === 'out_for_delivery'; });
         }
       }
     } catch (e) {}
@@ -309,7 +356,7 @@
       var orders = ls(LS_ORDERS, {}) || {};
       return Object.keys(orders).some(function (id) {
         var stage = orders[id] && orders[id].stage;
-        return stage === 'delivering';
+        return stage === 'out_for_delivery' || stage === 'delivering';
       });
     } catch (e) { return false; }
   }
@@ -352,10 +399,10 @@
         '<b class="dst-live-eta-val">— دقيقة</b>' +
         '<span class="dst-live-dist"></span>' +
       '</div>' +
-      '<button type="button" class="dst-msg-btn">💬 ' + (role === 'delivery' ? 'مراسلة المالك' : 'مراسلة المندوب') + '</button>';
+      '<button type="button" class="dst-msg-btn">💬 ' + (role === 'delivery' || role === 'driver' ? 'مراسلة المالك' : 'مراسلة المندوب') + '</button>';
     el.parentNode.insertBefore(box, el);
     var btn = box.querySelector('.dst-msg-btn');
-    if (btn) btn.addEventListener('click', function () { if (role === 'delivery') openStoreOwnerChat(); else openDriverChat(); });
+    if (btn) btn.addEventListener('click', function () { if (role === 'delivery' || role === 'driver') openStoreOwnerChat(); else openDriverChat(); });
   }
 
   function whenVisible(el, cb) {
@@ -381,6 +428,7 @@
 
   function startSim(el, st, force) {
     if (force) st.force = true;
+    if (!st.force && el && el._dsDelivering) st.force = true;
     if (st.timer) { setMapState(el, st.force); return; }
     if (!st.force && !deliveryActive()) { setMapState(el); return; }
     setMapState(el, st.force);
@@ -435,8 +483,8 @@
     var lat = DST_CENTER[0], lng = DST_CENTER[1];
     /* A demo customer/driver pair inside the city so the route is always visible.
        ~5.3 km apart → a realistic 6-minute delivery window that counts down. */
-    var customer = role === 'delivery' ? [31.1049, 30.9476] : [31.1107, 30.9398];
-    var driver = role === 'delivery' ? [31.1489, 30.9731] : [31.1489, 30.9731];
+    var customer = role === 'delivery' || role === 'driver' ? [31.1049, 30.9476] : [31.1107, 30.9398];
+    var driver = role === 'delivery' || role === 'driver' ? [31.1489, 30.9731] : [31.1489, 30.9731];
     var initialKm = distanceKm(driver, customer);
     ensureLiveUi(el, role);
     setMapState(el);
@@ -460,13 +508,13 @@
             }).addTo(map);
             map._dsTrackingLayers = L.layerGroup().addTo(map);
             if (maps) maps.set(el, map);
-            st = el._dstState = { driver: driver.slice(), customer: customer.slice(), gps: [lat, lng], timer: null };
+            st = el._dstState = { driver: driver.slice(), customer: customer.slice(), gps: [lat, lng], timer: null, force: !!el._dsDelivering };
             map.setView(DST_CENTER, DST_ZOOM);
           } else {
-            if (!st) st = el._dstState = { driver: driver.slice(), customer: customer.slice(), gps: [lat, lng], timer: null };
+            if (!st) st = el._dstState = { driver: driver.slice(), customer: customer.slice(), gps: [lat, lng], timer: null, force: !!el._dsDelivering };
             st.customer = customer.slice();
             /* Only reset the simulated driver when the real GPS position actually changes. */
-            if (role === 'delivery') {
+            if (role === 'delivery' || role === 'driver') {
               if (!st.gps) st.gps = [lat, lng];
               else if (distanceKm(st.gps, [lat, lng]) > 0.05) {
                 st.driver = driver.slice();
@@ -477,19 +525,19 @@
           map._dsTrackingLayers.clearLayers();
           var driverIcon = L.divIcon({
             className: 'dst-driver-marker',
-            html: '<div class="dst-moto-bubble" style="font-size:20px;line-height:1">🛵</div>',
+            html: '<div class="dst-moto-bubble">' + svgIcon('bike') + '</div>',
             iconSize: [40, 40], iconAnchor: [20, 20]
           });
           var customerIcon = L.divIcon({
             className: 'dst-customer-marker',
-            html: '<div class="dst-house-pin">🏠</div>',
+            html: '<div class="dst-house-pin">' + svgIcon('home') + '</div>',
             iconSize: [40, 40], iconAnchor: [20, 20]
           });
           var driverLabel = document.documentElement.lang === 'ar' ? 'المندوب' : 'Driver';
           var customerLabel = document.documentElement.lang === 'ar' ? 'موقعك' : 'You';
           st.driverMarker = L.marker(st.driver, { icon: driverIcon, zIndexOffset: 500 }).bindTooltip(driverLabel, { direction: 'top', offset: [0, -22] }).addTo(map._dsTrackingLayers);
           st.customerMarker = L.marker(st.customer, { icon: customerIcon, zIndexOffset: 400 }).bindTooltip(customerLabel, { direction: 'top', offset: [0, -22] }).addTo(map._dsTrackingLayers);
-          st.line = L.polyline([st.driver, st.customer], { color: '#82FF1F', weight: 4, opacity: .9, dashArray: '9 8', lineCap: 'round' }).addTo(map._dsTrackingLayers);
+          st.line = L.polyline([st.driver, st.customer], { color: (document.body.classList.contains('saleor-store') || document.body.classList.contains('saleor-checkout')) ? '#A8D400' : '#82FF1F', weight: 4, opacity: .9, dashArray: '9 8', lineCap: 'round' }).addTo(map._dsTrackingLayers);
           var km = distanceKm(st.driver, st.customer);
           /* Product rule: 1 km ≈ 1 minute. */
           setEta(el, Math.max(1, Math.ceil(km)), km);
@@ -508,26 +556,27 @@
     c.width = r.width || 400; c.height = r.height || 220;
     el.appendChild(c);
     var x = c.getContext('2d'), W = c.width, H = c.height;
-    x.fillStyle = '#0E0E11'; x.fillRect(0, 0, W, H);
-    x.strokeStyle = 'rgba(255,255,255,.05)'; x.lineWidth = 1;
+    var light = document.body.classList.contains('saleor-store') || document.body.classList.contains('saleor-checkout');
+    x.fillStyle = light ? '#F2F2F2' : '#0E0E11'; x.fillRect(0, 0, W, H);
+    x.strokeStyle = light ? 'rgba(17,17,17,.07)' : 'rgba(255,255,255,.05)'; x.lineWidth = 1;
     for (var i = 0; i < W; i += 40) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, H); x.stroke(); }
     for (var j = 0; j < H; j += 40) { x.beginPath(); x.moveTo(0, j); x.lineTo(W, j); x.stroke(); }
     var a = { x: W * 0.2, y: H * 0.75 }, b = { x: W * 0.8, y: H * 0.3 };
-    x.strokeStyle = '#82FF1F'; x.lineWidth = 3; x.setLineDash([9, 7]);
+    x.strokeStyle = light ? '#A8D400' : '#82FF1F'; x.lineWidth = 3; x.setLineDash([9, 7]);
     x.beginPath(); x.moveTo(a.x, a.y); x.quadraticCurveTo(W * 0.5, H * 0.2, b.x, b.y); x.stroke(); x.setLineDash([]);
     function dot(p, col, lbl) {
       x.fillStyle = col; x.beginPath(); x.arc(p.x, p.y, 9, 0, 7); x.fill();
       x.fillStyle = '#0A0A0B'; x.font = 'bold 10px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(lbl, p.x, p.y);
     }
-    dot(a, '#82FF1F', '🛵'); dot(b, '#60A5FA', '🏠');
-    x.fillStyle = 'rgba(255,255,255,.82)'; x.font = 'bold 11px sans-serif'; x.textAlign = 'start';
+    dot(a, light ? '#CCFF00' : '#82FF1F', 'D'); dot(b, '#60A5FA', 'C');
+    x.fillStyle = light ? 'rgba(17,17,17,.82)' : 'rgba(255,255,255,.82)'; x.font = 'bold 11px sans-serif'; x.textAlign = 'start';
     x.fillText('Driver / المندوب', a.x + 14, a.y); x.fillText('Customer / العميل', b.x + 14, b.y);
-    x.fillStyle = 'rgba(255,255,255,.5)'; x.font = '11px sans-serif'; x.textAlign = 'start';
+    x.fillStyle = light ? 'rgba(17,17,17,.50)' : 'rgba(255,255,255,.5)'; x.font = '11px sans-serif'; x.textAlign = 'start';
     x.fillText(lat.toFixed(4) + ', ' + lng.toFixed(4), 12, H - 12);
   }
 
   window.DSTrack = {
-    askPermission: askPermission, getLocation: getLocation, watch: startWatch,
+    askPermission: askPermission, requestLocation: requestLocation, getLocation: getLocation, watch: startWatch,
     statusOf: statusOf, setStatus: setStatus, nextStage: nextStage, stageMeta: stageMeta,
     openTrackingModal: openTrackingModal, renderMap: renderMap, stages: STAGES, order: ORDER,
     getEta: getEta, messageDriver: openDriverChat, messageCustomer: openCustomerChat,
@@ -542,7 +591,7 @@
     var DSref = window.DS || {};
     var data = DSref.data || {};
     var active = (data.orders || []).filter(function (o) {
-      return ['pending', 'confirmed', 'preparing', 'delivering'].indexOf(o.status) > -1;
+      return ['pending', 'preparing', 'handed_to_company', 'out_for_delivery'].indexOf(o.status) > -1;
     });
     var drivers = active.map(function (o, i) {
       var tn = (data.tenantById ? data.tenantById(o.tenant_id) : null) || {};
@@ -556,7 +605,7 @@
         dest: dest,
         pos: [start[0] + (dest[0] - start[0]) * f, start[1] + (dest[1] - start[1]) * f],
         rider: o.driver_name || (o.delivery_company_name || 'Rider'),
-        delivered: o.status === 'delivering'
+        delivered: o.status === 'out_for_delivery'
       };
     });
 
@@ -619,7 +668,7 @@
           drivers.forEach(function (d, i) {
             var ico = L.divIcon({
               className: 'dsf-driver',
-              html: '<div class="dst-moto-bubble" style="font-size:18px;line-height:1;border-color:' + colors[i % 3] + '">🛵</div>',
+              html: '<div class="dst-moto-bubble" style="border-color:' + colors[i % 3] + '">' + svgIcon('bike') + '</div>',
               iconSize: [38, 38], iconAnchor: [19, 19]
             });
             markers.push(L.marker(d.pos, { icon: ico, zIndexOffset: 500 + i })
@@ -683,7 +732,7 @@
           ctx.fillStyle = colors[i % 3];
           ctx.beginPath(); ctx.arc(a.x, a.y, 8, 0, 7); ctx.fill();
           ctx.fillStyle = '#0A0A0B'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-          ctx.fillText('🛵', a.x, a.y);
+          ctx.fillText('D', a.x, a.y);
         });
         if (!drivers.length) {
           ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.font = 'bold 13px sans-serif';
@@ -719,7 +768,11 @@
         if (opts.height) { host.style.height = opts.height + 'px'; host.style.minHeight = opts.height + 'px'; }
         host.classList.add('map-card');
         var user = window.DS.session ? window.DS.session() : null;
-        var role = opts.role || ((user && user.role === 'delivery') ? 'delivery' : 'customer');
+        var role = opts.role || ((user && (user.role === 'delivery' || user.role === 'driver')) ? 'delivery' : 'customer');
+        var delivering = opts.delivering != null
+          ? !!opts.delivering
+          : !!(opts.order && opts.order.status === 'out_for_delivery');
+        host._dsDelivering = delivering;
         renderMap(host, role);
         return {
           element: host,
@@ -728,6 +781,7 @@
             if (!host._dstState) renderMap(host, role);
             var st = host._dstState;
             if (!st) return false;
+            host._dsDelivering = true;
             startSim(host, st, true);
             setMapState(host, true);
             return true;
@@ -738,6 +792,8 @@
           }
         };
       },
+      askLocation: requestLocation,
+      requestLocation: requestLocation,
       simulate: function (host) {
         if (!host) return false;
         var st = host._dstState;

@@ -71,7 +71,7 @@
     var body = '<div class="field-grid">' +
       '<div class="field"><label>' + esc(t('name')) + ' *</label><input class="input" id="aName" value="' + esc(u ? u.name : '') + '"></div>' +
       '<div class="field"><label>' + esc(t('username')) + ' *</label><input class="input" id="aUser" value="' + esc(u ? u.username : '') + '" style="direction:ltr"' + (isNew ? '' : ' readonly') + '></div>' +
-      '<div class="field"><label>' + esc(t('password')) + ' *</label><input class="input" id="aPass" value="' + esc(u ? u.password || '' : '') + '" style="direction:ltr" placeholder="••••••••"></div>' +
+      '<div class="field"><label>' + esc(t('password')) + (isNew ? ' *' : '') + '</label><input class="input" id="aPass" value="" autocomplete="new-password" style="direction:ltr" placeholder="' + (isNew ? '' : esc(DS.lang() === 'en' ? 'Leave blank to keep current' : 'اتركه فارغًا للإبقاء على الحالي')) + '"></div>' +
       '<div class="field"><label>Email</label><input class="input" id="aEmail" value="' + esc(u ? (u.email || '') : '') + '" style="direction:ltr"></div>' +
       '</div><div class="field" style="margin-top:14px"><label>' + esc(t('permissions')) + '</label><p class="hint" style="margin-bottom:8px">' + esc(t('permissionsHint')) + '</p>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">' + DS.data.PERMISSIONS_ALL.map(function (p) {
@@ -83,7 +83,7 @@
         var name = root.querySelector('#aName').value.trim();
         var username = root.querySelector('#aUser').value.trim().toLowerCase();
         var pass = root.querySelector('#aPass').value;
-        if (!name || !username || !pass) { DS.toast(t('required'), 'error'); return false; }
+        if (!name || !username || (isNew && !pass)) { DS.toast(t('required'), 'error'); return false; }
         var selected = DS.$$('input[type=checkbox]:checked', root).map(function (c) { return c.value; });
         var email = root.querySelector('#aEmail').value.trim();
         if (isNew) {

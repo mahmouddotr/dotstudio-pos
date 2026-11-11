@@ -5,6 +5,7 @@
   var t = DS.t, esc = DS.esc, icon = DS.icon, money = DS.money, url = DS.url;
   var user = DS.session();
   if (!user) return;
+  document.body.classList.add('saleor-store');
 
   var page = DS.shell.mount({
     roles: ['customer'],
@@ -20,12 +21,17 @@
   if (!page) return;
 
   var params = new URLSearchParams(location.search);
-  var state = { id: params.get('order') || '', gps: null };
+  var state = { id: params.get('order') || '', gps: null, geoAsked: false };
+
+  /* ── Unified customer header (same chrome as the storefront) ───── */
+  function headerMarkup(active) {
+    return DS.shell.customerHeader(active === 'tracking' ? 'tracking' : active || 'tracking', { search: false });
+  }
 
   function myOrders() {
     return DS.data.visibleOrders(user).filter(function (o) { return o.status !== 'cancelled'; }).sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
   }
-  function activeOrders() { return myOrders().filter(function (o) { return ['pending', 'confirmed', 'preparing', 'delivering'].indexOf(o.status) > -1; }); }
+  function activeOrders() { return myOrders().filter(function (o) { return DS.isActiveOrderStatus(o.status); }); }
   function selected() {
     var list = activeOrders().length ? activeOrders() : myOrders();
     if (!list.length) return null;
@@ -47,17 +53,60 @@
     }).join('') + '</div>';
   }
 
+  /* ── TASK 5 · LIVE ORDER TIMELINE ─────────────────────────────
+     Four customer-facing phases with a lemon glow on the active one:
+     Preparing → Picked Up → On the Way → Delivered. */
+  function statusStepper(o) {
+    var EN = DS.lang() === 'en';
+    var phases = [
+      { key: 'preparing', statuses: ['pending', 'confirmed', 'preparing'], icon: 'package', ar: 'قيد التحضير', en: 'Preparing' },
+      { key: 'picked_up', statuses: ['handed_to_company'], icon: 'box', ar: 'تم الاستلام', en: 'Picked Up' },
+      { key: 'on_the_way', statuses: ['out_for_delivery', 'delivering'], icon: 'bike', ar: 'في الطريق', en: 'On the Way' },
+      { key: 'delivered', statuses: ['delivered'], icon: 'home', ar: 'تم التسليم', en: 'Delivered' }
+    ];
+    var idx = 0;
+    if (o.status === 'cancelled') idx = -1;
+    else if (o.status === 'delivered') idx = 3;
+    else if (o.status === 'out_for_delivery' || o.status === 'delivering') idx = 2;
+    else if (o.status === 'handed_to_company') idx = 1;
+    else idx = 0;
+
+    var events = o.timeline || [];
+    var progress = idx <= 0 ? 0 : (idx / 3) * 100;
+
+    return '<div class="ord-timeline' + (o.status === 'cancelled' ? ' is-cancelled' : '') + '" style="--tl-progress:' + progress + '%" aria-label="' + esc(t('timeline')) + '">' +
+      '<span class="ord-timeline-rail" aria-hidden="true"><span class="ord-timeline-fill"></span></span>' +
+      phases.map(function (p, i) {
+        var ev = events.filter(function (e) { return p.statuses.indexOf(e.status) > -1; })[0];
+        var done = idx > i;
+        var current = idx === i;
+        var complete = o.status === 'delivered' && i === 3;
+        var cls = 'ord-phase' + (done ? ' is-done' : '') + (current ? ' is-current' : '') + (complete ? ' is-complete' : '');
+        return '<div class="' + cls + '">' +
+          '<span class="ord-phase-dot">' + icon(done || complete ? 'check' : p.icon) + '</span>' +
+          '<b class="ord-phase-label">' + esc(EN ? p.en : p.ar) + '</b>' +
+          '<small class="ord-phase-time">' + (ev ? esc(DS.datetime(ev.at)) : (current ? esc(EN ? 'Now' : 'الآن') : '—')) + '</small>' +
+        '</div>';
+      }).join('') +
+    '</div>';
+  }
+
   function render() {
     var o = selected();
     var actives = activeOrders();
     if (!o) {
-      page.setContent(DS.empty({ icon: 'truck', title: t('noActiveOrder'), text: t('noActiveOrderText'), cta: { label: t('browseStore'), icon: 'store', onclick: "location.href='" + url('customer/storefront.html') + "'" } }));
+      page.setContent(headerMarkup('tracking') + '<div class="ct-page">' +
+        DS.empty({ icon: 'truck', title: t('noActiveOrder'), text: t('noActiveOrderText'), cta: { label: t('browseStore'), icon: 'store', onclick: "location.href='" + url('customer/storefront.html') + "'" } }) +
+        '</div>');
       return;
     }
     state.id = o.id;
     var tn = DS.data.tenantById(o.tenant_id) || {};
     var meta = DS.statusMeta(o.status);
     var company = (DS.data.companies || []).filter(function (c) { return c.id === o.delivery_company_id; })[0];
+    var rider = DS.data.driverForOrder ? DS.data.driverForOrder(o) : null;
+    var riderName = rider ? DS.loc(rider, 'name') : (o.driver_name || '');
+    var companyName = company ? DS.loc(company, 'name') : (o.delivery_company_name || '');
 
     var selector = actives.length > 1 ? '<div class="card"><div class="card-body" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">' +
       '<span style="font-size:12px;color:var(--text-tertiary)">' + esc(t('liveOrders')) + '</span>' +
@@ -65,24 +114,45 @@
         return '<option value="' + esc(a.id) + '"' + (a.id === o.id ? ' selected' : '') + '>' + esc(a.order_no) + ' · ' + esc(DS.statusMeta(a.status).label) + ' · ' + esc(a.customer ? DS.loc(a.customer, 'name') : '') + '</option>';
       }).join('') + '</select></div></div>' : '';
 
+    var EN = DS.lang() === 'en';
+    var driverCard = (riderName || companyName)
+      ? '<div class="card trk-driver-card"><div class="card-body trk-driver">' +
+          '<span class="trk-driver-avatar">' +
+            (rider && DS.avatarUrl ? '<img src="' + esc(DS.avatarUrl(rider)) + '" alt="">' : icon('bike')) +
+          '</span>' +
+          '<span class="trk-driver-copy">' +
+            '<i>' + esc(EN ? 'Delivery rider' : 'المندوب') + '</i>' +
+            '<b>' + esc(riderName || companyName) + '</b>' +
+            (rider && rider.phone ? '<small dir="ltr" style="text-align:start">' + esc(rider.phone) + '</small>' : '') +
+            (companyName ? '<small>' + esc(companyName) + '</small>' : '') +
+          '</span>' +
+          '<span class="trk-driver-live"><i></i>' + esc(EN ? 'Live' : 'لحظي') + '</span>' +
+        '</div>' +
+        (rider && rider.phone ? '<div class="card-body" style="padding-top:0"><a class="btn btn-primary" style="width:100%" href="tel:' + esc(rider.phone) + '">' + icon('phone') + esc(t('callDriver')) + '</a></div>' : '') +
+        '</div>'
+      : '';
+
     var left = '<div>' +
-      '<div class="tracking-summary"><div class="ic">' + icon(o.status === 'delivering' ? 'bike' : meta.icon) + '</div>' +
-        '<div class="t"><b>' + esc(o.status === 'delivering' ? t('driverOnWay') : o.status === 'delivered' ? t('orderDelivered') : meta.label) + '</b>' +
-          '<span>' + esc(o.order_no) + ' · ' + esc(tn.name || '') + ' · ' + esc(o.driver_id && DS.data.userById(o.driver_id) ? DS.loc(DS.data.userById(o.driver_id), 'name') : (o.driver_name || t('driver'))) + '</span></div>' +
+      '<div class="tracking-summary"><div class="ic">' + icon(o.status === 'out_for_delivery' ? 'bike' : meta.icon) + '</div>' +
+        '<div class="t"><b>' + esc(o.status === 'out_for_delivery' ? t('driverOnWay') : o.status === 'delivered' ? t('orderDelivered') : meta.label) + '</b>' +
+          '<span>' + esc(o.order_no) + ' · ' + esc(tn.name || '') + ' · ' + esc(companyName) + (riderName ? ' · ' + esc(riderName) : '') + '</span></div>' +
         DS.badge(o.status, meta.label) + '</div>' +
       '<div id="gpsHost"></div>' +
       '<div class="trk-actions">' +
-        (o.status === 'delivering' ? '<button type="button" class="btn btn-primary" data-driver-chat>' + icon('chat') + esc(t('chatWithDriver')) + '</button>' : '') +
-        (['delivered', 'cancelled'].indexOf(o.status) === -1 ? '<button type="button" class="btn btn-secondary" data-simulate>' + icon('bike') + esc(t('simulateDriver')) + '</button>' : '') +
+        (rider && ['delivered', 'cancelled'].indexOf(o.status) === -1 ? '<button type="button" class="btn btn-primary" data-driver-chat>' + icon('chat') + esc(t('chatWithDriver')) + '</button>' : '') +
+        (rider && rider.phone ? '<a class="btn btn-secondary" href="tel:' + esc(rider.phone) + '">' + icon('phone') + esc(t('callDriver')) + '</a>' : '') +
+        '<button type="button" class="btn btn-secondary" data-company-chat>' + icon('truck') + esc(DS.lang() === 'en' ? 'Delivery company' : 'شركة التوصيل') + '</button>' +
       '</div></div>';
 
-    var right = '<div style="display:flex;flex-direction:column;gap:14px">' +
+    var right = '<div class="trk-aside">' +
+      driverCard +
       '<div class="card"><div class="card-head"><div class="section-title">' + icon('receipt') + esc(t('details')) + '</div>' + DS.badge(o.status, meta.label) + '</div><div class="card-body">' +
         '<div class="order-details-grid">' +
           '<div class="order-detail-box"><div class="l">' + esc(t('orderId')) + '</div><div class="v" style="font-family:var(--font-mono);direction:ltr">' + esc(o.order_no) + '</div></div>' +
-          '<div class="order-detail-box"><div class="l">' + esc(t('total')) + '</div><div class="v" style="color:var(--lime)">' + money(o.total) + '</div></div>' +
+          '<div class="order-detail-box"><div class="l">' + esc(t('total')) + '</div><div class="v" style="color:var(--text)">' + money(o.total) + '</div></div>' +
           '<div class="order-detail-box"><div class="l">' + esc(t('paymentMethod')) + '</div><div class="v">' + esc(t(o.payment_method || 'cash')) + '</div></div>' +
-          '<div class="order-detail-box"><div class="l">' + esc(t('deliveryCompany')) + '</div><div class="v">' + esc(company ? DS.loc(company, 'name') : (o.delivery_company_name || t('noCompany'))) + '</div></div>' +
+          '<div class="order-detail-box"><div class="l">' + esc(t('deliveryCompany')) + '</div><div class="v">' + esc(companyName || t('noCompany')) +
+            (riderName ? '<span class="order-detail-rider">' + icon('bike') + ' ' + esc(riderName) + '</span>' : '') + '</div></div>' +
         '</div>' +
         '<div style="margin-top:12px"><div class="l" style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;font-weight:600">' + esc(t('address')) + '</div>' +
           '<div style="font-size:12px;color:var(--text-secondary);margin-top:3px">' + esc(o.customer ? DS.loc(o.customer, 'address') : '—') + '</div></div>' +
@@ -93,7 +163,7 @@
           return '<div class="order-item-row"><img src="' + esc(DS.data.img(it.image)) + '" alt=""><div class="info"><div class="nm">' + esc(DS.lang() === 'en' ? (it.name_en || it.name) : it.name) + '</div><div class="qt">' + it.qty + ' × ' + money(it.price) + '</div></div><div class="pr">' + money(it.qty * it.price) + '</div></div>';
         }).join('') + '</div>' +
         '<div class="cart-summary" style="margin-top:10px"><div class="cart-row"><span>' + esc(t('subtotal')) + '</span><span>' + money(o.subtotal) + '</span></div>' +
-          (o.discount ? '<div class="cart-row"><span>' + esc(t('discount')) + '</span><span style="color:var(--lime)">− ' + money(o.discount) + '</span></div>' : '') +
+          (o.discount ? '<div class="cart-row"><span>' + esc(t('discount')) + '</span><span style="color:var(--success)">− ' + money(o.discount) + '</span></div>' : '') +
           '<div class="cart-row"><span>' + esc(t('delivery')) + '</span><span>' + money(o.delivery_fee) + '</span></div>' +
           '<div class="cart-row total"><span>' + esc(t('total')) + '</span><span class="num">' + money(o.total) + '</span></div></div>' +
       '</div></div>' +
@@ -103,7 +173,21 @@
         '<button class="btn btn-secondary" style="flex:1" data-details="' + esc(o.id) + '">' + icon('eye') + esc(t('details')) + '</button></div></div>' +
     '</div>';
 
-    page.setContent(selector + '<div class="tracking-grid">' + left + right + '</div>');
+    var head = '<div class="ct-page-head"><div>' +
+      '<div class="ct-eyebrow">' + icon('mapPin') + esc(t('tracking')) + '</div>' +
+      '<h1 class="ct-title">' + esc(t('trackingTitle')) + '</h1>' +
+      '<p class="ct-sub">' + esc(DS.lang() === 'en'
+        ? 'Follow your rider live on the map — updated every 10 seconds.'
+        : 'تابع المندوب لحظة بلحظة على الخريطة — تحديث كل 10 ثوانٍ.') + '</p>' +
+      '</div><div class="ct-page-actions">' +
+        '<button type="button" class="btn btn-secondary" data-refresh>' + icon('refresh') + esc(t('refresh')) + '</button>' +
+        '<a class="btn btn-primary" href="' + url('customer/my-orders.html') + '">' + icon('orders') + esc(t('myOrders')) + '</a>' +
+      '</div></div>';
+
+    page.setContent(headerMarkup('tracking') + '<div class="ct-page">' + head +
+      statusStepper(o) +
+      (selector ? '<div style="margin:14px 0">' + selector + '</div>' : '') +
+      '<div class="tracking-grid">' + left + right + '</div></div>');
     bind(o);
 
     var host = page.body.querySelector('#gpsHost');
@@ -111,18 +195,31 @@
       if (state.gps && state.gps.stop) state.gps.stop();
       state.gps = DS.gps.mount(host, {
         order: o,
+        delivering: o.status === 'out_for_delivery',
         height: 380,
-        baseEta: o.status === 'delivering' ? 12 : 20,
+        baseEta: o.status === 'out_for_delivery' ? 12 : 20,
         storeLabel: tn.name || t('store'),
         customerLabel: o.customer ? DS.loc(o.customer, 'name') : t('customerLabel'),
         onDelivered: function () {
-          if (o.status === 'delivering') {
-            DS.data.updateOrderStatus(o.id, 'delivered', { driver_name: o.driver_name });
+          /* The rider confirms delivery with a proof photo — the customer view
+             only celebrates that the rider has arrived. */
+          if (o.status === 'out_for_delivery') {
             DS.toast(t('orderDeliveredMsg'), 'success');
             setTimeout(render, 500);
           }
         }
       });
+    }
+
+    /* Auto-request the browser's location permission once per visit. */
+    if (!state.geoAsked && DS.gps && (DS.gps.askLocation || DS.gps.requestLocation)) {
+      state.geoAsked = true;
+      var ask = DS.gps.askLocation || DS.gps.requestLocation;
+      try {
+        ask('customer', function (res) {
+          if (res && res.ok && state.gps && state.gps.refresh) state.gps.refresh();
+        });
+      } catch (e) {}
     }
   }
 
@@ -138,25 +235,38 @@
       else DS.toast(t('chatDriverNoOrder'), 'warning');
     });
 
-    var simBtn = page.body.querySelector('[data-simulate]');
-    if (simBtn) simBtn.addEventListener('click', function () {
-      var host = page.body.querySelector('#gpsHost');
-      var ok = state.gps && state.gps.simulate ? state.gps.simulate()
-        : (DS.gps && DS.gps.simulate ? DS.gps.simulate(host) : false);
-      DS.toast(ok
-        ? (DS.lang() === 'en' ? 'Simulating rider movement…' : 'جارٍ محاكاة حركة المندوب…')
-        : (DS.lang() === 'en' ? 'Map is still loading, try again.' : 'الخريطة قيد التحميل، جرّب مرة أخرى.'),
-        ok ? 'success' : 'warning');
-      simBtn.classList.toggle('is-active', !!ok);
+    var companyBtn = page.body.querySelector('[data-company-chat]');
+    if (companyBtn) companyBtn.addEventListener('click', function () {
+      if (DS.openCompanyChat) DS.openCompanyChat(o);
+      else DS.toast(t('noCompany'), 'warning');
+    });
+
+    var refreshBtn = page.body.querySelector('[data-refresh]');
+    if (refreshBtn) refreshBtn.addEventListener('click', function () {
+      var now = selected();
+      if (now) { state.id = now.id; }
+      render(); DS.toast(t('updated'), 'success');
     });
   }
 
-  var refresh = page.root.querySelector('[data-refresh]');
-  if (refresh) refresh.addEventListener('click', function () {
-    var now = selected();
-    if (now) { state.id = now.id; }
-    render(); DS.toast(t('updated'), 'success');
-  });
+  /* Floating support sheet: store owner · rider · platform team. */
+  function mountSupportFab() {
+    if (document.querySelector('[data-support-fab]')) return;
+    var EN = DS.lang() === 'en';
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'sf-support-fab';
+    b.setAttribute('data-support-fab', '');
+    b.setAttribute('aria-label', EN ? 'Support' : 'الدعم');
+    b.innerHTML = (DS.icons && DS.icons.lifebuoy ? icon('lifebuoy') : icon('chat')) +
+      '<span>' + esc(EN ? 'Support' : 'الدعم') + '</span>';
+    b.addEventListener('click', function () {
+      var o = selected();
+      if (DS.openSupportHub) DS.openSupportHub({ tenantId: o ? o.tenant_id : '', order: o });
+      else location.href = url('auth/public-chat.html');
+    });
+    document.body.appendChild(b);
+  }
 
   window.addEventListener('ds:order-updated', function (e) {
     if (!e.detail || !e.detail.id || e.detail.id === state.id) {
@@ -165,5 +275,6 @@
   });
   window.addEventListener('ds:data-changed', function () { /* local writes already re-render */ });
 
+  mountSupportFab();
   render();
 })();

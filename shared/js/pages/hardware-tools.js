@@ -2,8 +2,7 @@
    DotStudio® POS — System Tools
    One place for the physical shop hardware:
    barcode scanner · 60×40mm label designer · thermal invoice settings.
-   Shared by admin, owner and cashier.
-   ═══════════════════════════════════════════════════════════════ */
+   Shared by admin and owner. */
 (function () {
   'use strict';
   var DS = window.DS;
@@ -13,7 +12,7 @@
   var EN = DS.lang() === 'en';
 
   var page = DS.shell.mount({
-    roles: ['superadmin', 'subadmin', 'owner', 'cashier'],
+    roles: ['superadmin', 'subadmin', 'owner'],
     active: 'systemTools',
     title: t('systemTools'),
     eyebrow: EN ? 'Hardware' : 'الهاردوير',
@@ -114,7 +113,7 @@
       : { ok: false, name: EN ? 'Unknown barcode' : 'باركود غير معروف', code: code, price: 0, time: timeNow() });
     if (state.scans.length > 40) state.scans.length = 40;
     if (p) DS.toast((EN ? 'Scanned: ' : 'تم مسح: ') + pname(p) + ' · ' + money(p.price), 'success');
-    else DS.toast((EN ? 'Barcode not found: ' : 'الباركود غير موجود: ') + code, 'danger');
+    else DS.toast((EN ? 'Barcode not found: ' : 'الباركود غير موجود: ') + code, 'error');
     refreshLog();
     var input = page.body.querySelector('[data-scan-input]');
     if (input) { input.value = ''; input.focus(); }

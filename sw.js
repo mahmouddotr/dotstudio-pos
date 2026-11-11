@@ -6,7 +6,7 @@
    ═══════════════════════════════════════════════════════════════ */
 'use strict';
 
-var VERSION = 'dotstudio-pos-v13';
+var VERSION = 'dotstudio-pos-v19';
 var SHELL = [
   './',
   './index.html',
@@ -17,6 +17,7 @@ var SHELL = [
   './shared/css/design-system.css',
   './shared/css/components.css',
   './shared/css/app.css',
+  './shared/css/pos-clean.css',
   './shared/js/core.js',
   './shared/js/data.js',
   './shared/js/shell.js',
@@ -75,7 +76,7 @@ var PAGES = [
   './admin/audit-logs.html', './admin/chats.html', './admin/settings.html', './admin/hardware-tools.html',
   './owner/dashboard.html', './owner/orders.html', './owner/products.html', './owner/customers.html',
   './owner/cashiers.html', './owner/delivery-companies.html', './owner/reports.html',
-  './owner/subscriptions.html', './owner/chats.html', './owner/settings.html',
+  './owner/subscriptions.html', './owner/chats.html', './owner/settings.html', './owner/sell.html',
   './cashier/pos.html', './cashier/orders.html', './cashier/invoices.html', './cashier/settings.html',
   './delivery/dashboard.html', './delivery/orders.html', './delivery/tracking.html', './delivery/messages.html',
   './customer/storefront.html', './customer/checkout.html', './customer/my-orders.html', './customer/tracking.html'

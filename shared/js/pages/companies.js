@@ -27,7 +27,7 @@
       var delivered = orders.filter(function (o) { return o.status === 'delivered'; }).length;
       var revenue = DS.data.revenueOf(orders);
       return '<article class="delivery-card card">' +
-        '<div style="display:flex;align-items:flex-start;gap:11px"><div class="delivery-logo">' + (c.emoji || '🛵') + '</div>' +
+        '<div style="display:flex;align-items:flex-start;gap:11px"><div class="delivery-logo">' + icon('truck') + '</div>' +
           '<div class="delivery-info" style="flex:1"><div class="delivery-name">' + esc(DS.lang() === 'en' ? (c.name_en || c.name) : c.name) + ' ' + DS.badge(c.status, t(c.status)) + '</div>' +
             '<div class="delivery-meta">' + esc(DS.lang() === 'en' ? (c.city_en || c.city) : c.city) + ' · ' + esc(c.phone) + '</div></div>' +
           '<button class="btn btn-icon" data-edit="' + esc(c.id) + '">' + icon('edit') + '</button></div>' +
@@ -50,7 +50,7 @@
 
     var stats = '<div class="kpi-grid">' +
       stat(t('delivery-companies'), companies.length, 'truck', 'lime') +
-      stat(t('driver'), DS.data.users.filter(function (u) { return u.role === 'delivery'; }).length, 'bike', 'info') +
+      stat(t('driver'), DS.data.users.filter(function (u) { return DS.data.isDeliveryRole ? DS.data.isDeliveryRole(u) : u.role === 'delivery'; }).length, 'bike', 'info') +
       stat(t('completed'), companies.reduce(function (s, c) { return s + c.completed; }, 0), 'checkCircle', 'green') +
       stat(t('fee'), money(companies.reduce(function (s, c) { return s + c.fee; }, 0) / companies.length), 'wallet', 'purple') + '</div>';
 
@@ -96,7 +96,7 @@
       '<div class="field"><label>' + esc(t('fee')) + ' (EGP)</label><input class="input" id="dFee" type="number" value="' + esc(c ? c.fee : 30) + '"></div>' +
       '<div class="field"><label>' + esc(t('avgTime')) + ' (min)</label><input class="input" id="dAvg" type="number" value="' + esc(c ? c.avg_time : 30) + '"></div>' +
       '<div class="field"><label>' + esc(t('status')) + '</label><select class="select" id="dStatus"><option value="active"' + (!c || c.status === 'active' ? ' selected' : '') + '>' + esc(t('active')) + '</option><option value="inactive"' + (c && c.status === 'inactive' ? ' selected' : '') + '>' + esc(t('inactive')) + '</option></select></div>' +
-      '<div class="field"><label>Emoji</label><input class="input" id="dEmoji" value="' + esc(c ? c.emoji : '🛵') + '"></div>' +
+      '<div class="field"><label>' + esc(DS.lang() === 'en' ? 'Fleet' : 'الأسطول') + '</label><input class="input" value="' + esc(t('deliveryCompanies')) + '" readonly style="opacity:.7"></div>' +
       '</div>';
     DS.modal({
       title: isNew ? t('addCompany') : t('edit'), body: body,
@@ -108,7 +108,7 @@
           phone: root.querySelector('#dPhone').value.trim(), city: root.querySelector('#dCity').value.trim(),
           city_en: root.querySelector('#dCity').value.trim(), fee: Number(root.querySelector('#dFee').value) || 30,
           avg_time: Number(root.querySelector('#dAvg').value) || 30, status: root.querySelector('#dStatus').value,
-          emoji: root.querySelector('#dEmoji').value || '🛵'
+          emoji: c && c.emoji ? c.emoji : '🛵'
         };
         if (c) data.id = c.id;
         DS.data.saveCompany(data);

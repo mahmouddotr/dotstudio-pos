@@ -146,15 +146,57 @@
   };
   DS.store = storage;
 
+  /* ──────────────────────── LOYALTY & REWARDS ────────────────────────
+     Points live next to the signed-in customer profile inside
+     localStorage so every page (storefront, checkout, orders) reads the
+     same balance. 10 EGP spent = 1 point · 100 points = 10 EGP off. */
+  var LOYALTY_KEY = 'ds_loyalty_points';
+  function loyaltyId(user) {
+    user = user || DS.session() || {};
+    return String(user.id || user.username || user.phone || 'guest');
+  }
+  function loyaltyBook() {
+    var raw = storage.get(LOYALTY_KEY, null);
+    return raw && typeof raw === 'object' ? raw : {};
+  }
+  DS.loyalty = {
+    POINTS_PER_REDEEM: 100,
+    REDEEM_VALUE: 10,
+    key: LOYALTY_KEY,
+    get: function (user) {
+      var n = Number(loyaltyBook()[loyaltyId(user)]);
+      return isFinite(n) && n > 0 ? Math.floor(n) : 0;
+    },
+    set: function (user, points) {
+      var book = loyaltyBook();
+      book[loyaltyId(user)] = Math.max(0, Math.floor(Number(points) || 0));
+      storage.set(LOYALTY_KEY, book);
+      return book[loyaltyId(user)];
+    },
+    add: function (user, points) {
+      return DS.loyalty.set(user, DS.loyalty.get(user) + Math.max(0, Math.floor(Number(points) || 0)));
+    },
+    spend: function (user, points) {
+      var cost = Math.max(0, Math.floor(Number(points) || 0));
+      if (cost > DS.loyalty.get(user)) return false;
+      DS.loyalty.set(user, DS.loyalty.get(user) - cost);
+      return true;
+    },
+    earnedFor: function (total) {
+      return Math.max(0, Math.floor((Number(total) || 0) / 10));
+    }
+  };
+
   /* ─────────────────────────────── I18N ────────────────────────────── */
   var I18N = {
     ar: {
       /* nav / roles */
       admin: 'الإدارة', subadmin: 'مشرف', owner: 'صاحب متجر', cashier: 'كاشير', delivery: 'مندوب', customer: 'عميل',
       dashboard: 'لوحة التحكم', overview: 'نظرة عامة', stores: 'المتاجر', products: 'المنتجات', orders: 'الطلبات',
-      invoices: 'الفواتير', customers: 'العملاء', cashiers: 'الكاشير', 'delivery-companies': 'شركات التوصيل',
-      chats: 'المحادثات', messages: 'الرسائل', jobs: 'الوظائف', reports: 'التقارير', subscriptions: 'الاشتراكات',
-      audit: 'سجل النشاط', settings: 'الإعدادات', pos: 'نقطة البيع', storefront: 'المتجر', checkout: 'إتمام الطلب',
+      invoices: 'الفواتير', customers: 'العملاء', cashiers: 'الكاشير', drivers: 'المناديب', 'delivery-companies': 'شركات التوصيل',
+      'manage-drivers': 'إدارة المناديب', companyOwner: 'صاحب شركة التوصيل', subDriver: 'مندوب توصيل',
+      chats: 'المحادثات', messages: 'الرسائل', jobs: 'الوظائف', reports: 'التقارير', subscriptions: 'الاشتراكات', discounts: 'الخصومات', discountCode: 'كود الخصم',
+      audit: 'سجل النشاط', settings: 'الإعدادات', pos: 'نقطة البيع', sell: 'الكاشير', storefront: 'المتجر', checkout: 'إتمام الطلب',
       tracking: 'تتبع الطلب', 'my-orders': 'طلباتي', 'sub-admins': 'المشرفون', marketing: 'الرئيسية',
       /* common */
       search: 'بحث', searchPlaceholder: 'ابحث عن أي شيء…', save: 'حفظ', cancel: 'إلغاء', delete: 'حذف',
@@ -175,6 +217,7 @@
       viewAll: 'عرض الكل', quickActions: 'إجراءات سريعة', recentOrders: 'أحدث الطلبات', topProducts: 'الأكثر مبيعاً',
       lowStock: 'مخزون منخفض', salesOverview: 'نظرة على المبيعات', last7: 'آخر 7 أيام', last30: 'آخر 30 يوم',
       vsLast: 'مقارنة بالفترة السابقة', pending: 'قيد الانتظار', confirmed: 'مؤكد', preparing: 'قيد التحضير',
+      handed_to_company: 'تم التسليم لشركة التوصيل', out_for_delivery: 'في الطريق',
       delivering: 'في الطريق', delivered: 'تم التسليم', cancelled: 'ملغي', orderId: 'رقم الطلب',
       paymentMethod: 'طريقة الدفع', cash: 'نقدي', card: 'بطاقة', wallet: 'محفظة', vodafone: 'فودافون كاش',
       deliveryCompany: 'شركة التوصيل', driver: 'المندوب', timeline: 'مراحل الطلب', proof: 'إثبات التسليم',
@@ -204,7 +247,7 @@
       storeHours: 'ساعات العمل', storeOpenUntil: 'مفتوح حتى', storeOpensAt: 'يفتح الساعة',
       systemTools: 'أدوات النظام', systemToolsHint: 'الماسح الضوئي · مصمم الاستيكرات · إعدادات الفاتورة',
       scanBarcode: 'الماسح الضوئي', labelDesigner: 'مصمم الاستيكرات', invoiceSettings: 'إعدادات الفاتورة',
-      simulateDriver: 'محاكاة حركة المندوب', liveTracking: 'التتبع المباشر', liveTrackingHint: 'كل المندوبين النشطين على الخريطة الآن',
+      liveTracking: 'التتبع المباشر', liveTrackingHint: 'كل المندوبين النشطين على الخريطة الآن',
       labelName: 'اسم المنتج', labelPrice: 'السعر', labelBarcode: 'الباركود', printLabel: 'طباعة الاستيكر',
       storeName: 'اسم المتجر', footerText: 'نص التذييل', storeLogo: 'شعار المتجر', uploadLogo: 'رفع شعار',
       savedSettings: 'تم حفظ الإعدادات بنجاح', invoicePreview: 'معاينة الفاتورة',
@@ -315,7 +358,13 @@
       footerRights: 'جميع الحقوق محفوظة.',
       error: 'حدث خطأ', retry: 'إعادة المحاولة', required: 'هذا الحقل مطلوب', invalidPhone: 'رقم هاتف غير صحيح',
       addedToCart: 'تمت الإضافة إلى السلة', removedFromCart: 'تم الحذف من السلة', copiedLink: 'تم نسخ الرابط',
-      orderCancelled: 'تم إلغاء الطلب', orderConfirmed: 'تم تأكيد الطلب', orderDelivering: 'الطلب في الطريق',
+      orderCancelled: 'تم إلغاء الطلب', orderConfirmed: 'تم تأكيد الطلب', orderDelivering: 'الطلب في الطريق', handToDriver: 'تسليم للمندوب',
+      startPreparing: 'بدء التحضير', handToCompany: 'تسليم لشركة التوصيل', handedToCompany: 'تم التسليم لشركة التوصيل',
+      startDelivery: 'بدء التوصيل', assignDriver: 'تعيين مندوب', assignDriverHint: 'اختر أحد مناديب شركتك لاستلام هذا الطلب.',
+      driverAssigned: 'تم تعيين المندوب', noDriverAssigned: 'لم يتم تعيين مندوب بعد', callDriver: 'الاتصال بالمندوب',
+      driverPhone: 'هاتف المندوب', activeDispatchOrders: 'طلبات جاهزة للتوزيع', companyDriversList: 'مناديب الشركة',
+      noCompanyDrivers: 'لا يوجد مناديب مسجلون في الشركة', monitorDriverChat: 'مراقبة محادثة المندوب', monitorDriverChatHint: 'عرض محادثة المندوب مع العميل لمراقبة جودة الخدمة.',
+      chatTeam: 'المناديب', chatTeamHint: 'محادثة مباشرة مع مناديب شركتك',
       orderDeliveredMsg: 'تم تسليم الطلب بنجاح', orderCreated: 'تم إنشاء الطلب بنجاح',
       userSaved: 'تم حفظ المستخدم', productSaved: 'تم حفظ المنتج', storeSaved: 'تم حفظ المتجر',
       companySaved: 'تم حفظ شركة التوصيل', settingsSaved: 'تم حفظ الإعدادات', passwordCopied: 'تم نسخ كلمة المرور',
@@ -330,9 +379,10 @@
     en: {
       admin: 'Admin', subadmin: 'Sub-admin', owner: 'Store owner', cashier: 'Cashier', delivery: 'Driver', customer: 'Customer',
       dashboard: 'Dashboard', overview: 'Overview', stores: 'Stores', products: 'Products', orders: 'Orders',
-      invoices: 'Invoices', customers: 'Customers', cashiers: 'Cashiers', 'delivery-companies': 'Delivery companies',
-      chats: 'Chats', messages: 'Messages', jobs: 'Jobs', reports: 'Reports', subscriptions: 'Subscriptions',
-      audit: 'Audit log', settings: 'Settings', pos: 'Point of sale', storefront: 'Storefront', checkout: 'Checkout',
+      invoices: 'Invoices', customers: 'Customers', cashiers: 'Cashiers', drivers: 'Drivers', 'delivery-companies': 'Delivery companies',
+      'manage-drivers': 'Manage drivers', companyOwner: 'Delivery company owner', subDriver: 'Delivery rider',
+      chats: 'Chats', messages: 'Messages', jobs: 'Jobs', reports: 'Reports', subscriptions: 'Subscriptions', discounts: 'Discounts', discountCode: 'Promo code',
+      audit: 'Audit log', settings: 'Settings', pos: 'Point of sale', sell: 'Cashier', storefront: 'Storefront', checkout: 'Checkout',
       tracking: 'Order tracking', 'my-orders': 'My orders', 'sub-admins': 'Sub-admins', marketing: 'Home',
       search: 'Search', searchPlaceholder: 'Search anything…', save: 'Save', cancel: 'Cancel', delete: 'Delete',
       edit: 'Edit', add: 'Add', view: 'View', details: 'Details', close: 'Close', confirm: 'Confirm',
@@ -352,6 +402,7 @@
       viewAll: 'View all', quickActions: 'Quick actions', recentOrders: 'Recent orders', topProducts: 'Top products',
       lowStock: 'Low stock', salesOverview: 'Sales overview', last7: 'Last 7 days', last30: 'Last 30 days',
       vsLast: 'vs. previous period', pending: 'Pending', confirmed: 'Confirmed', preparing: 'Preparing',
+      handed_to_company: 'Handed to delivery company', out_for_delivery: 'Out for delivery',
       delivering: 'On the way', delivered: 'Delivered', cancelled: 'Cancelled', orderId: 'Order ID',
       paymentMethod: 'Payment method', cash: 'Cash', card: 'Card', wallet: 'Wallet', vodafone: 'Vodafone Cash',
       deliveryCompany: 'Delivery company', driver: 'Driver', timeline: 'Order timeline', proof: 'Delivery proof',
@@ -381,7 +432,7 @@
       storeHours: 'Opening hours', storeOpenUntil: 'Open until', storeOpensAt: 'Opens at',
       systemTools: 'System tools', systemToolsHint: 'Barcode scanner · Label designer · Invoice settings',
       scanBarcode: 'Barcode scanner', labelDesigner: 'Label designer', invoiceSettings: 'Invoice settings',
-      simulateDriver: 'Simulate driver movement', liveTracking: 'Live tracking', liveTrackingHint: 'Every active rider, moving live on the map',
+      liveTracking: 'Live tracking', liveTrackingHint: 'Every active rider, moving live on the map',
       labelName: 'Product name', labelPrice: 'Price', labelBarcode: 'Barcode', printLabel: 'Print label',
       storeName: 'Store name', footerText: 'Footer text', storeLogo: 'Store logo', uploadLogo: 'Upload logo',
       savedSettings: 'Settings saved successfully', invoicePreview: 'Invoice preview',
@@ -492,7 +543,13 @@
       footerRights: 'All rights reserved.',
       error: 'Something went wrong', retry: 'Retry', required: 'This field is required', invalidPhone: 'Invalid phone number',
       addedToCart: 'Added to cart', removedFromCart: 'Removed from cart', copiedLink: 'Link copied',
-      orderCancelled: 'Order cancelled', orderConfirmed: 'Order confirmed', orderDelivering: 'Order is on the way',
+      orderCancelled: 'Order cancelled', orderConfirmed: 'Order confirmed', orderDelivering: 'Order is on the way', handToDriver: 'Hand to driver',
+      startPreparing: 'Start preparing', handToCompany: 'Hand to delivery company', handedToCompany: 'Handed to delivery company',
+      startDelivery: 'Start delivery', assignDriver: 'Assign driver', assignDriverHint: 'Pick one of your company riders to take this order.',
+      driverAssigned: 'Driver assigned', noDriverAssigned: 'No driver assigned yet', callDriver: 'Call driver',
+      driverPhone: 'Driver phone', activeDispatchOrders: 'Orders ready to dispatch', companyDriversList: 'Company drivers',
+      noCompanyDrivers: 'No drivers registered for this company', monitorDriverChat: 'Monitor rider chat', monitorDriverChatHint: 'View the rider–customer conversation to monitor service quality.',
+      chatTeam: 'Riders', chatTeamHint: 'Chat directly with your company riders',
       orderDeliveredMsg: 'Order delivered successfully', orderCreated: 'Order created successfully',
       userSaved: 'User saved', productSaved: 'Product saved', storeSaved: 'Store saved',
       companySaved: 'Delivery company saved', settingsSaved: 'Settings saved', passwordCopied: 'Password copied',
@@ -600,10 +657,68 @@
     if (DS.page && typeof DS.page.render === 'function') { try { DS.page.render(); } catch (e) {} }
   };
 
+  /* ── Customer-only dark / light mode ────────────────────────────────
+     Kept separate from the dashboard theme. The storefront now ships in
+     dark mode (black + lemon) by default; only an explicit "light"
+     choice in localStorage switches it back. */
+  var LS_CUSTOMER_THEME = 'ds_customer_theme';
+  function customerTheme() {
+    try { return localStorage.getItem(LS_CUSTOMER_THEME) === 'light' ? 'light' : 'dark'; }
+    catch (e) { return 'dark'; }
+  }
+  function syncThemeColor() {
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', customerTheme() === 'dark' ? '#0A0A0A' : '#F9F9F9');
+  }
+  function applyCustomerTheme() {
+    document.documentElement.setAttribute('data-customer-theme', customerTheme());
+    syncThemeColor();
+  }
+  DS.customerTheme = customerTheme;
+  DS.applyCustomerTheme = applyCustomerTheme;
+  DS.toggleCustomerTheme = function () {
+    var next = customerTheme() === 'dark' ? 'light' : 'dark';
+    try { localStorage.setItem(LS_CUSTOMER_THEME, next); } catch (e) {}
+    applyCustomerTheme();
+    document.dispatchEvent(new CustomEvent('ds:customer-theme', { detail: { theme: next } }));
+  };
+
   /* ───────────────────────────── SESSION ───────────────────────────── */
+  /* "Remember me" support: persistent sessions live in localStorage, while
+     the ones created with the checkbox unchecked live in sessionStorage and
+     disappear when the browser/app window is closed. Every reader goes
+     through sessionGet() so both stores behave identically. */
+  var SESSION_KEYS = ['cz_user', 'cz_session', 'cz_role', 'cz_mock', 'cz_login_at', 'ds_permissions'];
+
+  function sessionGet(key) {
+    try {
+      var v = sessionStorage.getItem(key);
+      if (v !== null && v !== '') return v;
+    } catch (e) {}
+    try { return localStorage.getItem(key); } catch (e) { return null; }
+  }
+  function sessionStore() {
+    try { if (sessionStorage.getItem('cz_user')) return sessionStorage; } catch (e) {}
+    try { return localStorage; } catch (e) { return null; }
+  }
+  function writeSession(user) {
+    if (!user) return false;
+    var store = sessionStore();
+    if (!store) return false;
+    try {
+      store.setItem('cz_user', JSON.stringify(user));
+      if (user.id) store.setItem('cz_session', user.id);
+      if (user.role) store.setItem('cz_role', user.role);
+      return true;
+    } catch (e) { return false; }
+  }
+  DS.sessionGet = sessionGet;
+  DS.sessionStore = sessionStore;
+  DS.writeSession = writeSession;
+
   function session() {
     try {
-      var user = JSON.parse(localStorage.getItem('cz_user') || 'null');
+      var user = JSON.parse(sessionGet('cz_user') || 'null');
       if (user && !user.role && user.username && DS.data && DS.data.users) {
         /* Legacy sessions (old login only stored {username}). Hydrate the full
            profile from the seeded database so routing, avatars and tenant
@@ -612,12 +727,9 @@
         if (seeded) {
           var clean = Object.assign({}, seeded);
           delete clean.password;
+          delete clean.password_hash;
           user = Object.assign(clean, user, { role: clean.role, name: clean.name, name_en: clean.name_en, tenant_id: clean.tenant_id || user.tenant_id });
-          try {
-            localStorage.setItem('cz_user', JSON.stringify(user));
-            localStorage.setItem('cz_role', user.role);
-            if (user.id) localStorage.setItem('cz_session', user.id);
-          } catch (e) {}
+          writeSession(user);
         }
       }
       if (user && user.role) {
@@ -638,7 +750,7 @@
     if (user.role === 'superadmin' || user.role === 'subadmin') return 'admin/dashboard.html';
     if (user.role === 'owner') return 'owner/dashboard.html';
     if (user.role === 'cashier') return 'cashier/pos.html';
-    if (user.role === 'delivery') return 'delivery/dashboard.html';
+    if (user.role === 'delivery' || user.role === 'driver') return 'delivery/dashboard.html';
     return 'customer/storefront.html';
   }
   DS.roleHome = roleHome;
@@ -646,17 +758,24 @@
   function requireAuth(roles) {
     var user = session();
     if (!user) { window.location.replace(url('index.html')); return null; }
-    if (roles && roles.length && roles.indexOf(user.role) === -1) {
-      window.location.replace(url(roleHome(user)));
-      return null;
+    if (roles && roles.length) {
+      var allowed = roles.slice();
+      /* The rider account type is the same surface as a delivery account. */
+      if (user.role === 'driver' && allowed.indexOf('delivery') > -1) allowed.push('driver');
+      if (user.role === 'delivery' && allowed.indexOf('driver') > -1) allowed.push('delivery');
+      if (allowed.indexOf(user.role) === -1) {
+        window.location.replace(url(roleHome(user)));
+        return null;
+      }
     }
     return user;
   }
   DS.requireAuth = requireAuth;
 
   DS.logout = function (silent) {
-    ['cz_session', 'cz_user', 'cz_role', 'cz_mock', 'ds_permissions', 'ds_admin_backup'].forEach(function (k) {
+    ['cz_session', 'cz_user', 'cz_role', 'cz_mock', 'cz_login_at', 'cz_remember', 'ds_permissions', 'ds_admin_backup'].forEach(function (k) {
       try { localStorage.removeItem(k); } catch (e) {}
+      try { sessionStorage.removeItem(k); } catch (e) {}
     });
     if (!silent) window.location.href = url('index.html');
   };
@@ -690,12 +809,13 @@
       localStorage.setItem(IMPERSONATION_KEY, JSON.stringify({ user: admin, at: Date.now() }));
       var clean = Object.assign({}, target);
       delete clean.password;
-      localStorage.setItem('cz_user', JSON.stringify(clean));
-      localStorage.setItem('cz_session', clean.id);
-      localStorage.setItem('cz_role', clean.role);
-      localStorage.setItem('cz_mock', '1');
-      if (clean.role === 'subadmin') localStorage.setItem('ds_permissions', JSON.stringify(clean.permissions || []));
-      else localStorage.removeItem('ds_permissions');
+      delete clean.password_hash;
+      writeSession(clean);
+      var store = sessionStore();
+      if (store) {
+        if (clean.role === 'subadmin') store.setItem('ds_permissions', JSON.stringify(clean.permissions || []));
+        else store.removeItem('ds_permissions');
+      }
       if (clean.tenant_id) localStorage.setItem('ds_customer_store', clean.tenant_id);
     } catch (e) { return { ok: false, error: 'storage' }; }
     return { ok: true, user: target, redirect: roleHome(target) };
@@ -706,11 +826,9 @@
     if (!state) return false;
     try {
       var admin = state.admin;
-      localStorage.setItem('cz_user', JSON.stringify(admin));
-      localStorage.setItem('cz_session', admin.id);
-      localStorage.setItem('cz_role', admin.role);
-      localStorage.setItem('cz_mock', '1');
-      localStorage.removeItem('ds_permissions');
+      writeSession(admin);
+      var store = sessionStore();
+      if (store) store.removeItem('ds_permissions');
       localStorage.removeItem(IMPERSONATION_KEY);
     } catch (e) { return false; }
     window.location.href = url('admin/dashboard.html');
@@ -720,6 +838,7 @@
   /* Apply language/theme immediately */
   applyLangAttrs();
   applyTheme();
+  applyCustomerTheme();
 
   /* ───────────────────────────── TOASTS ────────────────────────────── */
   var ICONS = {
@@ -758,6 +877,7 @@
     shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
     activity: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
     search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    scan: '<path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10"/>',
     edit: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/>',
     trash: '<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6"/>',
     eye: '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
@@ -791,6 +911,7 @@
     list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
     send: '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
     star: '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>',
+    flame: '<path d="M12 2c1.5 4 4.5 5.5 4.5 9a4.5 4.5 0 0 1-9 0c0-1.4.6-2.4 1.3-3.3C9.4 9.4 10 11 11 11c1.4 0 1-3 1-9z"/><path d="M12 22a6 6 0 0 0 6-6c0-2.5-1.5-4-3-5.5"/>',
     sparkles: '<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/><path d="M5 3v4M3 5h4M19 17v4M17 19h4"/>',
     package: '<path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>',
     bike: '<circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6h4l-2 6M5.5 17.5 9 8h5l2 5.5M9 8H6"/>',
@@ -818,7 +939,7 @@
 
   function icon(name, cls) {
     var svg = ICONS[name] || ICONS.info;
-    return '<svg class="' + (cls || '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + svg + '</svg>';
+    return '<svg class="' + (cls || '') + '" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + svg + '</svg>';
   }
   DS.icon = icon;
   DS.icons = ICONS;
@@ -889,7 +1010,8 @@
     var size = opts.size ? ' ' + opts.size : '';
     var dismissible = opts.dismissible !== false;
     var backdrop = document.createElement('div');
-    backdrop.className = 'modal-backdrop';
+    backdrop.className = 'modal-backdrop' + (opts.className ? ' ' + opts.className : '');
+    if (opts.raise) backdrop.style.zIndex = '99999';
     backdrop.setAttribute('role', 'dialog');
     backdrop.setAttribute('aria-modal', 'true');
     var actions = (opts.actions || []).map(function (a, i) {
@@ -904,6 +1026,10 @@
         '<div class="modal-body">' + (opts.body || '') + '</div>' +
         (actions ? '<div class="modal-foot">' + (opts.footLeft || '') + '<div class="spacer"></div>' + actions + '</div>' : (opts.footLeft ? '<div class="modal-foot">' + opts.footLeft + '</div>' : '')) +
       '</div>';
+    if (opts.modalClass) {
+      var modalBox = backdrop.querySelector('.modal');
+      if (modalBox) modalBox.className += ' ' + opts.modalClass;
+    }
     document.body.appendChild(backdrop);
     document.body.classList.add('modal-open');
     openModals.push(backdrop);
@@ -942,6 +1068,15 @@
     return { el: backdrop, close: close };
   }
   DS.modal = modal;
+
+  /* ───────────────────────── NOTIFICATION SOUND ───────────────────── */
+  function playNotification() {
+    try {
+      const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+      audio.play().catch(e => console.log(e));
+    } catch (e) { console.log(e); }
+  }
+  DS.playNotification = playNotification;
 
   function confirm(opts) {
     if (typeof opts === 'string') opts = { text: opts };
@@ -1010,7 +1145,7 @@
             if (tenant && DS.data) DS.data.saveTenant({ id: tenant.id, avatar_id: id, avatar_custom: null });
             if (DS.data) DS.data.saveUser({ id: user.id, avatar_id: id, avatar_custom: null, avatar: file });
             user.avatar_id = id; user.avatar_custom = null; user.avatar = file;
-            localStorage.setItem('cz_user', JSON.stringify(user));
+            writeSession(user);
             m.close();
             toast(t('saved'), 'success');
             if (DS.shell && DS.shell.refreshUser) DS.shell.refreshUser();
@@ -1028,7 +1163,7 @@
             if (tenant && DS.data) DS.data.saveTenant({ id: tenant.id, avatar_custom: data, avatar_id: null });
             if (DS.data) DS.data.saveUser({ id: user.id, avatar_custom: data, avatar_id: null, avatar: data });
             user.avatar_custom = data; user.avatar_id = null; user.avatar = data;
-            localStorage.setItem('cz_user', JSON.stringify(user));
+            writeSession(user);
             m.close();
             toast(t('saved'), 'success');
             if (DS.shell && DS.shell.refreshUser) DS.shell.refreshUser();
@@ -1198,7 +1333,7 @@
 
   DS.badge = function (status, label) {
     var map = {
-      pending: 'warning', confirmed: 'info', preparing: 'orange', delivering: 'lime', delivered: 'success', cancelled: 'danger',
+      pending: 'warning', confirmed: 'info', preparing: 'orange', handed_to_company: 'purple', out_for_delivery: 'lime', delivering: 'lime', delivered: 'success', cancelled: 'danger',
       active: 'success', inactive: 'neutral', suspended: 'danger', expired: 'danger', paid: 'success', unpaid: 'warning',
       owner: 'lime', cashier: 'info', delivery: 'purple', customer: 'neutral', superadmin: 'lime', subadmin: 'purple'
     };
@@ -1207,17 +1342,22 @@
 
   DS.statusMeta = function (status) {
     var map = {
-      pending: { label: t('pending'), badge: 'warning', icon: 'clock', step: 0, pct: 12 },
-      confirmed: { label: t('confirmed'), badge: 'info', icon: 'checkCircle', step: 1, pct: 30 },
-      preparing: { label: t('preparing'), badge: 'orange', icon: 'package', step: 2, pct: 52 },
-      delivering: { label: t('delivering'), badge: 'lime', icon: 'bike', step: 3, pct: 78 },
+      pending: { label: t('pending'), badge: 'warning', icon: 'clock', step: 0, pct: 10 },
+      confirmed: { label: t('preparing'), badge: 'orange', icon: 'package', step: 1, pct: 25 },
+      preparing: { label: t('preparing'), badge: 'orange', icon: 'package', step: 1, pct: 30 },
+      handed_to_company: { label: t('handed_to_company'), badge: 'purple', icon: 'truck', step: 2, pct: 55 },
+      out_for_delivery: { label: t('out_for_delivery'), badge: 'lime', icon: 'bike', step: 3, pct: 80 },
+      delivering: { label: t('delivering'), badge: 'lime', icon: 'bike', step: 3, pct: 80 },
       delivered: { label: t('delivered'), badge: 'success', icon: 'checkCircle', step: 4, pct: 100 },
       cancelled: { label: t('cancelled'), badge: 'danger', icon: 'x', step: -1, pct: 0 }
     };
     return map[status] || map.pending;
   };
 
-  DS.statusFlow = ['pending', 'confirmed', 'preparing', 'delivering', 'delivered'];
+  DS.statusFlow = ['pending', 'preparing', 'handed_to_company', 'out_for_delivery', 'delivered'];
+  /* Statuses that still occupy a rider/company queue. */
+  DS.activeStatuses = ['pending', 'preparing', 'handed_to_company', 'out_for_delivery'];
+  DS.isActiveOrderStatus = function (status) { return DS.activeStatuses.indexOf(status) > -1; };
 
   DS.copy = function (text) {
     var done = function () { toast(t('copied'), 'success'); };
@@ -1264,6 +1404,23 @@
   DS.audit = function (action, detail) {
     if (DS.data && DS.data.audit) DS.data.audit(action, detail);
   };
+
+  /* Authentication gate for application folders. Public surfaces — the login
+     page, marketing site and careers portal — stay open; every workspace page
+     bounces an unauthenticated visitor to the login screen. This also covers
+     modules that early-return before shell.mount() when no session exists. */
+  function isProtectedPath() {
+    var p = String(location.pathname || '');
+    return /\/(admin|owner|cashier|delivery|customer)\//.test(p) || /\/auth\/public-chat\.html$/.test(p);
+  }
+  function enforceAuthGate() {
+    if (!isProtectedPath()) return;
+    if (!session()) {
+      try { location.replace(url('index.html')); } catch (e) {}
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', enforceAuthGate);
+  else enforceAuthGate();
 
   console.log('%cDotStudio® POS · core ready', 'color:#82FF1F;font-weight:bold');
 })();

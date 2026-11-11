@@ -14,10 +14,22 @@
 
   DS.icons.lifebuoy = '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="m4.93 4.93 4.24 4.24M14.83 9.17l4.24-4.24M14.83 14.83l4.24 4.24M9.17 14.83l-4.24 4.24"/>';
 
+  /* Chat modals sit above the dock/sidebar. Positioning lives in chat.css so
+     the panel stays a proper flex column (no clipped threads, no blur bleed). */
+  (function chatModalStyle() {
+    if (document.getElementById('dsChatModalStyle')) return;
+    var st = document.createElement('style');
+    st.id = 'dsChatModalStyle';
+    st.textContent = '.modal-backdrop.chat-modal-backdrop{z-index:9000 !important;}';
+    document.head.appendChild(st);
+  })();
+
   var SCOPES = [
     { key: 'support', labelKey: 'chatSupport', hintKey: 'chatSupportHint', icon: 'lifebuoy', tone: 'lime' },
     { key: 'stores', labelKey: 'chatStores', hintKey: 'chatStoresHint', icon: 'store', tone: 'blue' },
     { key: 'delivery', labelKey: 'chatDelivery', hintKey: 'chatDeliveryHint', icon: 'truck', tone: 'teal' },
+    /* Delivery company internal team: owner ↔ riders. */
+    { key: 'team', labelKey: 'chatTeam', hintKey: 'chatTeamHint', icon: 'users', tone: 'teal' },
     /* Customer ↔ assigned rider threads (created from the tracking page). */
     { key: 'driver', labelKey: 'chatDriver', hintKey: 'chatDriverHint', icon: 'bike', tone: 'orange' }
   ];
@@ -64,7 +76,7 @@
       return '<span class="' + cls + ' chat-avatar-tone blue">' + icon('store') + '</span>';
     }
     var co = (DS.data.companies || []).filter(function (c) { return c.id === contact.id; })[0];
-    return '<span class="' + cls + ' chat-avatar-tone teal">' + esc((co && co.emoji) || '🛵') + '</span>';
+    return '<span class="' + cls + ' chat-avatar-tone teal">' + icon('truck') + '</span>';
   }
 
   function roomOf(user, scope, contact) {
@@ -119,6 +131,40 @@
         '</div></div>';
     });
     return html;
+  }
+
+  /* ── Live thread watch → new-message sound + soft refresh ─────────────
+     Works across tabs (ds:data from localStorage) and inside one tab. */
+  function liveThread(getRoom, onChange) {
+    var seen = {};
+    function keyOf(room) { return room ? room.id : ''; }
+    function lastId(room) {
+      var msgs = (room && room.messages) || [];
+      return msgs.length ? (msgs[msgs.length - 1].id || '') : '';
+    }
+    function tick() {
+      var room = getRoom();
+      if (!room) return;
+      var k = keyOf(room);
+      var id = lastId(room);
+      if (!id) { seen[k] = ''; return; }
+      if (seen[k] === undefined) { seen[k] = id; return; }
+      if (seen[k] === id) return;
+      seen[k] = id;
+      var msgs = room.messages || [];
+      var last = msgs[msgs.length - 1] || {};
+      var me = (DS.session() || {}).id;
+      var incoming = last.user_id !== me;
+      if (incoming && DS.playNotification) { try { DS.playNotification(); } catch (e) {} }
+      if (onChange) onChange(incoming);
+    }
+    var timer = setInterval(tick, 2400);
+    window.addEventListener('ds:data', tick);
+    tick();
+    return function stop() {
+      clearInterval(timer);
+      window.removeEventListener('ds:data', tick);
+    };
   }
 
   function contactListMarkup(contacts, activeKey, user, scope) {
@@ -190,6 +236,8 @@
       title: t('chatSettings'),
       sub: contactName(contact),
       body: body,
+      raise: true,
+      className: 'chat-sheet-backdrop',
       actions: [{ label: t('close'), variant: 'btn-secondary' }],
       onMount: function (root) {
         var blockBtn = root.querySelector('[data-settings-block]');
@@ -227,6 +275,8 @@
       title: t('chatReport'),
       sub: contactName(contact),
       body: body,
+      raise: true,
+      className: 'chat-sheet-backdrop',
       actions: [
         { label: t('cancel'), variant: 'btn-secondary' },
         { label: t('chatSendReport'), variant: 'btn-primary', onClick: function (root) {
@@ -253,7 +303,7 @@
       if (!canScope(user, s.key)) return false;
       /* The rider channel is a private thread opened from tracking, so it is
          only listed for riders themselves (customers use the tracking button). */
-      if (s.key === 'driver') return user.role === 'delivery';
+      if (s.key === 'driver') return user.role === 'delivery' || user.role === 'driver';
       return true;
     });
     if (!scopes.length) scopes = [SCOPES[0]];
@@ -440,6 +490,19 @@
 
     render();
 
+    /* Sound + live refresh when the other party replies. */
+    var stopLive = liveThread(function () {
+      var contact = currentContacts().filter(function (c) { return c.key === state.contactKey; })[0];
+      if (!contact) return null;
+      return roomOf(user, state.scope, contact);
+    }, function (incoming) {
+      render();
+      if (incoming) {
+        var th = el.querySelector('[data-chat-thread]');
+        if (th) th.scrollTop = th.scrollHeight;
+      }
+    });
+
     return {
       element: el,
       refresh: render,
@@ -450,8 +513,8 @@
         var match = list.filter(function (c) { return c.roomId === id; })[0];
         if (match) { state.contactKey = match.key; state.mobileConv = true; render(); }
       },
-      disable: function () { el.innerHTML = '<div class="chat-thread-empty"><div class="cte-icon">' + icon('lock') + '</div><b>' + esc(t('chatLocked')) + '</b><p>' + esc(t('chatLockedText')) + '</p></div>'; },
-      destroy: function () { el.innerHTML = ''; }
+      disable: function () { if (stopLive) stopLive(); el.innerHTML = '<div class="chat-thread-empty"><div class="cte-icon">' + icon('lock') + '</div><b>' + esc(t('chatLocked')) + '</b><p>' + esc(t('chatLockedText')) + '</p></div>'; },
+      destroy: function () { if (stopLive) stopLive(); el.innerHTML = ''; }
     };
   }
 
@@ -493,6 +556,9 @@
       title: icon('bike') + ' ' + esc(t('chatWithDriver')),
       sub: esc(order.order_no || '') + ' · ' + esc(contactName(contact)),
       body: bodyMarkup(),
+      className: 'chat-modal-backdrop',
+      modalClass: 'chat-modal',
+      raise: true,
       actions: [
         { label: t('chatBlock'), variant: 'btn-secondary', close: false, onClick: function () {
           var nowBlocked = DS.data.togglePeerBlock(scope, driver.id, user);
@@ -508,7 +574,20 @@
         } },
         { label: t('close'), variant: 'btn-primary' }
       ],
-      onMount: function (root) { bind(root); }
+      onMount: function (root) { bind(root); },
+      onClose: function () { if (m && m._stopLive) m._stopLive(); }
+    });
+
+    m._stopLive = liveThread(function () {
+      return DS.data.chatThread(user, scope, driver.id);
+    }, function () {
+      var body = m.el.querySelector('.modal-body');
+      if (!body) return;
+      var th = body.querySelector('[data-dsc-thread]');
+      if (th) {
+        th.innerHTML = messagesMarkup(DS.data.chatThread(user, scope, driver.id), user);
+        th.scrollTop = th.scrollHeight;
+      }
     });
 
     function scroll(root) {
@@ -559,6 +638,430 @@
       if (sendBtn) sendBtn.addEventListener('click', send);
     }
 
+    return m;
+  };
+
+  /* ─────────── 1-on-1 delivery-company chat, opened from tracking ─────────── */
+  DS.openCompanyChat = function (order) {
+    var user = DS.session();
+    if (!user || !order) return null;
+    var company = (DS.data.companies || []).filter(function (c) { return c.id === order.delivery_company_id; })[0] || null;
+    if (!company) { DS.toast(t('noCompany'), 'warning'); return null; }
+    if (DS.data.chatCanScope && !DS.data.chatCanScope(user, 'delivery')) { DS.toast(t('noPermission'), 'error'); return null; }
+    var scope = 'delivery';
+    var contact = {
+      key: company.id, type: 'company', id: company.id,
+      name: company.name, name_en: company.name_en,
+      subtitle: 'شركة التوصيل', subtitle_en: 'Delivery company'
+    };
+
+    function bodyMarkup() {
+      var room = DS.data.chatThread(user, scope, company.id);
+      var blocked = DS.data.isPeerBlocked(scope, company.id, user);
+      return '<div class="dsc">' +
+        '<div class="dsc-head">' + avatarFor(contact, 'avatar') +
+          '<div class="dsc-id"><b>' + esc(contactName(contact)) + '</b>' +
+            '<span><i class="chat-live-dot"></i>' + esc(DS.lang() === 'en' ? 'Delivery company' : 'شركة التوصيل') + '</span></div>' +
+          '<span class="dsc-order">' + esc(order.order_no || '') + '</span>' +
+          '<button type="button" class="chat-settings-btn" data-dsc-settings aria-label="' + esc(t('chatSettings')) + '">' + icon('settings') + '</button>' +
+        '</div>' +
+        '<div class="chat-thread dsc-thread" data-dsc-thread>' + messagesMarkup(room, user) + '</div>' +
+        (blocked
+          ? '<div class="dsc-blocked">' + icon('lock') + '<span>' + esc(t('chatBlockedNotice')) + '</span>' +
+              '<button type="button" class="btn btn-secondary btn-sm" data-dsc-unblock>' + esc(t('chatUnblock')) + '</button></div>'
+          : '<div class="chat-compose dsc-compose"><div class="chat-compose-box">' +
+              '<textarea rows="1" data-dsc-input placeholder="' + esc(t('sendMessage')) + '" aria-label="' + esc(t('sendMessage')) + '"></textarea></div>' +
+              '<button type="button" class="chat-send" data-dsc-send aria-label="' + esc(t('send')) + '">' + icon('send') + '</button></div>') +
+      '</div>';
+    }
+
+    var m = DS.modal({
+      size: 'sm',
+      title: icon('truck') + ' ' + esc(DS.lang() === 'en' ? 'Chat with delivery company' : 'محادثة شركة التوصيل'),
+      sub: esc(order.order_no || '') + ' · ' + esc(contactName(contact)),
+      body: bodyMarkup(),
+      className: 'chat-modal-backdrop',
+      modalClass: 'chat-modal',
+      raise: true,
+      actions: [
+        { label: t('chatBlock'), variant: 'btn-secondary', close: false, onClick: function () {
+          var nowBlocked = DS.data.togglePeerBlock(scope, company.id, user);
+          DS.toast(nowBlocked ? t('chatBlockedToast') : t('chatUnblocked'), 'success');
+          rerender();
+          var btn = m.el.querySelector('[data-action="0"]');
+          if (btn) btn.textContent = nowBlocked ? t('chatUnblock') : t('chatBlock');
+          return false;
+        } },
+        { label: t('chatReport'), variant: 'btn-secondary', close: false, onClick: function () {
+          openReportSheet(scope, contact);
+          return false;
+        } },
+        { label: t('close'), variant: 'btn-primary' }
+      ],
+      onMount: function (root) { bind(root); },
+      onClose: function () { if (m && m._stopLive) m._stopLive(); }
+    });
+
+    m._stopLive = liveThread(function () {
+      return DS.data.chatThread(user, scope, company.id);
+    }, function () {
+      var body = m.el.querySelector('.modal-body');
+      if (!body) return;
+      var th = body.querySelector('[data-dsc-thread]');
+      if (th) {
+        th.innerHTML = messagesMarkup(DS.data.chatThread(user, scope, company.id), user);
+        th.scrollTop = th.scrollHeight;
+      }
+    });
+
+    function scroll(root) {
+      var th = root.querySelector('[data-dsc-thread]');
+      if (th) th.scrollTop = th.scrollHeight;
+    }
+    function rerender() {
+      var body = m.el.querySelector('.modal-body');
+      if (!body) return;
+      body.innerHTML = bodyMarkup();
+      bind(m.el);
+      var btn = m.el.querySelector('[data-action="0"]');
+      if (btn) btn.textContent = DS.data.isPeerBlocked(scope, company.id, user) ? t('chatUnblock') : t('chatBlock');
+    }
+    function bind(root) {
+      scroll(root);
+      var gear = root.querySelector('[data-dsc-settings]');
+      if (gear) gear.addEventListener('click', function () { openSettingsSheet(scope, contact, rerender); });
+      var unblock = root.querySelector('[data-dsc-unblock]');
+      if (unblock) unblock.addEventListener('click', function () {
+        DS.data.togglePeerBlock(scope, company.id, user);
+        DS.toast(t('chatUnblocked'), 'success');
+        rerender();
+      });
+      var input = root.querySelector('[data-dsc-input]');
+      var sendBtn = root.querySelector('[data-dsc-send]');
+      function send() {
+        if (!input) return;
+        var text = (input.value || '').trim();
+        if (!text) return;
+        var res = DS.data.sendMessageTo(scope, company.id, text);
+        if (!res) { DS.toast(t('noPermission'), 'error'); return; }
+        if (res.blocked) { DS.toast(t('chatBlockedNotice'), 'error'); return; }
+        input.value = '';
+        input.style.height = 'auto';
+        rerender();
+      }
+      if (input) {
+        input.addEventListener('input', function () {
+          input.style.height = 'auto';
+          input.style.height = Math.min(110, input.scrollHeight) + 'px';
+          if (sendBtn) sendBtn.classList.toggle('ready', !!input.value.trim());
+        });
+        input.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+        });
+      }
+      if (sendBtn) sendBtn.addEventListener('click', send);
+    }
+
+    return m;
+  };
+
+  /* ─────────── Delivery company team & dispatch chats (owner) ─────────── */
+  DS.openTeamChat = function (driverId) {
+    var user = DS.session();
+    var driver = DS.data.userById ? DS.data.userById(driverId) : null;
+    if (!user || !driver) return null;
+    var en = DS.lang() === 'en';
+    return openDirectThread('team', {
+      key: driver.id, id: driver.id, type: 'user',
+      name: driver.name, name_en: driver.name_en || driver.name,
+      subtitle: en ? 'Delivery rider' : 'مندوب توصيل',
+      subtitle_en: 'Delivery rider'
+    });
+  };
+
+  DS.openCustomerChat = function (order) {
+    var user = DS.session();
+    if (!user || !order) return null;
+    var customer = DS.data.customerUserForOrder ? DS.data.customerUserForOrder(order) : null;
+    if (!customer) { DS.toast(t('noData'), 'warning'); return null; }
+    var en = DS.lang() === 'en';
+    return openDirectThread('delivery', {
+      key: customer.id, id: customer.id, type: 'user',
+      name: customer.name, name_en: customer.name_en || customer.name,
+      subtitle: en ? 'Customer' : 'عميل',
+      subtitle_en: 'Customer'
+    }, { orderNo: order.order_no });
+  };
+
+  /* Read-only quality monitor: the company owner can read the private
+     rider ↔ customer thread without posting into it. */
+  DS.openMonitorChat = function (order) {
+    var user = DS.session();
+    if (!user || !order) return null;
+    if (!DS.data.isCompanyOwner || !DS.data.isCompanyOwner(user)) { DS.toast(t('noPermission'), 'error'); return null; }
+    var driver = DS.data.driverForOrder ? DS.data.driverForOrder(order) : null;
+    var customer = DS.data.customerUserForOrder ? DS.data.customerUserForOrder(order) : null;
+    if (!driver || !customer) { DS.toast(t('chatDriverNoOrder'), 'warning'); return null; }
+    var en = DS.lang() === 'en';
+    var room = DS.data.monitorDriverRoom ? DS.data.monitorDriverRoom(order) : null;
+    var body = '<div class="dsc monitor-chat">' +
+      '<div class="dsc-head"><span class="avatar chat-avatar-tone orange">' + icon('eye') + '</span>' +
+        '<div class="dsc-id"><b>' + esc(DS.loc(driver, 'name')) + ' ↔ ' + esc(DS.loc(customer, 'name')) + '</b>' +
+          '<span>' + esc(en ? 'Read-only quality monitor' : 'مراقبة جودة — للقراءة فقط') + '</span></div>' +
+        '<span class="dsc-order">' + esc(order.order_no) + '</span></div>' +
+      '<div class="chat-thread dsc-thread" data-monitor-thread>' + messagesMarkup(room, user) + '</div>' +
+      '<p class="assign-driver-hint" style="margin:10px 4px 0">' + esc(t('monitorDriverChatHint')) + '</p>' +
+    '</div>';
+    return DS.modal({
+      size: 'sm',
+      title: icon('eye') + ' ' + esc(t('monitorDriverChat')),
+      sub: esc(order.order_no),
+      body: body,
+      className: 'chat-modal-backdrop',
+      modalClass: 'chat-modal',
+      raise: true,
+      actions: [{ label: t('close'), variant: 'btn-secondary' }],
+      onMount: function (root) {
+        var th = root.querySelector('[data-monitor-thread]');
+        if (th) th.scrollTop = th.scrollHeight;
+      }
+    });
+  };
+
+  /* ═══════════════════════════════════════════════════════════════
+     CUSTOMER SUPPORT HUB — store owner · delivery rider · platform.
+     One floating button opens this sheet; each row starts a clean
+     1-on-1 thread using the same data layer as the dashboard chat.
+     ═══════════════════════════════════════════════════════════════ */
+  function openDirectThread(scope, contact, opts) {
+    var user = DS.session();
+    if (!user || !contact) return null;
+    opts = opts || {};
+    var peerId = contact.id || contact.key;
+    var en = DS.lang() === 'en';
+    var fallbackSub = en ? 'Online' : 'متصل';
+
+    function bodyMarkup() {
+      var room = DS.data.chatThread(user, scope, peerId);
+      var blocked = DS.data.isPeerBlocked(scope, peerId, user);
+      return '<div class="dsc">' +
+        '<div class="dsc-head">' + avatarFor(contact, 'avatar') +
+          '<div class="dsc-id"><b>' + esc(contactName(contact)) + '</b>' +
+            '<span><i class="chat-live-dot"></i>' + esc(contactSub(contact) || fallbackSub) + '</span></div>' +
+          (opts.orderNo ? '<span class="dsc-order">' + esc(opts.orderNo) + '</span>' : '') +
+          '<button type="button" class="chat-settings-btn" data-dsc-settings aria-label="' + esc(t('chatSettings')) + '">' + icon('settings') + '</button>' +
+        '</div>' +
+        '<div class="chat-thread dsc-thread" data-dsc-thread>' + messagesMarkup(room, user) + '</div>' +
+        (blocked
+          ? '<div class="dsc-blocked">' + icon('lock') + '<span>' + esc(t('chatBlockedNotice')) + '</span>' +
+              '<button type="button" class="btn btn-secondary btn-sm" data-dsc-unblock>' + esc(t('chatUnblock')) + '</button></div>'
+          : '<div class="chat-compose dsc-compose"><div class="chat-compose-box">' +
+              '<textarea rows="1" data-dsc-input placeholder="' + esc(t('sendMessage')) + '" aria-label="' + esc(t('sendMessage')) + '"></textarea></div>' +
+              '<button type="button" class="chat-send" data-dsc-send aria-label="' + esc(t('send')) + '">' + icon('send') + '</button></div>') +
+      '</div>';
+    }
+
+    var m = DS.modal({
+      size: 'sm',
+      title: icon(scope === 'stores' ? 'store' : scope === 'driver' ? 'bike' : 'lifebuoy') + ' ' + esc(contactName(contact)),
+      sub: esc(contactSub(contact) || fallbackSub),
+      body: bodyMarkup(),
+      className: 'chat-modal-backdrop',
+      modalClass: 'chat-modal',
+      raise: true,
+      actions: [
+        { label: t('chatBlock'), variant: 'btn-secondary', close: false, onClick: function () {
+          var nowBlocked = DS.data.togglePeerBlock(scope, peerId, user);
+          DS.toast(nowBlocked ? t('chatBlockedToast') : t('chatUnblocked'), 'success');
+          rerender();
+          var btn = m.el.querySelector('[data-action="0"]');
+          if (btn) btn.textContent = nowBlocked ? t('chatUnblock') : t('chatBlock');
+          return false;
+        } },
+        { label: t('chatReport'), variant: 'btn-secondary', close: false, onClick: function () {
+          openReportSheet(scope, contact);
+          return false;
+        } },
+        { label: t('close'), variant: 'btn-primary' }
+      ],
+      onMount: function (root) { bind(root); },
+      onClose: function () { if (m && m._stopLive) m._stopLive(); }
+    });
+
+    m._stopLive = liveThread(function () {
+      return DS.data.chatThread(user, scope, peerId);
+    }, function () {
+      var body = m.el.querySelector('.modal-body');
+      if (!body) return;
+      var th = body.querySelector('[data-dsc-thread]');
+      if (th) {
+        th.innerHTML = messagesMarkup(DS.data.chatThread(user, scope, peerId), user);
+        th.scrollTop = th.scrollHeight;
+      }
+    });
+
+    function scroll(root) {
+      var th = root.querySelector('[data-dsc-thread]');
+      if (th) th.scrollTop = th.scrollHeight;
+    }
+    function rerender() {
+      var body = m.el.querySelector('.modal-body');
+      if (!body) return;
+      body.innerHTML = bodyMarkup();
+      bind(m.el);
+      var btn = m.el.querySelector('[data-action="0"]');
+      if (btn) btn.textContent = DS.data.isPeerBlocked(scope, peerId, user) ? t('chatUnblock') : t('chatBlock');
+    }
+    function bind(root) {
+      scroll(root);
+      var gear = root.querySelector('[data-dsc-settings]');
+      if (gear) gear.addEventListener('click', function () { openSettingsSheet(scope, contact, rerender); });
+      var unblock = root.querySelector('[data-dsc-unblock]');
+      if (unblock) unblock.addEventListener('click', function () {
+        DS.data.togglePeerBlock(scope, peerId, user);
+        DS.toast(t('chatUnblocked'), 'success');
+        rerender();
+      });
+      var input = root.querySelector('[data-dsc-input]');
+      var sendBtn = root.querySelector('[data-dsc-send]');
+      function send() {
+        if (!input) return;
+        var text = (input.value || '').trim();
+        if (!text) return;
+        var res = DS.data.sendMessageTo(scope, peerId, text);
+        if (!res) { DS.toast(t('noPermission'), 'error'); return; }
+        if (res.blocked) { DS.toast(t('chatBlockedNotice'), 'error'); return; }
+        input.value = '';
+        input.style.height = 'auto';
+        rerender();
+      }
+      if (input) {
+        input.addEventListener('input', function () {
+          input.style.height = 'auto';
+          input.style.height = Math.min(110, input.scrollHeight) + 'px';
+          if (sendBtn) sendBtn.classList.toggle('ready', !!input.value.trim());
+        });
+        input.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+        });
+      }
+      if (sendBtn) sendBtn.addEventListener('click', send);
+    }
+
+    return m;
+  }
+
+  function contactForTenant(tn) {
+    if (!tn) return null;
+    var user = DS.session();
+    var contacts = DS.data.chatContacts(user, 'stores') || [];
+    var found = contacts.filter(function (c) { return c.id === tn.id; })[0];
+    if (found) return found;
+    return {
+      key: tn.id, type: 'tenant', id: tn.id,
+      name: tn.name, name_en: tn.name_en || tn.name,
+      subtitle: DS.lang() === 'en' ? (tn.industry_en || tn.industry) : (tn.industry || tn.industry_en),
+      subtitle_en: tn.industry_en || tn.industry || ''
+    };
+  }
+
+  function openStorePicker() {
+    var user = DS.session();
+    var en = DS.lang() === 'en';
+    var contacts = DS.data.chatContacts(user, 'stores') || [];
+    var m = DS.modal({
+      size: 'sm',
+      title: icon('store') + ' ' + esc(en ? 'Choose a store' : 'اختر المتجر'),
+      sub: esc(en ? 'Every store answers its own customers.' : 'كل متجر يرد على عملائه مباشرة.'),
+      className: 'sf-modal-backdrop',
+      modalClass: 'sf-modal support-hub',
+      body: '<div class="support-hub-list">' + contacts.map(function (c) {
+        return '<button type="button" class="support-hub-row" data-pick-store="' + esc(c.id) + '">' +
+          '<span class="support-hub-ico">' + icon('store') + '</span>' +
+          '<span class="support-hub-copy"><b>' + esc(contactName(c)) + '</b><small>' + esc(contactSub(c) || '') + '</small></span>' +
+          '<span class="support-hub-arrow">' + icon('chevronRight') + '</span></button>';
+      }).join('') + '</div>',
+      actions: [{ label: t('close'), variant: 'btn-secondary' }]
+    });
+    DS.$$('[data-pick-store]', m.el).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.getAttribute('data-pick-store');
+        var c = contacts.filter(function (x) { return x.id === id; })[0];
+        m.close();
+        if (c) setTimeout(function () { openDirectThread('stores', c); }, 160);
+      });
+    });
+    return m;
+  }
+
+  DS.openSupportHub = function (opts) {
+    opts = opts || {};
+    var user = DS.session();
+    if (!user) return null;
+    var en = DS.lang() === 'en';
+    var order = opts.order || null;
+    var tenantId = opts.tenantId || (order && order.tenant_id) || '';
+    var tenant = tenantId && DS.data.tenantById ? DS.data.tenantById(tenantId) : null;
+    var driver = order && DS.data.driverForOrder ? DS.data.driverForOrder(order) : null;
+    var supportContacts = DS.data.chatContacts(user, 'support') || [];
+    var supportContact = supportContacts[0] || null;
+
+    function row(key, iconName, title, sub, disabled) {
+      return '<button type="button" class="support-hub-row' + (disabled ? ' is-disabled' : '') + '" data-hub="' + key + '"' + (disabled ? ' disabled' : '') + '>' +
+        '<span class="support-hub-ico">' + icon(iconName) + '</span>' +
+        '<span class="support-hub-copy"><b>' + esc(title) + '</b><small>' + esc(sub) + '</small></span>' +
+        '<span class="support-hub-arrow">' + icon('chevronRight') + '</span></button>';
+    }
+
+    var storeSub = tenant
+      ? (DS.loc(tenant, 'name') + ' · ' + (en ? 'owner & team' : 'المالك وفريق المتجر'))
+      : (en ? 'Choose the store you ordered from' : 'اختر المتجر الذي طلبت منه');
+    var driverSub = driver
+      ? (DS.loc(driver, 'name') + (order ? ' · ' + order.order_no : ''))
+      : (en ? 'Available once your order is on the way' : 'متاح عندما يكون طلبك في الطريق');
+    var supportSub = en ? 'DotStudio® platform team' : 'فريق منصة DotStudio®';
+
+    var m = DS.modal({
+      size: 'sm',
+      title: icon('lifebuoy') + ' ' + esc(en ? 'Support' : 'الدعم'),
+      sub: esc(en ? 'Chat with the store, your rider, or our team.' : 'تواصل مع المتجر أو المندوب أو فريق المنصة.'),
+      className: 'sf-modal-backdrop',
+      modalClass: 'sf-modal support-hub',
+      body: '<div class="support-hub-list">' +
+        row('store', 'store', en ? 'Store owner' : 'صاحب المتجر', storeSub, false) +
+        row('driver', 'bike', en ? 'Delivery driver' : 'مندوب التوصيل', driverSub, !driver) +
+        row('support', 'lifebuoy', en ? 'Platform support' : 'الدعم الفني', supportSub, !supportContact) +
+      '</div>',
+      actions: [{ label: t('close'), variant: 'btn-secondary' }]
+    });
+
+    DS.$$('[data-hub]', m.el).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var key = b.getAttribute('data-hub');
+        if (key === 'store') {
+          m.close();
+          if (tenant) {
+            var contact = contactForTenant(tenant);
+            setTimeout(function () { openDirectThread('stores', contact); }, 160);
+          } else {
+            setTimeout(openStorePicker, 160);
+          }
+        } else if (key === 'driver') {
+          if (!driver) { DS.toast(en ? 'No active delivery right now.' : 'لا يوجد توصيل نشط حالياً.', 'info'); return; }
+          m.close();
+          var driverContact = {
+            key: driver.id, type: 'user', id: driver.id,
+            name: driver.name, name_en: driver.name_en || driver.name,
+            subtitle: en ? 'Delivery rider' : 'مندوب التوصيل', subtitle_en: 'Delivery rider'
+          };
+          setTimeout(function () { openDirectThread('driver', driverContact, { orderNo: order ? order.order_no : '' }); }, 160);
+        } else if (key === 'support') {
+          if (!supportContact) { DS.toast(en ? 'Support is offline right now.' : 'الدعم غير متاح حالياً.', 'warning'); return; }
+          m.close();
+          setTimeout(function () { openDirectThread('support', supportContact); }, 160);
+        }
+      });
+    });
     return m;
   };
 

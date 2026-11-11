@@ -21,22 +21,30 @@
   if (!page) return;
 
   var state = { status: '', q: '' };
+  var isOwner = DS.data.isCompanyOwner ? DS.data.isCompanyOwner(user) : false;
 
   function mine() { return DS.data.visibleOrders(user).slice().sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); }); }
   function filtered() {
     var q = state.q.trim().toLowerCase();
     return mine().filter(function (o) {
-      if (state.status === 'active' && ['pending', 'confirmed', 'preparing', 'delivering'].indexOf(o.status) === -1) return false;
+      if (state.status === 'active' && !DS.isActiveOrderStatus(o.status)) return false;
       if (state.status && state.status !== 'active' && o.status !== state.status) return false;
       if (!q) return true;
       return (o.order_no + ' ' + (o.customer ? o.customer.name + ' ' + o.customer.phone : '')).toLowerCase().indexOf(q) > -1;
     });
   }
   function nextAction(o) {
-    if (o.status === 'pending' || o.status === 'confirmed') return { label: t('acceptTask'), next: 'preparing', variant: 'btn-primary', icon: 'check' };
-    if (o.status === 'preparing') return { label: t('markPicked'), next: 'delivering', variant: 'btn-primary', icon: 'package' };
-    if (o.status === 'delivering') return { label: t('markDelivered'), next: 'delivered', variant: 'btn-success', icon: 'checkCircle' };
+    if (isOwner) {
+      if (o.status === 'handed_to_company' && o.driver_id) return { label: t('startDelivery'), next: 'out_for_delivery', variant: 'btn-primary', icon: 'bike' };
+      return null;
+    }
+    if (o.status === 'handed_to_company' && o.driver_id === user.id) return { label: t('startDelivery'), next: 'out_for_delivery', variant: 'btn-primary', icon: 'bike' };
+    if (o.status === 'out_for_delivery' && o.driver_id === user.id) return { label: t('markDelivered'), next: 'delivered', variant: 'btn-success', icon: 'checkCircle' };
     return null;
+  }
+  function riders() {
+    var list = DS.data.companyDrivers ? DS.data.companyDrivers(user.delivery_company) : [];
+    return list.filter(function (u) { return DS.data.isRider(u) && u.is_active !== false; });
   }
 
   function stat(label, value, ico, tone, foot) {
@@ -45,7 +53,7 @@
 
   function render() {
     var all = mine();
-    var active = all.filter(function (o) { return ['pending', 'confirmed', 'preparing', 'delivering'].indexOf(o.status) > -1; });
+    var active = all.filter(function (o) { return DS.isActiveOrderStatus(o.status); });
     var done = all.filter(function (o) { return o.status === 'delivered'; });
     var list = filtered();
 
@@ -67,6 +75,14 @@
       var tn = DS.data.tenantById(o.tenant_id) || {};
       var act = nextAction(o);
       var count = (o.items || []).reduce(function (s, i) { return s + i.qty; }, 0);
+      var rider = o.driver_id && DS.data.userById ? DS.data.userById(o.driver_id) : null;
+      var assign = isOwner && o.status === 'handed_to_company'
+        ? '<div class="driver-assign-slot" style="margin-top:10px">' +
+            '<select class="select assign-driver-select" data-assign-select="' + esc(o.id) + '"><option value="">' + esc(t('assignDriver')) + '</option>' +
+              riders().map(function (d) { return '<option value="' + esc(d.id) + '"' + (o.driver_id === d.id ? ' selected' : '') + '>' + esc(DS.loc(d, 'name')) + '</option>'; }).join('') +
+            '</select>' +
+            '<button class="btn btn-primary btn-sm" data-assign="' + esc(o.id) + '">' + icon('userPlus') + esc(t('assignDriver')) + '</button></div>'
+        : '';
       return '<article class="card"><div class="card-body">' +
         '<div style="display:flex;align-items:flex-start;gap:10px">' +
           '<div class="delivery-logo">' + icon('truck') + '</div>' +
@@ -76,7 +92,9 @@
         '<div style="margin-top:10px;display:flex;flex-direction:column;gap:3px">' +
           '<div style="font-size:12px;font-weight:600">' + esc(o.customer ? DS.loc(o.customer, 'name') : t('customerLabel')) + '</div>' +
           '<div class="icon-inline" style="font-size:11px;color:var(--text-tertiary)">' + icon('mapPin') + esc(o.customer ? DS.loc(o.customer, 'address') : '') + '</div>' +
-          '<div class="icon-inline" style="font-size:11px;color:var(--text-tertiary)">' + icon('phone') + esc(o.customer ? o.customer.phone : '') + ' · ' + count + ' ' + esc(t('item')) + '</div></div>' +
+          '<div class="icon-inline" style="font-size:11px;color:var(--text-tertiary)">' + icon('phone') + esc(o.customer ? o.customer.phone : '') + ' · ' + count + ' ' + esc(t('item')) + '</div>' +
+          '<div class="icon-inline" style="font-size:11px;color:var(--text-tertiary)">' + icon('bike') + esc(o.driver_name || t('noDriverAssigned')) + (rider && rider.phone ? ' · ' + esc(rider.phone) : '') + '</div></div>' +
+        assign +
         '<div class="delivery-actions" style="margin-top:12px;display:flex;gap:6px">' +
           '<button class="btn btn-secondary btn-sm" data-details="' + esc(o.id) + '">' + icon('eye') + esc(t('details')) + '</button>' +
           (act ? '<button class="btn ' + act.variant + ' btn-sm" data-advance="' + esc(o.id) + '">' + icon(act.icon) + esc(act.label) + '</button>' : '') +
@@ -92,6 +110,17 @@
     if (q) q.addEventListener('input', DS.debounce(function () { state.q = q.value; render(); }, 160));
     var st = page.body.querySelector('[data-status]');
     if (st) st.addEventListener('change', function () { state.status = st.value; render(); });
+    DS.$$('[data-assign]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.getAttribute('data-assign');
+        var sel = page.body.querySelector('[data-assign-select="' + id + '"]');
+        if (!sel || !sel.value) { DS.toast(t('noDriverAssigned'), 'warning'); return; }
+        if (!DS.data.assignOrder(id, sel.value)) { DS.toast(t('noPermission'), 'error'); return; }
+        DS.toast(t('driverAssigned'), 'success');
+        window.dispatchEvent(new CustomEvent('ds:order-updated', { detail: { id: id } }));
+        render();
+      });
+    });
     DS.$$('[data-details]', page.body).forEach(function (b) { b.addEventListener('click', function () { DS.openOrder(b.getAttribute('data-details')); }); });
     DS.$$('[data-advance]', page.body).forEach(function (b) {
       b.addEventListener('click', function () {
@@ -100,8 +129,10 @@
         var act = nextAction(o);
         if (!act) return;
         if (act.next === 'delivered') { openProof(o); return; }
-        DS.data.updateOrderStatus(o.id, act.next, { driver_name: DS.loc(user, 'name'), company_id: company.id, company_name: company.name });
-        DS.toast(t('statusUpdated'), act.next === 'delivering' ? 'success' : 'info');
+        if (!DS.data.updateOrderStatus(o.id, act.next, { driver_id: o.driver_id, driver_name: o.driver_name || DS.loc(user, 'name'), company_id: company.id, company_name: company.name })) {
+          DS.toast(t('noPermission'), 'error'); return;
+        }
+        DS.toast(t('statusUpdated'), 'success');
         window.dispatchEvent(new CustomEvent('ds:order-updated', { detail: { id: o.id } }));
         render();
       });
@@ -116,7 +147,7 @@
           '<label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px dashed var(--border-strong);border-radius:var(--radius-lg);padding:28px;background:var(--surface-2);cursor:pointer;text-align:center">' +
             '<span style="width:52px;height:52px;border-radius:14px;background:var(--lime-soft);color:var(--lime);display:grid;place-items:center">' + icon('image') + '</span>' +
             '<b style="font-size:13px">' + esc(t('uploadImage')) + '</b><span style="font-size:11px;color:var(--text-tertiary)">PNG / JPG · ≤ 800KB</span>' +
-            '<input type="file" id="proofFile" accept="image/*" hidden></label>' +
+            '<input type="file" id="proofPhoto" accept="image/*" capture="environment" hidden></label>' +
           '<div data-proof-preview style="margin-top:10px;display:none"><img alt="proof" style="width:100%;max-height:220px;object-fit:cover;border-radius:var(--radius-md);border:1px solid var(--border)"></div>' +
           '<p style="font-size:11px;color:var(--text-tertiary);margin-top:8px">' + esc(t('proofRequired')) + '</p></div>',
       actions: [
@@ -125,7 +156,7 @@
             var img = root.querySelector('[data-proof-preview] img');
             var src = img ? img.getAttribute('src') : '';
             if (!src) { DS.toast(t('proofRequired'), 'error'); return false; }
-            DS.data.updateOrderStatus(o.id, 'delivered', { proof: src, driver_name: DS.loc(user, 'name'), company_id: company.id, company_name: company.name });
+            DS.data.updateOrderStatus(o.id, 'delivered', { proof: src, driver_id: o.driver_id, driver_name: o.driver_name || DS.loc(user, 'name'), company_id: company.id, company_name: company.name });
             DS.toast(t('orderDeliveredMsg'), 'success');
             window.dispatchEvent(new CustomEvent('ds:order-updated', { detail: { id: o.id } }));
             setTimeout(render, 200);
@@ -133,7 +164,7 @@
           } }
       ],
       onMount: function (root) {
-        var input = root.querySelector('#proofFile');
+        var input = root.querySelector('#proofPhoto');
         input.addEventListener('change', function () {
           var f = input.files && input.files[0];
           if (!f) return;

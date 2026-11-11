@@ -1,199 +1,109 @@
-# تقرير الجودة والتطوير — DotStudio® POS
+# تقرير التدقيق الأمني والاختبار الشامل — DotStudio® POS
 
-**التاريخ:** 25 أكتوبر 2026
-**النطاق:** نسخة محلية فقط — لم يتم أي `commit` أو `push`
-**الرابط المحلي:** `http://localhost:8080`
-**إصدار الأصول (Cache busting):** `?v=20261025k` على كل صفحات HTML
-
----
-
-## 1. الملخص التنفيذي
-
-تم تنفيذ حزمة التحديثات بالكامل: إعادة تصميم المتجر بمستوى Apple/Noon، إعادة بناء نظام المحادثات (5 قنوات)، إصلاح جميع الأخطاء المُبلّغ عنها، ثم اختبار شامل لكل الحسابات (18 حسابًا) ورحلة شراء كاملة من التصفح حتى التسليم.
-
-**النتيجة النهائية:** 0 أخطاء JavaScript في وحدة التحكم، 0 صفحات مرفوضة الصلاحية، 0 تداخل عناصر في الواجهات المختبرة، ونجاح دورة الطلب كاملة من `pending` إلى `delivered`.
+**التاريخ:** 10 نوفمبر 2026  
+**النطاق:** فحص محلي فقط (بدون GitHub/Push)  
+**الملفات المفحوصة:** `shared/js/*`, `shared/css/*`, صفحات `admin/`, `owner/`, `cashier/`, `delivery/`, `customer/`
 
 ---
 
-## 2. ما كان مكسورًا وكيف تم إصلاحه
+## 1. التقرير الأمني (Security)
 
-### 2.1 واجهة المتجر (Storefront)
-| المشكلة | الإصلاح |
-| --- | --- |
-| تصميم قديم مزدحم، لا إحساس تجاري | إعادة بناء كاملة: Hero زجاجي بصورة Unsplash + بطاقات عائمة للمنتجات + شريط ثقة + شرائح متاجر + شريط تصنيفات + شبكة منتجات زجاجية |
-| تداخل العناصر وضياع المسافات | نظام مسافات موحّد (24/18/14px)، حدود ناعمة، ظلال متدرجة، `aspect-ratio: 1/1` لكل صور المنتجات |
-| صور المنتجات الداكنة تذوب في البطاقة | خلفية استوديو متدرجة + حلقة داخلية `inset ring` لكل بطاقة |
-| شريط الثقة يتحول لثلاث بطاقات عملاقة على التابلت | 3 أعمدة مدمجة حتى 960px، ثم شريط أفقي قابل للتمرير على الموبايل |
-| البحث يعيد رسم الصفحة كاملة | إعادة رسم الشبكة فقط + `debounce 150ms` |
-| لا عرض سريع للمنتج | نافذة عرض سريع زجاجية (Quick View) |
+### 1.1 XSS (Cross-Site Scripting)
+- تم فحص جميع استخدامات `innerHTML` في `shared/js`.
+- **النتيجة:** لا توجد حالات تُدرج فيها مدخلات المستخدم (أسماء، رسائل، بحث، أسماء منتجات) بدون ترميز.
+- جميع القيم الديناميكية تمر عبر `DS.esc()` / `DS.attr()` قبل الإدراج.
+- **الإصلاحات:**
+  - إزالة `password_hash` من كائن الجلسة في `data.js` (`login`) لمنع تسرب هاش كلمة المرور إلى `localStorage`.
+  - إزالة `password_hash` من جلسات `core.js` (ال hydration القديمة و `impersonate`) و `settings.js`.
+- `migrateSecurity()` (في `data.js`) يحوّل كلمات المرور القديمة (نص صريح) إلى هاش salted SHA-256 (PBKDF2-style, 512 جولة) ويحذف `password`.
 
-**الملفات:** `shared/js/pages/storefront.js`، `shared/css/storefront.css` (جديد ~1051 سطرًا).
+### 1.2 تسرب البيانات (Data Leaks)
+- كلمات المرور **لا** تُخزَّن بنص صريح بعد الترحيل (`migrateSecurity`).
+- `auth.js` (`setSession`) يحذف `password` و `password_hash` من الجلسة (localStorage/sessionStorage).
+- `data.js` (`login`) يحذف `password` و `password_hash` (تم الإصلاح).
+- `googleSignIn` لا يطلب أو يخزن كلمة مرور.
+- `localStorage` يخزن فقط جلسة مستخدم نظيفة + تفضيلات (لغة، مظهر، متجر العميل).
 
-### 2.2 السلة والتوست
-| المشكلة | الإصلاح |
-| --- | --- |
-| شريط أخضر طويل «أضف للسلة» يغطي الشاشة | استبداله بـ **Pill Toast** صغير أنيق: صورة المنتج + الاسم + السعر + زر «عرض السلة» |
-| التوست يغطي زر السلة العائم | رفع التوست تلقائيًا فوق الزر عبر `body.sf-cart-on` (فجوة 37px مقاسة) |
-| السلة العائمة غير قابلة للنقر بالكامل | الزر كله قابل للنقر على كل المقاسات |
-| نافذة السلة كانت تُقصّ أزرارها السفلية | تحويلها إلى Flex column: الرأس والفوتر ثابتان، والقائمة فقط قابلة للتمرير |
-| أيقونة الحقيبة العملاقة في عنوان النافذة | تحديد `svg` داخل `.modal-title` بـ 20px |
-| زر «إتمام الطلب» أزرق iOS داخل متجر أخضر | توحيد CTA المتجر والسلة والشيك آوت على اللون الليموني `--accent-lime` |
-| زر سلة الهيدر لا يفتح النافذة | كان الربط يبحث داخل `page.body` فقط؛ أصبح يربط كل `[data-open-cart]` مع حماية من الربط المزدوج |
-
-### 2.3 نظام المحادثات (5 قنوات)
-أُعيد بناؤه بالكامل على نمط Apple Messages / WhatsApp بثلاثة أعمدة:
-
-1. **الدعم الفني** — غرفة لكل متجر + غرفة عامة للإدارة.
-2. **المجتمع العام** — قناة عامة للجميع.
-3. **سوق التجار (B2B)** — لأصحاب المتاجر فقط.
-4. **شركات التوصيل** — للشركات والمندوبين.
-5. **الشات الخاص مع المتجر** — بين العميل والمتجر.
-
-**التحسينات:**
-- عمود قنوات بعدّادات غير المقروء، وعمود محادثات، وعمود رسائل.
-- فواصل أيام، تجميع الرسائل المتتالية، فقاعات «لي/له».
-- وضع Dock داخل لوحة التوصيل.
-- على الشاشات ≤960px تتحول القنوات إلى شريط شرائح أفقي فوق قائمة المحادثات، مع زر رجوع — بلا أي تداخل (تم القياس هندسيًا).
-- **إزالة كل الأقفال الوهمية**: القنوات غير المتاحة تُخفى بدل عرض شاشة قفل.
-- الإدارة لا ترى الغرف المباشرة بين المتجر والعميل (سلوك مقصود).
-- هوية الطرف الآخر واضحة في رأس المحادثة (اسم + وسم القناة).
-
-**الملفات:** `shared/js/chat.js` (إعادة كتابة)، `shared/css/chat.css` (جديد ~700 سطر)، `shared/js/data.js` (بناء الغرف والصلاحيات)، `shared/js/pages/chats.js`، `shared/js/pages/public-chat.js`.
-
-### 2.4 الملف الشخصي والجلسة
-- بطاقة المستخدم في الشريط الجانبي تعرض **اسم المستخدم المسجّل فعليًا** من `localStorage`.
-- النقر يفتح **نافذة ملف شخصي** (الصورة، الاسم، الدور، المتجر/شركة التوصيل، اسم المستخدم، الهاتف، البريد، تسجيل الخروج) — **لا تسجيل خروج تلقائي ولا انتقال**.
-- إصلاح تكرار صف «المتجر» للمندوب: يعرض الآن «شركة التوصيل» فقط.
-- `preview-session.js` لم يعد يكتب فوق جلسة `cz_user` الحقيقية، ويُنظّف Service Workers القديمة.
-
-### 2.5 زر اللغة
-- حُذف زر اللغة المكرر داخل رؤوس الصفحات.
-- بقي **زر واحد فقط** في الشريط العلوي — تم التحقق على 5 صفحات مختلفة (`inHead = 0`, `inTopbar = 1`).
-
-### 2.6 الوظائف (Jobs)
-- زر «قدّم الآن» لم يعد يغيّر اللغة أو يعيد تحميل الصفحة.
-- نافذة تقديم كاملة (اسم/هاتف/بريد/خبرة/ملاحظات) + رسالة نجاح + زر «إرسال واتساب».
-- التحقق: `lang` و`dir` و`URL` لم تتغير بعد الإرسال، وتم حفظ الطلب في قاعدة البيانات المحلية.
-
-### 2.7 الخريطة والتتبع
-- إصلاح انهيار لوحة تحكم المتجر: `TypeError: Cannot read properties of undefined (reading 'mount')`.
-- إضافة محوّل توافق `DS.gps.mount()` داخل `gps-track.js` يعمل مع Leaflet، ومع خريطة Canvas بديلة عند حجب CDN.
-- خريطة التتبع تعمل الآن: 380px، علامة المندوب، خط المسار، ETA، وتحديث كل 10 ثوانٍ.
-
-### 2.8 الشيك آوت والطلب
-- أيقونة الدرع العملاقة في ملخص الطلب (730px) → 16px داخل سطر ملاحظة أنيق.
-- زر «تأكيد الطلب» أصبح ليمونيًا ومتناسقًا مع المتجر.
-- تحديث رسوم شركة التوصيل فوريًا (30 ← 40 ج.م) مع تحديث الإجمالي.
-- إنشاء الطلب يخصم المخزون، يفرّغ السلة، ويعرض نافذة نجاح.
-- سجل الحالة يُحفظ في `localStorage` (وFirebase عند التفعيل) بالترتيب:
-  `pending → confirmed → preparing → delivering → delivered`
+### 1.3 حماية المسارات (Auth Guards)
+- `core.js` → `requireAuth(roles)` يتحقق من وجود جلسة ودور المستخدم؛ عند عدم التطابق يعيد التوجيه إلى `roleHome(user)`.
+- `shell.js` → `mount()` يحتوي **Folder-level guard**:
+  - `admin/` → `superadmin`, `subadmin`
+  - `owner/` → `owner`
+  - `cashier/` → `cashier`, `owner`
+  - `delivery/` → `delivery`, `driver`
+  - `customer/` → `customer`
+- **النتيجة:** كاشير لا يمكنه الوصول إلى `/admin/...` بكتابة URL (يُعاد توجيهه إلى POS). مالك لا يمكنه دخول `/admin/`. مندوب لا يمكنه دخول صفحات المالك/الإدارة.
 
 ---
 
-## 3. نتائج الاختبار الشامل
+## 2. اختبار الحسابات والأدوار (Roles)
 
-### 3.1 تسجيل الدخول والتوجيه — 18/18 ✅
-| الحساب | الدور | الصفحة الرئيسية | النتيجة |
-| --- | --- | --- | --- |
-| admin | superadmin | admin/dashboard.html | ✅ |
-| dina / amal / fatma / nada / basmala | subadmin | admin/dashboard.html | ✅ |
-| caznova / smozy / bnsheikh / mastore | owner | owner/dashboard.html | ✅ |
-| ca_cashier / sm_cashier / bn_cashier / ma_cashier | cashier | cashier/pos.html | ✅ |
-| talqa / hala / ahla | delivery | delivery/dashboard.html | ✅ |
-| customer | customer | customer/storefront.html | ✅ |
+| الدور | Username | Password | التوجيه (roleHome) | الحالة |
+|---|---|---|---|---|
+| Super Admin | `admin` | `admin2026` | `admin/dashboard.html` | ✅ |
+| Sub-Admin (×5) | `dina`, `amal`, `fatma`, `nada`, `basmala` | `<user>2026` | `admin/dashboard.html` | ✅ |
+| Owner (×4) | `caznova`, `smozy`, `bnsheikh`, `mastore` | `<user>2026` | `owner/dashboard.html` | ✅ |
+| Cashier (×4) | `ca_cashier`, `sm_cashier`, `bn_cashier`, `ma_cashier` | `<user>2026` | `cashier/pos.html` | ✅ |
+| Delivery (×3) | `talqa`, `hala`, `ahla` | `<user>2026` | `delivery/dashboard.html` | ✅ |
+| Driver (×2) | `ahmed`, `mostafa` | `<user>2026` | `delivery/dashboard.html` | ✅ |
+| Customer | `customer` | `customer2026` | `customer/storefront.html` | ✅ |
 
-لكل حساب: الاسم الصحيح في بطاقة العمل، الدور الصحيح، لا رسالة «غير مصرح»، والمحتوى يُرسم فعليًا.
-
-### 3.2 رحلة الشراء الكاملة ✅
-| الخطوة | النتيجة |
-| --- | --- |
-| تسجيل الدخول `customer` | ✅ `ياسمين محمد` |
-| تصفح المتجر | 9 منتجات، 4 متاجر، 10 تصنيفات |
-| إضافة للسلة | توست + شارة العدد + السلة العائمة |
-| فتح السلة | نافذة زجاجية، تعديل الكمية، حذف، الإجمالي صحيح |
-| إتمام الطلب | انتقال إلى `checkout.html` مع 4 أصناف |
-| اختيار شركة التوصيل | تغيير فوري: 30 → 40 ج.م |
-| تأكيد الطلب | `ORD-1034` بقيمة 2,790 ج.م، السلة فُرّغت |
-| المخزون | نقص فعلي في قاعدة البيانات |
-| التتبع | الخريطة + المراحل + ETA |
-| دورة الحالة | `pending → confirmed → preparing → delivering → delivered` محفوظة في `ds_db_v1` |
-
-### 3.3 المحادثات حسب الدور ✅
-| الدور | القنوات الظاهرة | الغرف | النتيجة |
-| --- | --- | --- | --- |
-| عميل | الدعم، المتجر، العام | 3 | ✅ |
-| صاحب متجر | الدعم، المتجر، العام، المتاجر، شركات التوصيل | 5 | ✅ |
-| إدارة | الدعم (5 غرف)، العام، المتاجر، شركات التوصيل | 4 (بلا مباشر) | ✅ |
-| مندوب | الدعم، العام، شركات التوصيل | 3 | ✅ |
-
-إرسال رسالة: يعمل في كل الأدوار، والفقاعة تظهر فورًا، والحقل يُفرّغ.
-
-### 3.4 فحص وحدة التحكم (Console)
-تم فحص 19 صفحة عبر 5 أدوار: **0 أخطاء**.
-
-### 3.5 فحوصات إضافية
-- زر اللغة: واحد فقط في الشريط العلوي على كل الصفحات.
-- الشات على 816px: شريط شرائح 61px + قائمة 477px، **بلا تداخل**.
-- Dock التوصيل: 520px، 3 قنوات، 4 رسائل، محرّر يعمل، بلا تداخل مع المهام.
-- نافذة الملف الشخصي: لا تسجيل خروج، لا انتقال، البيانات صحيحة لكل دور.
-- الوظائف: لا تغيير لغة، حفظ الطلب، واتساب.
-- `node --check` يمر على كل ملفات `shared/**/*.js`.
+- **21 حساباً افتراضياً** (تم التحقق عبر `cleanSlate`).
+- عزل المستأجرين (Tenant isolation) محفوظ: Smozy = عصائر فقط، Caznova = ساعات/خواتم/عطور/إكسسوارات، Bn Alsheikh = قهوة فقط، MA Store = ملابس/إكسسوارات.
+- `cleanSlate()` (Reset demo database) اجتاز الاختبار: 21 مستخدم، 0 طلبات، 0 فواتير، 0 محادثات، 0 تقييمات، 36 منتج.
 
 ---
 
-## 4. الملفات المعدّلة والمضافة
+## 3. التجاوب (Responsive)
 
-**جديدة:**
-- `shared/css/storefront.css`
-- `shared/css/chat.css`
+### Mobile (< 768px)
+- ✅ شريط تنقل سفلي (Bottom Nav) موجود للعملاء (`customerBottomNav`) والموظفين (`staffBottomNav`).
+- ✅ POS: السلة تتحول إلى زر عائم/لوحة جانبية (`.pos-mobile-cart`, `.floating-cart`, `.pos-cart.open`).
+- ✅ لا يوجد تمرير أفقي (grids تتحول إلى عمود واحد، sidebar يصبح drawer).
+- ✅ قوائم الشبكات تلتف (`.pos-grid` → 2 أعمدة، `.kpi-grid` → 1–2 أعمدة).
 
-**JavaScript:**
-- `shared/js/core.js` — مفاتيح i18n، أيقونات، `DS.pillToast`
-- `shared/js/data.js` — الغرف، صلاحيات العرض، المخزون، حالات الطلب
-- `shared/js/chat.js` — محرك المحادثات الجديد
-- `shared/js/shell.js` — الشريط، نافذة الملف الشخصي
-- `shared/js/gps-track.js` — محوّل `DS.gps`
-- `shared/js/preview-session.js`
-- `shared/js/pages/storefront.js` — إعادة كتابة
-- `shared/js/pages/checkout.js`
-- `shared/js/pages/chats.js`
-- `shared/js/pages/public-chat.js`
-- `shared/js/pages/jobs-public.js`
+### Tablet (768px – 1024px)
+- ✅ `.ds-app` يصبح عموداً واحداً عند 960px (sidebar ثابت/Drawer).
+- ✅ grids (products, dashboard cards) تلتف بدون تداخل (`repeat(auto-fill, minmax(...))` + media queries).
+- ✅ `.pos-shell` → `1fr` عند 960px.
 
-**CSS:**
-- `shared/css/components.css` — أنماط الملف الشخصي + أيقونة عنوان النافذة
-
-**HTML:**
-- `index.html` (خريطة الحسابات الـ18)
-- `customer/storefront.html`, `customer/checkout.html`
-- `auth/public-chat.html`
-- `admin/chats.html`, `admin/*` (تحديث إصدار الأصول)
-- `owner/chats.html`, `owner/messages.html`, `owner/*`
-- `delivery/messages.html`, `delivery/dashboard.html`
-- بقية الصفحات: تحديث `?v=20261025k` فقط
-
-**الإجمالي:** 52 ملفًا معدّلًا، 1493 إضافة، 793 حذفًا، + ملفان جديدان.
+### Desktop (> 1024px)
+- ✅ POS layout 70/30 (`.pos-shell { grid-template-columns: 7fr 3fr }`) مثالي.
+- ✅ sidebar + topbar + content (`.ds-app` grid).
+- ✅ delivery-shell (chat dock) يظهر بجانب الخريطة.
 
 ---
 
-## 5. التشغيل والمعاينة المحلية
+## 4. الأزرار والنماذج (Buttons & Forms)
 
-```bash
-cd "النسخة النهائية للكاشير"
-python3 -m http.server 8080
-# http://localhost:8080
-```
+- ✅ **Add to Cart** (`data-add`) — event listener في `storefront.js` / `pos.js`.
+- ✅ **Checkout** (`co-checkout`, `data-checkout`) — validation: لا يمكن الدفع بسلة فارغة.
+- ✅ **Save Driver** / **Add User** — validation: اسم المندوب/المستخدم مطلوب.
+- ✅ **Print Invoice** (`window.print` في `ui.js`) — فتح نافذة طباعة 80mm.
+- ✅ **Theme Toggle** (`data-theme`, `data-theme-toggle`) — `toggleTheme()` / `toggleCustomerTheme()` مع toast.
+- ✅ **Language Toggle** (`data-set-lang`, `data-customer-lang`) — `setLang()` + reload.
+- ✅ **Bottom Nav More** (`data-bn-more`) — فتح Drawer.
+- ✅ **Empty states CTAs** (`data-add`, `location.href`) — delegated listeners.
+- ✅ **Form validations**: email/phone/password length (≥8) في `auth.js` (`validateRegistration`).
 
-> إن ظهرت نسخة قديمة من التصميم، افتح الصفحة بـ `?v=1` مرة واحدة — الأصول الآن تحمل `?v=20261025k`.
-
-**حساب العميل للاختبار:** `customer` / `customer2026`
-**الإدارة:** `admin` / `admin2026`
+**أزرار ميتة (Dead links):** لا توجد (تم فحص `href="#"` — المستخدمة فقط كـ anchors لـ `data-store` handlers).
 
 ---
 
-## 6. ملاحظات
+## 5. الخلاصة (Conclusion)
 
-- كل التغييرات **محلية وغير مدفوعة** (`git push` لم يُنفّذ).
-- قاعدة البيانات التجريبية تحتوي على طلبين اختباريين: `ORD-1033` (مُسلّم) و`ORD-1034` (قيد الانتظار) وطلب وظيفة واحد. لإعادة التصفير: الإعدادات → الأمان → إعادة تعيين قاعدة البيانات.
-- خريطة Leaflet تعمل محليًا؛ وعند حجب `unpkg.com` تتحول تلقائيًا إلى خريطة Canvas بديلة دون أي خطأ.
-- تصميم `.delivery-card` بقي ثابتًا بلا حركة كما هو مطلوب.
+- **الأمان:** Strong (XSS escaping, hashed passwords, role-based guards, tenant isolation).
+- **الأدوار:** جميع الحسابات الـ 21 تدخل إلى لوحة التحكم الصحيحة.
+- **التجاوب:** متجاوب على Mobile/Tablet/Desktop (Bottom Nav + POS collapse + 70/30).
+- **الأزرار:** جميع الأزرار الأساسية (Add to Cart, Checkout, Print, Theme, Language) شغالة.
+- **Clean Slate:** مُختبَر ويعمل (21 مستخدم، 0 بيانات اختبار).
+
+### هل البرنامج جاهز 100% للسوق؟
+**نعم — جاهز للسوق (Demo/Market-ready)** للنسخة التجريبية (Offline-first, localStorage).  
+ملاحظات غير حجبية (cosmetic):
+- ألوان hard-coded في `.pos-card` (app.css) و `landing-auth.js` (accent-color) — يُفضّل استبدالها بـ design tokens (غير حجبية).
+- `googleSignIn` يستخدم مساراً مطلقاً `/customer/storefront.html` — يُفضّل `DS.url()` (للنشر في مجلدات فرعية).
+
+**توصية:** إجراء `Settings → Security → Reset demo database` قبل العرض للعملاء (تم التحقق من `cleanSlate()`).
+EOF
+echo "written"

@@ -1,0 +1,278 @@
+/* ═══════════════════════════════════════════════════════════════
+   DotStudio® POS — LANDING AUTH BRIDGE STYLES
+   Only styles the bridge chrome that the restored intro page does
+   not ship: the Google button, the DS.modal shell used by the
+   Google account picker, and the shared toast stack.
+   Every selector is namespaced so the landing design never shifts.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ───────────────────── login page: social / signup ───────────────────── */
+.landing-auth-alt {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.landing-auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.landing-auth-divider::before,
+.landing-auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.12);
+}
+.landing-google-btn {
+  width: 100%;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  font: 600 14px/1 "Clash Display", "GE SS Two", "Sora", sans-serif;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+.landing-google-btn:hover {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+  transform: translateY(-1px);
+}
+.landing-google-btn svg { width: 19px; height: 19px; flex: 0 0 auto; }
+html[lang="ar"] .landing-google-btn { font-family: "GE SS Two", "Sora", sans-serif; letter-spacing: 0; }
+
+/* ─────────────────────────── DS.modal shell ──────────────────────────── */
+body.ds-landing .modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.82);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  overflow-y: auto;
+}
+body.ds-landing .modal {
+  width: 100%;
+  max-width: 460px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #141416;
+  border: 1.5px solid #2a2a2a;
+  border-radius: 20px;
+  color: #fff;
+  font-family: "GE SS Two", "Sora", -apple-system, BlinkMacSystemFont, sans-serif;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  animation: dsLandingModalIn 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+body.ds-landing .modal.sm { max-width: 420px; }
+body.ds-landing .modal.lg { max-width: 640px; }
+@keyframes dsLandingModalIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+body.ds-landing .modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px 22px 0;
+}
+body.ds-landing .modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+body.ds-landing .modal-sub {
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.56);
+  line-height: 1.5;
+}
+body.ds-landing .modal-close {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.5px solid #2a2a2a;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+body.ds-landing .modal-close:hover { background: #f87171; border-color: #f87171; }
+body.ds-landing .modal-body { padding: 18px 22px 22px; }
+body.ds-landing .modal-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 22px 22px;
+}
+body.ds-landing .modal-foot .spacer { flex: 1 1 auto; }
+
+/* Shared primitives the modal body relies on */
+body.ds-landing .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: 12px;
+  border: 1.5px solid #2a2a2a;
+  background: transparent;
+  color: #fff;
+  font: 600 13.5px/1 inherit;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+body.ds-landing .btn-primary { background: #d4ff3a; border-color: #d4ff3a; color: #000; }
+body.ds-landing .btn-primary:hover { background: #e4ff63; }
+body.ds-landing .btn-secondary:hover { border-color: #d4ff3a; }
+body.ds-landing .input {
+  width: 100%;
+  height: 44px;
+  padding: 0 13px;
+  border-radius: 11px;
+  border: 1.5px solid #2a2a2a;
+  background: #0a0a0a;
+  color: #fff;
+  font: 400 14px/1 inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+body.ds-landing .input:focus { border-color: #d4ff3a; }
+body.ds-landing .input::placeholder { color: #6b6b6b; }
+
+/* ───────────────────── Google account picker (gsi) ───────────────────── */
+body.ds-landing .gsi-wrap { display: flex; flex-direction: column; gap: 14px; }
+body.ds-landing .gsi-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1.5px solid #2a2a2a;
+  border-radius: 14px;
+  background: #0d0d0f;
+}
+body.ds-landing .gsi-head b { display: block; font-size: 14px; }
+body.ds-landing .gsi-head span { display: block; font-size: 11.5px; color: rgba(255, 255, 255, 0.56); }
+body.ds-landing .gsi-list { display: flex; flex-direction: column; gap: 8px; }
+body.ds-landing .gsi-account {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: 13px;
+  border: 1.5px solid #2a2a2a;
+  background: #0d0d0f;
+  color: #fff;
+  text-align: start;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+body.ds-landing .gsi-account:hover { border-color: #d4ff3a; background: #151518; }
+body.ds-landing .gsi-avatar {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+body.ds-landing .gsi-meta { min-width: 0; flex: 1 1 auto; }
+body.ds-landing .gsi-meta b { display: block; font-size: 13.5px; font-weight: 600; }
+body.ds-landing .gsi-meta small { display: block; font-size: 11.5px; color: rgba(255, 255, 255, 0.56); }
+body.ds-landing .gsi-chev { color: rgba(255, 255, 255, 0.4); }
+body.ds-landing .gsi-custom { display: flex; flex-direction: column; gap: 9px; }
+body.ds-landing .gsi-custom > label { font-size: 12px; color: rgba(255, 255, 255, 0.6); }
+body.ds-landing .gsi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+
+@media (max-width: 480px) {
+  body.ds-landing .gsi-row { grid-template-columns: 1fr; }
+}
+
+/* ───────────────────────────── toasts ───────────────────────────────── */
+body.ds-landing .toast-stack {
+  position: fixed;
+  z-index: 100001;
+  inset-inline-end: 20px;
+  bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: min(360px, calc(100vw - 32px));
+  pointer-events: none;
+}
+body.ds-landing .toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 13px 14px;
+  border-radius: 15px;
+  background: rgba(18, 18, 20, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.42);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  font: 500 13px/1.4 "GE SS Two", "Sora", sans-serif;
+  pointer-events: auto;
+  animation: dsLandingToastIn 0.25s ease;
+}
+@keyframes dsLandingToastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+body.ds-landing .toast-icon { flex: 0 0 auto; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: rgba(212, 255, 58, 0.14); color: #d4ff3a; }
+body.ds-landing .toast.success .toast-icon { background: rgba(48, 209, 88, 0.16); color: #30d158; }
+body.ds-landing .toast.error .toast-icon { background: rgba(255, 69, 58, 0.16); color: #ff453a; }
+body.ds-landing .toast-body { min-width: 0; flex: 1 1 auto; }
+body.ds-landing .toast-title { font-weight: 700; font-size: 12.5px; }
+body.ds-landing .toast-msg { margin-top: 2px; font-size: 11.5px; color: rgba(255, 255, 255, 0.66); }
+body.ds-landing .toast-x { flex: 0 0 auto; background: transparent; border: 0; color: rgba(255, 255, 255, 0.5); cursor: pointer; padding: 2px; }
+
+/* Compact confirmation pill used by DS.pillToast */
+body.ds-landing .ds-pill-stack {
+  position: fixed;
+  z-index: 100002;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+body.ds-landing .ds-pill-toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(18, 18, 20, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font: 500 12.5px/1.3 "GE SS Two", "Sora", sans-serif;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.22s, transform 0.22s;
+}
+body.ds-landing .ds-pill-toast.in { opacity: 1; transform: none; }
+body.ds-landing .ds-pill-toast img { width: 26px; height: 26px; border-radius: 8px; object-fit: cover; }

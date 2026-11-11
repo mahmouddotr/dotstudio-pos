@@ -7,7 +7,7 @@
   if (!user) return;
   var tenant = DS.data.tenantById(user.tenant_id) || {};
   var page = DS.shell.mount({
-    roles: ['cashier', 'owner'],
+    roles: ['owner'],
     active: 'invoices',
     title: t('invoices'),
     eyebrow: tenant.name || t('store'),
@@ -147,7 +147,7 @@
     if (!tryQr()) {
       drawFallbackQr(box, url);
       var s = document.createElement('script');
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+      s.src = DS.url('shared/vendor/qrcode.min.js');
       s.onload = function () {
         box.innerHTML = '';
         tryQr();

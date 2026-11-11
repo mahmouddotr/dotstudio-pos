@@ -22,8 +22,8 @@
         dashboard: 'لوحة التحكم', stores: 'المتاجر', products: 'المنتجات', orders: 'الطلبات',
         invoices: 'الفواتير', customers: 'العملاء', cashiers: 'الكاشير', deliveryCompanies: 'شركات التوصيل',
         chats: 'المحادثات', messages: 'الرسائل', jobs: 'الوظائف', reports: 'التقارير',
-        subscriptions: 'الاشتراكات', audit: 'سجل النشاط', settings: 'الإعدادات', pos: 'نقطة البيع',
-        storefront: 'المتجر', checkout: 'إتمام الطلب', tracking: 'تتبع الطلب', myOrders: 'طلباتي',
+        subscriptions: 'الاشتراكات', audit: 'سجل النشاط', settings: 'الإعدادات', pos: 'نقطة البيع', sell: 'الكاشير',
+        storefront: 'المتجر', checkout: 'إتمام الطلب', tracking: 'تتبع الطلب', myOrders: 'طلباتي', reviews: 'التقييمات',
         subAdmins: 'المشرفون', marketing: 'الرئيسية', publicChat: 'المحادثة العامة',
         logout: 'تسجيل الخروج', workspace: 'مساحة العمل', operations: 'العمليات', growth: 'النمو',
         communication: 'التواصل', team: 'الفريق', system: 'النظام', community: 'المجتمع'
@@ -56,7 +56,7 @@
         customer: 'العميل', owner: 'المالك', store: 'المتجر', role: 'الدور', plan: 'الباقة',
         language: 'اللغة', theme: 'المظهر', logout: 'تسجيل الخروج', login: 'تسجيل الدخول',
         username: 'اسم المستخدم', password: 'كلمة المرور', welcome: 'أهلاً', today: 'اليوم',
-        week: 'هذا الأسبوع', month: 'هذا الشهر', revenue: 'الإيرادات', print: 'طباعة',
+        week: 'هذا الأسبوع', month: 'هذا الشهر', revenue: 'الإيرادات', print: 'طباعة', printReceipt: 'طباعة الإيصال', newSale: 'بيعة جديدة',
         export: 'تصدير', filter: 'تصفية', from: 'من', to: 'إلى', apply: 'تطبيق', reset: 'إعادة تعيين',
         loading: 'جارٍ التحميل…', noData: 'لا توجد بيانات', noResults: 'لا توجد نتائج',
         accessDenied: 'لا تملك صلاحية الوصول', back: 'رجوع', next: 'التالي', previous: 'السابق',
@@ -95,7 +95,7 @@
       },
       order: {
         title: 'الطلبات', id: 'رقم الطلب', status: 'الحالة', pending: 'قيد الانتظار',
-        confirmed: 'مؤكد', preparing: 'قيد التحضير', delivering: 'في الطريق', delivered: 'تم التسليم',
+        confirmed: 'مؤكد', preparing: 'قيد التحضير', delivering: 'تم التسليم للمندوب', delivered: 'تم التسليم',
         cancelled: 'ملغي', paymentMethod: 'طريقة الدفع', cash: 'نقدي', card: 'بطاقة',
         wallet: 'محفظة', vodafone: 'فودافون كاش', deliveryCompany: 'شركة التوصيل', driver: 'المندوب',
         timeline: 'مراحل الطلب', proof: 'إثبات التسليم', items: 'المنتجات', summary: 'الملخص',
@@ -104,7 +104,7 @@
         search: 'ابحث عن طلب…', allStatuses: 'كل الحالات', date: 'تاريخ الطلب',
         created: 'تم إنشاء الطلب', confirmedAt: 'تم تأكيد الطلب', preparingAt: 'جارٍ تجهيز الطلب',
         deliveringAt: 'المندوب في الطريق', deliveredAt: 'تم تسليم الطلب', cancelledAt: 'تم إلغاء الطلب',
-        newSale: 'بيعة جديدة', markDelivered: 'تأكيد التسليم', markPicked: 'تم الاستلام',
+        newSale: 'بيعة جديدة', markDelivered: 'تم التسليم', markPicked: 'تم الاستلام', handToDriver: 'تسليم للمندوب',
         proofUpload: 'ارفع صورة الإثبات', orderSummary: 'ملخص الطلب', total: 'الإجمالي',
         deliveryFee: 'رسوم التوصيل', notes: 'ملاحظات الطلب', customer: 'العميل', phone: 'الهاتف',
         address: 'العنوان', city: 'المدينة', itemsCount: 'عدد المنتجات', qty: 'الكمية'
@@ -126,7 +126,7 @@
         onTheWay: 'في الطريق', delivered: 'تم التسليم', earnings: 'الأرباح',
         empty: 'لا يوجد مندوبون مسجلون بعد.', dashboard: 'لوحة المندوب',
         noAssigned: 'لا توجد مهام مسندة', noAssignedText: 'ستظهر المهام الجديدة هنا فور إسنادها إليك.',
-        accept: 'قبول المهمة', markPicked: 'تأكيد الاستلام', markDelivered: 'تأكيد التسليم',
+        accept: 'قبول المهمة', markPicked: 'تأكيد الاستلام', markDelivered: 'تم التسليم',
         proofUpload: 'ارفع صورة إثبات التسليم', eta: 'الوقت المتوقع', distance: 'المسافة',
         liveTracking: 'تتبع لحظي', deliverTo: 'التوصيل إلى', rider: 'مندوب'
       },
@@ -212,8 +212,8 @@
         dashboard: 'Dashboard', stores: 'Stores', products: 'Products', orders: 'Orders',
         invoices: 'Invoices', customers: 'Customers', cashiers: 'Cashiers', deliveryCompanies: 'Delivery companies',
         chats: 'Chats', messages: 'Messages', jobs: 'Jobs', reports: 'Reports',
-        subscriptions: 'Subscriptions', audit: 'Audit log', settings: 'Settings', pos: 'Point of sale',
-        storefront: 'Storefront', checkout: 'Checkout', tracking: 'Track order', myOrders: 'My orders',
+        subscriptions: 'Subscriptions', audit: 'Audit log', settings: 'Settings', pos: 'Point of sale', sell: 'Cashier',
+        storefront: 'Storefront', checkout: 'Checkout', tracking: 'Track order', myOrders: 'My orders', reviews: 'Reviews',
         subAdmins: 'Sub-admins', marketing: 'Home', publicChat: 'Public chat',
         logout: 'Sign out', workspace: 'Workspace', operations: 'Operations', growth: 'Growth',
         communication: 'Communication', team: 'Team', system: 'System', community: 'Community'
@@ -246,7 +246,7 @@
         customer: 'Customer', owner: 'Owner', store: 'Store', role: 'Role', plan: 'Plan',
         language: 'Language', theme: 'Theme', logout: 'Sign out', login: 'Sign in',
         username: 'Username', password: 'Password', welcome: 'Welcome', today: 'Today',
-        week: 'This week', month: 'This month', revenue: 'Revenue', print: 'Print',
+        week: 'This week', month: 'This month', revenue: 'Revenue', print: 'Print', printReceipt: 'Print receipt', newSale: 'New sale',
         export: 'Export', filter: 'Filter', from: 'From', to: 'To', apply: 'Apply', reset: 'Reset',
         loading: 'Loading…', noData: 'No data yet', noResults: 'No results',
         accessDenied: 'You do not have access', back: 'Back', next: 'Next', previous: 'Previous',
@@ -285,7 +285,7 @@
       },
       order: {
         title: 'Orders', id: 'Order ID', status: 'Status', pending: 'Pending',
-        confirmed: 'Confirmed', preparing: 'Preparing', delivering: 'On the way', delivered: 'Delivered',
+        confirmed: 'Confirmed', preparing: 'Preparing', delivering: 'Handed to driver', delivered: 'Delivered',
         cancelled: 'Cancelled', paymentMethod: 'Payment method', cash: 'Cash', card: 'Card',
         wallet: 'Wallet', vodafone: 'Vodafone Cash', deliveryCompany: 'Delivery company', driver: 'Driver',
         timeline: 'Order timeline', proof: 'Delivery proof', items: 'Items', summary: 'Summary',
@@ -294,7 +294,7 @@
         search: 'Search orders…', allStatuses: 'All statuses', date: 'Order date',
         created: 'Order created', confirmedAt: 'Order confirmed', preparingAt: 'Preparing your order',
         deliveringAt: 'Driver on the way', deliveredAt: 'Order delivered', cancelledAt: 'Order cancelled',
-        newSale: 'New sale', markDelivered: 'Confirm delivery', markPicked: 'Picked up',
+        newSale: 'New sale', markDelivered: 'Mark delivered', markPicked: 'Picked up', handToDriver: 'Hand to driver',
         proofUpload: 'Upload proof photo', orderSummary: 'Order summary', total: 'Total',
         deliveryFee: 'Delivery fee', notes: 'Order notes', customer: 'Customer', phone: 'Phone',
         address: 'Address', city: 'City', itemsCount: 'Items', qty: 'Qty'
@@ -316,7 +316,7 @@
         onTheWay: 'On the way', delivered: 'Delivered', earnings: 'Earnings',
         empty: 'No drivers assigned yet.', dashboard: 'Driver dashboard',
         noAssigned: 'No assigned tasks', noAssignedText: 'New tasks appear here as soon as they are assigned to you.',
-        accept: 'Accept task', markPicked: 'Confirm pickup', markDelivered: 'Confirm delivery',
+        accept: 'Accept task', markPicked: 'Confirm pickup', markDelivered: 'Mark delivered',
         proofUpload: 'Upload delivery proof', eta: 'ETA', distance: 'Distance',
         liveTracking: 'Live tracking', deliverTo: 'Deliver to', rider: 'Rider'
       },

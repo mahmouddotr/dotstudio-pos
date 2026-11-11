@@ -1,1 +1,45 @@
+# Dependencies
+node_modules/
+package-lock.json.bak
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Logs & temp
+*.log
+npm-debug.log*
+yarn-error.log*
+.work/
+qa-*.js
+qa-*.json
+dbg-*.js
+_dev-*.html
+
+# Editors / tools
 .aider*
+.vscode/
+.idea/
+*.swp
+
+# Build / cache
+dist/
+build/
+.cache/
+.tmp/
+coverage/
+
+# Capacitor / native build output
+android/app/build/
+android/.gradle/
+ios/App/Pods/
+ios/App/build/

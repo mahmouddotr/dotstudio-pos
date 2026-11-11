@@ -23,8 +23,13 @@
   --text-secondary: #86868B;
   --text-tertiary: #48484A;
 
+  /* Brand identity — Black · White · Lemon Green */
+  --bg-main: #F9F9F9;
+  --text-main: #111111;
+  --accent: #CCFF00;
+  --card-bg: #FFFFFF;
+
   /* Apple accents */
-  --accent: #007AFF;
   --accent-blue: #007AFF;
   --accent-green: #30D158;
   --accent-lime: #82FF1F;

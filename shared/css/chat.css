@@ -739,3 +739,196 @@ html[dir="rtl"] .chat-send svg { transform: scaleX(-1); }
 .cs-copy small{font-size:10.5px;color:var(--text-tertiary);line-height:1.5}
 .chat-report-reasons{display:flex;flex-direction:column;gap:6px}
 .chat-report-reason{padding:9px 11px;border:1px solid var(--border);border-radius:10px}
+
+/* ═══════════════════════════════════════════════════════════════
+   2026 CHAT PANEL — fixed glass sheet, no clipped threads
+   ═══════════════════════════════════════════════════════════════ */
+.modal-backdrop.chat-modal-backdrop {
+  z-index: 9000;
+  padding: clamp(10px, 3vw, 28px);
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  overflow: hidden;
+}
+.modal.chat-modal {
+  display: flex;
+  flex-direction: column;
+  width: min(460px, 100%);
+  height: min(760px, calc(100vh - 2 * 16px));
+  height: min(760px, calc(100dvh - 2 * clamp(10px, 3vw, 28px)));
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.095), rgba(255, 255, 255, 0.022) 55%, rgba(255, 255, 255, 0.012)),
+    rgba(16, 16, 18, 0.86);
+  box-shadow: 0 40px 90px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(34px) saturate(180%);
+  backdrop-filter: blur(34px) saturate(180%);
+  transform-origin: center;
+  animation: dsChatIn 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.modal.chat-modal .modal-head {
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent);
+}
+.modal.chat-modal .modal-title { font-size: 15px; letter-spacing: -0.01em; }
+.modal.chat-modal .modal-sub { font-size: 11.5px; margin-top: 3px; }
+.modal.chat-modal .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+.modal.chat-modal .modal-foot {
+  flex-shrink: 0;
+  padding: 12px 18px calc(14px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.018);
+}
+.modal.chat-modal .modal-foot .btn { min-width: 0; padding: 8px 14px; font-size: 12px; }
+
+/* Direct thread (driver / delivery company) */
+.dsc {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+.dsc-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.022);
+}
+.dsc-head .avatar { width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0; }
+.dsc-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.dsc-id b { font-size: 13px; }
+.dsc-id span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+}
+.chat-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lime, #82FF1F);
+  box-shadow: 0 0 0 0 rgba(130, 255, 31, 0.45);
+  animation: dsLivePulse 2.2s ease-out infinite;
+  flex-shrink: 0;
+}
+@keyframes dsLivePulse {
+  0% { box-shadow: 0 0 0 0 rgba(130, 255, 31, 0.45); }
+  70% { box-shadow: 0 0 0 6px rgba(130, 255, 31, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(130, 255, 31, 0); }
+}
+.dsc-order {
+  font-size: 10px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  direction: ltr;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.dsc-thread {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding: 16px 16px 12px;
+  scrollbar-width: thin;
+}
+.dsc-thread::-webkit-scrollbar { width: 6px; }
+.dsc-thread::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 4px; }
+.dsc-compose {
+  flex-shrink: 0;
+  padding: 10px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.02);
+}
+.dsc-blocked {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.dsc-blocked svg { width: 15px; height: 15px; color: var(--danger, #FF453A); }
+.dsc-blocked span { flex: 1; }
+.chat-settings-btn {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .16s, color .16s;
+}
+.chat-settings-btn:hover { background: rgba(255, 255, 255, 0.10); color: var(--text-primary); }
+.chat-settings-btn svg { width: 15px; height: 15px; }
+
+/* Nested settings / report sheets must sit above the chat sheet */
+.modal-backdrop.chat-sheet-backdrop { z-index: 9500; }
+
+@keyframes dsChatIn {
+  /* No filter keyframes: a lingering blur() would rasterise the panel text. */
+  from { opacity: 0; transform: translateY(14px) scale(0.965); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 560px) {
+  .modal-backdrop.chat-modal-backdrop { padding: 0; align-items: flex-end; }
+  .modal.chat-modal {
+    width: 100%;
+    height: 92dvh;
+    border-radius: 26px 26px 0 0;
+    border-bottom: 0;
+    animation: dsChatSheet 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes dsChatSheet {
+    from { opacity: 0; transform: translateY(38px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal.chat-modal, .chat-live-dot { animation: none !important; }
+}
+
+/* No backdrop-filter (older WebViews) → keep the sheet readable, not see-through. */
+@supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
+  .modal-backdrop.chat-modal-backdrop { background: rgba(0, 0, 0, 0.82); }
+  .modal.chat-modal {
+    background:
+      linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02) 55%, rgba(255, 255, 255, 0.01)),
+      rgba(16, 16, 18, 0.985);
+  }
+}

@@ -94,7 +94,7 @@
         return isAdmin || tn.id === user.tenant_id;
       }).map(function (tn) { return '<option value="' + tn.id + '"' + (u && u.tenant_id === tn.id ? ' selected' : '') + '>' + esc(tn.name) + '</option>'; }).join('') + '</select></div>' +
       '<div class="field"><label>' + esc(t('username')) + ' *</label><input class="input" id="cUser" value="' + esc(u ? u.username : '') + '" style="direction:ltr"' + (isNew ? '' : ' readonly') + '></div>' +
-      '<div class="field"><label>' + esc(t('password')) + ' *</label><input class="input" id="cPass" value="' + esc(u ? u.password || '' : '') + '" style="direction:ltr"></div>' +
+      '<div class="field"><label>' + esc(t('password')) + (isNew ? ' *' : '') + '</label><input class="input" id="cPass" value="" autocomplete="new-password" style="direction:ltr" placeholder="' + (isNew ? '' : esc(DS.lang() === 'en' ? 'Leave blank to keep current' : 'اتركه فارغًا للإبقاء على الحالي')) + '"></div>' +
       '<div class="field"><label>' + esc(t('phone')) + '</label><input class="input" id="cPhone" value="' + esc(u ? (u.phone || '') : '') + '" style="direction:ltr"></div>' +
       '<div class="field"><label>' + esc(t('status')) + '</label><select class="select" id="cActive"><option value="1"' + (!u || u.is_active !== false ? ' selected' : '') + '>' + esc(t('active')) + '</option><option value="0"' + (u && u.is_active === false ? ' selected' : '') + '>' + esc(t('inactive')) + '</option></select></div>' +
       '</div>';
@@ -105,7 +105,7 @@
         var username = root.querySelector('#cUser').value.trim().toLowerCase();
         var pass = root.querySelector('#cPass').value;
         var tid = root.querySelector('#cStore').value;
-        if (!name || !username || !pass) { DS.toast(t('required'), 'error'); return false; }
+        if (!name || !username || (isNew && !pass)) { DS.toast(t('required'), 'error'); return false; }
         if (isNew) {
           if (DS.data.users.filter(function (x) { return x.username === username; }).length) { DS.toast(t('invalidLogin'), 'error'); return false; }
           DS.data.addUser({ username: username, password: pass, role: 'cashier', name: name, name_en: name, tenant_id: tid, phone: root.querySelector('#cPhone').value.trim(), avatar_id: 'av6', is_active: root.querySelector('#cActive').value === '1' });

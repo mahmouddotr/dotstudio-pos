@@ -5,14 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>المتجر · DotStudio® POS</title>
   <meta name="description" content="DotStudio® POS — منصة إدارة المتاجر والمبيعات والتوصيل.">
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#0A0A0A">
   <link rel="icon" type="image/png" href="../assets/img/LOGO-ICON-DONE.png">
   <link rel="stylesheet" href="../assets/css/fonts.css">
-  <link rel="stylesheet" href="../shared/css/design-system.css?v=20261026e">
-  <link rel="stylesheet" href="../shared/css/components.css?v=20261026e">
-  <link rel="stylesheet" href="../shared/css/app.css?v=20261026e">
-  <link rel="stylesheet" href="../shared/css/storefront.css?v=20261026e">
-  <script src="../shared/js/i18n.js?v=20261026e"></script>
+  <link rel="stylesheet" href="../shared/css/design-system.css?v=20261107a">
+  <link rel="stylesheet" href="../shared/css/components.css?v=20261106f">
+  <link rel="stylesheet" href="../shared/css/app.css?v=20261109nav">
+  <link rel="stylesheet" href="../shared/css/storefront.css?v=20261106g">
+  <link rel="stylesheet" href="../shared/css/chat.css?v=20261107b">
+  <script>
+    /* Apply the saved customer theme before paint (no white flash). */
+    (function () {
+      try {
+        var t = localStorage.getItem('ds_customer_theme');
+        document.documentElement.setAttribute('data-customer-theme', t === 'light' ? 'light' : 'dark');
+      } catch (e) {
+        document.documentElement.setAttribute('data-customer-theme', 'dark');
+      }
+    })();
+  </script>
+  <script src="../shared/js/i18n.js?v=20261106e"></script>
 
   <style>
     /* ═══════════════════════════════════════════════════════════════
@@ -287,8 +299,9 @@
 
     .sf-page .sf-card-media {
       aspect-ratio: 1 / 1;
-      background: var(--surface-2);
+      background: #ffffff;
       box-shadow: none;
+      border: 0;
     }
     .sf-page .sf-card-media img { transition: transform 700ms var(--ease-out); }
     .sf-page .sf-card:hover .sf-card-media img { transform: scale(1.035); }
@@ -427,7 +440,7 @@
       html[lang="ar"] .sf-page .sf-title { font-size: clamp(30px, 9vw, 40px); }
       .sf-page .sf-sub { font-size: 14px; }
       .sf-page .sf-hero-meta { margin-top: 22px; }
-      .sf-page .sf-card-media { aspect-ratio: 4 / 3; }
+      .sf-page .sf-card-media { aspect-ratio: 1 / 1; }
       .sf-page .sf-card-body { padding: 14px 14px 16px; }
       .sf-page .sf-toolbar-head { align-items: flex-start; }
       .sf-page .sf-search { width: 100%; }
@@ -454,53 +467,26 @@
   </script>
 
 
-    <style id="force-white-blazity">
-        body, html, .main-content, .content-area, #app { background-color: #FFFFFF !important; color: #000000 !important; }
-        .sidebar, .navbar, .header, .topbar { background-color: #FFFFFF !important; border-bottom: 1px solid #EAEAEA !important; color: #000 !important; }
-        .sidebar a, .navbar a { color: #000 !important; }
-        
-        /* تنسيق الهيرو سيكشن */
-        .hero-section, .hero, .banner { background: #F9F9F9 !important; border-radius: 20px; margin: 20px; }
-        
-        /* إجبار شبكة المنتجات */
-        .products-grid, #products-grid, .grid, .product-grid, .store-products {
-            display: grid !important;
-            grid-template-columns: repeat(4, 1fr) !important;
-            gap: 25px !important;
-            padding: 20px !important;
-            background: #FFFFFF !important;
-        }
-        
-        /* كروت المنتجات */
-        .product-card, .card, .product-item {
-            background: #FFFFFF !important;
-            border: 1px solid #F0F0F0 !important;
-            border-radius: 16px !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
-            overflow: hidden !important;
-        }
-        
-        /* النصوص */
-        .product-card h3, .card h3, .product-name { color: #111 !important; font-weight: bold !important; }
-        .product-price, .price { color: #000 !important; font-weight: 900 !important; }
-        .store-name, .vendor { color: #777 !important; font-size: 12px !important; }
-        
-        /* شاشة الموبايل */
-        @media (max-width: 1024px) { .products-grid { grid-template-columns: repeat(2, 1fr) !important; } }
-        @media (max-width: 600px) { .products-grid { grid-template-columns: 1fr !important; } }
-    </style>
+  <link rel="stylesheet" href="../shared/css/saleor.css?v=20261106h">
+  <link rel="stylesheet" href="../shared/css/brand-2026.css?v=20261107a">
+  <link rel="stylesheet" href="../shared/css/customer-theme.css?v=20261108d">
     </head>
     
 
 <body>
   <div id="app"></div>
-  <script src="../shared/js/preview-session.js?v=20261026e"></script>
-  <script src="../shared/js/core.js?v=20261026e"></script>
-  <script src="../shared/js/data.js?v=20261026e"></script>
-  <script src="../shared/js/shell.js?v=20261026e"></script>
-  <script src="../shared/js/ui.js?v=20261026e"></script>
-  <script src="../shared/js/scanner.js?v=20261026e"></script>
-  <script src="../shared/js/pages/storefront.js?v=20261026e"></script>
+  <script src="../shared/js/preview-session.js?v=20261106e"></script>
+  <script src="../shared/js/core.js?v=20261108a"></script>
+  <script src="../shared/js/security.js?v=20261106e"></script>
+<script src="../shared/js/data.js?v=20261106e"></script>
+
+  <script src="../shared/js/auth.js?v=20261106e"></script>
+  <script src="../shared/js/shell.js?v=20261109nav"></script>
+  <script src="../shared/js/ui.js?v=20261109nav"></script>
+  <script src="../shared/js/scanner.js?v=20261106e"></script>
+  <script src="../shared/js/chat.js?v=20261107b"></script>
+  <script src="../shared/js/pages/storefront.js?v=20261109nav"></script>
+  <script src="../shared/js/error-handler.js?v=20261106e"></script>
 </body>
 
                 

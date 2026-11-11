@@ -18,9 +18,158 @@
     content: '<div class="kpi-grid">' + DS.skeleton.cards(4) + '</div><div class="two-col">' + DS.skeleton.rows(5) + DS.skeleton.rows(4) + '</div>'
   });
   if (!page) return;
-
+  document.body.classList.add('saleor', isAdmin ? 'saleor-admin' : 'saleor-owner');
   var range = 7;
   var fleet = null;
+  var view = { tab: 'overview', branch: 'main' };
+
+  /* ───────────────────────── TASK 4 · BRANCHES ─────────────────────────
+     Visual multi-branch management: branches are stored per tenant in
+     localStorage and orders are deterministically assigned to one of them
+     so every branch shows a different, stable slice of the stats. */
+  var BRANCH_KEY = 'ds_branches_' + (user.tenant_id || 'store');
+  function defaultBranches() {
+    var tn = DS.data.tenantById(user.tenant_id) || {};
+    return [
+      { id: 'main', name: DS.lang() === 'en' ? 'Main branch' : 'الفرع الرئيسي', name_en: 'Main branch', address: tn.address || (DS.lang() === 'en' ? 'Head office' : 'المقر الرئيسي'), created_at: new Date().toISOString() },
+      { id: 'smouha', name: 'فرع سموحة', name_en: 'Smouha branch', address: DS.lang() === 'en' ? 'Smouha, Alexandria' : 'سموحة، الإسكندرية', created_at: new Date().toISOString() }
+    ];
+  }
+  function branches() {
+    var list = DS.store.get(BRANCH_KEY, null);
+    if (!Array.isArray(list) || !list.length) {
+      list = defaultBranches();
+      DS.store.set(BRANCH_KEY, list);
+    }
+    if (!list.some(function (b) { return b.id === view.branch; })) view.branch = list[0].id;
+    return list;
+  }
+  function branchName(b) { return DS.lang() === 'en' ? (b.name_en || b.name) : (b.name || b.name_en); }
+  function hashId(id) {
+    var s = String(id || ''), h = 0;
+    for (var i = 0; i < s.length; i++) h = ((h * 31) + s.charCodeAt(i)) >>> 0;
+    return h;
+  }
+  function ordersForBranch(branchId) {
+    var list = branches();
+    var all = DS.data.ordersByTenant ? DS.data.ordersByTenant(user.tenant_id) : DS.data.visibleOrders(user);
+    var idx = Math.max(0, list.map(function (b) { return b.id; }).indexOf(branchId));
+    return all.filter(function (o) { return hashId(o.id) % list.length === idx; });
+  }
+  function branchStats(list) {
+    var revenue = DS.data.revenueOf ? DS.data.revenueOf(list) : list.reduce(function (s, o) { return s + (Number(o.total) || 0); }, 0);
+    return {
+      orders: list.length,
+      revenue: revenue,
+      active: list.filter(function (o) { return DS.isActiveOrderStatus(o.status); }).length,
+      delivered: list.filter(function (o) { return o.status === 'delivered'; }).length,
+      avg: list.length ? revenue / list.length : 0
+    };
+  }
+
+  /* ────────────────────── TASK 2 · AI SALES FORECAST ───────────────────
+     Reads the real order history for the tenant, ranks items by units
+     sold and forecasts stock pressure. No backend, no external calls. */
+  function aiForecast() {
+    var orders = DS.data.ordersByTenant ? DS.data.ordersByTenant(user.tenant_id) : DS.data.visibleOrders(user);
+    var map = {};
+    orders.forEach(function (o) {
+      (o.items || []).forEach(function (it) {
+        var key = it.product_id || it.name;
+        if (!key) return;
+        if (!map[key]) map[key] = { id: it.product_id, name: it.name, name_en: it.name_en || it.name, qty: 0 };
+        map[key].qty += Number(it.qty) || 0;
+      });
+    });
+    var list = Object.keys(map).map(function (k) { return map[k]; }).sort(function (a, b) { return b.qty - a.qty; });
+    var products = DS.data.visibleProducts(user);
+    var fallback = false;
+    if (!list.length) {
+      /* Fresh demo database: no orders yet. Fall back to the seeded sales
+         counters so the forecast still has a meaningful signal. */
+      fallback = true;
+      list = products.map(function (p) {
+        return { id: p.id, name: p.name, name_en: p.name_en || p.name, qty: Number(p.sold) || 0 };
+      }).filter(function (p) { return p.qty > 0; }).sort(function (a, b) { return b.qty - a.qty; });
+    }
+    var top = list.slice(0, 3);
+    var totalUnits = list.reduce(function (s, x) { return s + x.qty; }, 0);
+    return {
+      totalUnits: totalUnits,
+      products: list.length,
+      orders: orders.length,
+      fallback: fallback,
+      top: top.map(function (p) {
+        var prod = products.filter(function (x) { return x.id === p.id; })[0] || {};
+        var stock = Number(prod.stock) || 0;
+        var demand = totalUnits ? Math.round(p.qty / totalUnits * 100) : 0;
+        return {
+          name: DS.lang() === 'en' ? (p.name_en || p.name) : (p.name || p.name_en),
+          qty: p.qty,
+          share: demand,
+          stock: stock,
+          low: stock <= (Number(prod.min_stock) || 0),
+          confidence: Math.max(62, Math.min(97, Math.round((p.qty / Math.max(1, top[0] ? top[0].qty : p.qty)) * 82 + 15)))
+        };
+      })
+    };
+  }
+
+  function aiInsightsMarkup() {
+    var EN = DS.lang() === 'en';
+    var f = aiForecast();
+    var body;
+    if (!f.top.length) {
+      body = '<div class="ai-empty">' + icon('sparkles') +
+        '<p>' + esc(EN ? 'No sales history yet. Complete a few orders and the forecast will start learning.' : 'لا يوجد سجل مبيعات بعد. أنشئ بضع طلبات وسيبدأ التنبؤ في التعلم.') + '</p></div>';
+    } else {
+      body = '<div class="ai-forecast-list">' + f.top.map(function (p, i) {
+        return '<div class="ai-forecast-item">' +
+          '<span class="ai-rank">' + (i + 1) + '</span>' +
+          '<div class="ai-forecast-copy">' +
+            '<div class="ai-forecast-title">' +
+              (EN ? 'Forecast: ' : 'تنبؤ: ') + (EN ? 'product ' : 'منتج ') + '<b>' + esc(p.name) + '</b> ' +
+              (EN ? 'is in high demand — we recommend increasing stock by 20%.' : 'مطلوب بكثرة، ننصح بزيادة المخزون بنسبة 20%.') +
+            '</div>' +
+            '<div class="ai-forecast-meta">' +
+              '<span>' + icon('trendingUp') + p.qty + ' ' + esc(t('units')) + '</span>' +
+              '<span>' + icon('chart') + p.share + '% ' + esc(EN ? 'of demand' : 'من الطلب') + '</span>' +
+              '<span class="' + (p.low ? 'is-low' : '') + '">' + icon('box') + (EN ? 'Stock ' : 'المخزون ') + p.stock + '</span>' +
+              '<span class="ai-conf">' + icon('sparkles') + (EN ? 'Confidence ' : 'ثقة ') + p.confidence + '%</span>' +
+            '</div>' +
+            '<div class="ai-bar"><span style="width:' + p.confidence + '%"></span></div>' +
+          '</div>' +
+        '</div>';
+      }).join('') + '</div>';
+    }
+    return '<section class="ai-insights-card">' +
+      '<div class="ai-glow" aria-hidden="true"></div>' +
+      '<header class="ai-insights-head">' +
+        '<span class="ai-orb">' + icon('sparkles') + '</span>' +
+        '<div><div class="ai-kicker">' + esc(EN ? 'AI Insights' : 'تحليلات الذكاء الاصطناعي') + '</div>' +
+          '<h2>' + esc(EN ? 'Sales forecasting' : 'تنبؤات المبيعات') + '</h2>' +
+          '<p>' + esc(EN ? 'Learns from your orders and flags the products about to run out.' : 'يتعلم من طلباتك ويحدد المنتجات المعرضة للنفاد قبل حدوثه.') + '</p></div>' +
+        '<span class="ai-live"><i></i>' + esc(EN ? 'Live model' : 'نموذج لحظي') + '</span>' +
+      '</header>' +
+      body +
+      '<footer class="ai-insights-foot">' +
+        '<span>' + icon(f.fallback ? 'chart' : 'orders') + (f.fallback
+          ? esc(EN ? 'Based on historical sales' : 'مبني على المبيعات التاريخية')
+          : f.orders + ' ' + esc(EN ? 'orders analysed' : 'طلب تم تحليله')) + '</span>' +
+        '<span>' + icon('box') + f.products + ' ' + esc(EN ? 'products tracked' : 'منتج متتبع') + '</span>' +
+      '</footer>' +
+    '</section>';
+  }
+
+  function ownerTabsMarkup() {
+    var EN = DS.lang() === 'en';
+    return '<div class="owner-tabs" role="tablist">' +
+      '<button type="button" class="owner-tab' + (view.tab === 'overview' ? ' active' : '') + '" data-owner-tab="overview" role="tab" aria-selected="' + (view.tab === 'overview') + '">' +
+        icon('dashboard') + esc(EN ? 'Overview' : 'نظرة عامة') + '</button>' +
+      '<button type="button" class="owner-tab' + (view.tab === 'branches' ? ' active' : '') + '" data-owner-tab="branches" role="tab" aria-selected="' + (view.tab === 'branches') + '">' +
+        icon('store') + esc(EN ? 'Branches' : 'الفروع') + '<span class="owner-tab-count">' + branches().length + '</span></button>' +
+    '</div>';
+  }
 
   function greeting() {
     var h = new Date().getHours();
@@ -49,10 +198,12 @@
     var orders = DS.data.visibleOrders(user).slice().sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
     var low = DS.data.visibleProducts(user).filter(function (p) { return p.stock <= p.min_stock; }).slice(0, 5);
     var sub = DS.data.activeSubscription(user.tenant_id);
-    var active = orders.filter(function (o) { return o.status === 'delivering'; })[0];
+    var active = orders.filter(function (o) { return o.status === 'out_for_delivery'; })[0];
     var seriesTotal = series.reduce(function (a, x) { return a + x.value; }, 0);
+    var tabs = ownerTabsMarkup();
+    if (view.tab === 'branches') return tabs + branchesRender();
 
-    return '<div class="welcome-card"><div class="welcome-copy">' +
+    return tabs + '<div class="welcome-card"><div class="welcome-copy">' +
       '<span class="welcome-kicker">' + icon('sparkles') + esc(greeting()) + ' · ' + esc(user.name) + '</span>' +
       '<div class="welcome-title">' + esc(DS.lang() === 'en' ? 'Your store is running smoothly.' : 'متجرك شغّال بكفاءة.') + '</div>' +
       '<div class="welcome-sub">' + esc(DS.lang() === 'en'
@@ -71,6 +222,8 @@
       (sub && sub.daysLeft <= 15 ? '<div class="notice warning" style="display:flex;align-items:center;gap:10px">' + icon('alert') +
         '<div style="flex:1"><b>' + esc(t('expiringSoon')) + '</b> · ' + esc(t('daysRemaining')) + ': ' + Math.max(0, sub.daysLeft) + '</div>' +
         '<a class="btn btn-primary btn-sm" href="' + url('owner/subscriptions.html') + '">' + icon('whatsapp') + esc(t('renew')) + '</a></div>' : '') +
+
+      aiInsightsMarkup() +
 
       '<div class="kpi-grid">' +
         statCard(t('monthRevenue'), money(s.monthRevenue), 'chart', 'lime', '+' + s.monthOrders + ' ' + t('orders')) +
@@ -101,6 +254,8 @@
               '<b style="font-size:12px">' + money(p.revenue) + '</b></div>';
           }).join('') : DS.empty({ icon: 'box', title: t('emptyProducts'), text: t('emptyProductsText') })) +
         '</div></div></div>' +
+
+      driversCard() +
 
       '<div class="two-col">' +
         (active ? '<div class="card"><div class="card-header"><div class="card-title">' + esc(t('liveOrders')) + '</div><a class="btn btn-ghost btn-sm" href="' + url('customer/tracking.html?order=' + active.id) + '">' + esc(t('tracking')) + '</a></div><div class="card-body" data-owner-map></div></div>'
@@ -143,6 +298,7 @@
         '<a class="btn btn-primary" href="' + url('admin/stores.html') + '">' + icon('store') + esc(t('stores')) + '</a>' +
         '<a class="btn btn-secondary" href="' + url('admin/orders.html') + '">' + icon('orders') + esc(t('orders')) + '</a>' +
         '<a class="btn btn-ghost" href="' + url('admin/reports.html') + '">' + icon('chart') + esc(t('reports')) + '</a>' +
+        '<button class="btn btn-secondary" data-quick-add-user>' + icon('userPlus') + esc(DS.lang() === 'en' ? 'Quick add user' : 'إضافة سريعة') + '</button>' +
       '</div></div><div class="welcome-stats">' +
         '<div class="welcome-stat"><div class="v">' + money(s.mrr) + '</div><div class="l">' + esc(t('mrr')) + '</div></div>' +
         '<div class="welcome-stat"><div class="v">' + s.tenants + '</div><div class="l">' + esc(t('totalStores')) + '</div></div>' +
@@ -192,6 +348,7 @@
       '<div class="kpi-grid cols-2"><div class="card"><div class="card-header"><div class="card-title">' + esc(t('topProducts')) + '</div></div><div class="card-body">' +
         DS.chart.bars(tops.map(function (p) { return { label: DS.lang() === 'en' ? (p.name_en || p.name) : p.name, value: p.revenue }; })) + '</div></div>' +
         '<div class="card"><div class="card-header"><div class="card-title">' + esc(t('quickActions')) + '</div></div><div class="card-body"><div class="quick-grid">' +
+          quickAdd('userPlus', DS.lang() === 'en' ? 'Quick add user' : 'إضافة سريعة') +
           quick('store', t('addStore'), 'admin/stores.html') +
           quick('shield', t('addAdmin'), 'admin/sub-admins.html') +
           quick('cashier', t('cashiers'), 'admin/cashiers.html') +
@@ -201,6 +358,109 @@
         '</div></div></div></div>';
   }
 
+  function branchTopProducts(list, limit) {
+    var map = {};
+    list.forEach(function (o) {
+      (o.items || []).forEach(function (it) {
+        var key = it.product_id || it.name;
+        if (!map[key]) map[key] = { name: it.name, name_en: it.name_en || it.name, qty: 0, revenue: 0, image: it.image };
+        map[key].qty += Number(it.qty) || 0;
+        map[key].revenue += (Number(it.qty) || 0) * (Number(it.price) || 0);
+      });
+    });
+    return Object.keys(map).map(function (k) { return map[k]; }).sort(function (a, b) { return b.revenue - a.revenue; }).slice(0, limit || 5);
+  }
+
+  function branchesRender() {
+    var EN = DS.lang() === 'en';
+    var list = branches();
+    var current = list.filter(function (b) { return b.id === view.branch; })[0] || list[0];
+    var orders = ordersForBranch(current.id).slice().sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+    var s = branchStats(orders);
+    var tops = branchTopProducts(orders, 5);
+
+    var pills = '<div class="branch-pills" role="tablist">' + list.map(function (b) {
+      return '<button type="button" class="branch-pill' + (b.id === current.id ? ' active' : '') + '" data-branch-select="' + esc(b.id) + '">' +
+        icon('store') + '<span>' + esc(branchName(b)) + '</span>' +
+        '<b>' + branchStats(ordersForBranch(b.id)).orders + '</b></button>';
+    }).join('') +
+      '<button type="button" class="branch-pill branch-pill-add" data-add-branch>' + icon('plus') + '<span>' + esc(EN ? 'New branch' : 'فرع جديد') + '</span></button>' +
+    '</div>';
+
+    var head = '<div class="branch-head">' +
+      '<div class="branch-head-copy"><div class="branch-eyebrow">' + icon('store') + esc(EN ? 'Multi-branch management' : 'إدارة الفروع') + '</div>' +
+        '<h2>' + esc(branchName(current)) + '</h2>' +
+        '<p>' + icon('mapPin') + esc(current.address || (EN ? 'No address saved' : 'لا يوجد عنوان محفوظ')) + '</p></div>' +
+      '<button type="button" class="btn btn-primary" data-add-branch>' + icon('plus') + esc(EN ? 'Add branch' : 'إضافة فرع') + '</button>' +
+    '</div>';
+
+    var kpis = '<div class="kpi-grid branch-kpis">' +
+      statCard(EN ? 'Branch revenue' : 'إيرادات الفرع', money(s.revenue), 'chart', 'lime', s.orders + ' ' + t('orders')) +
+      statCard(EN ? 'Orders' : 'الطلبات', String(s.orders), 'orders', 'info', (EN ? 'Active: ' : 'الجارية: ') + s.active) +
+      statCard(EN ? 'Average order' : 'متوسط الطلب', money(s.avg), 'receipt', 'purple', (EN ? 'Delivered: ' : 'تم التسليم: ') + s.delivered) +
+      statCard(EN ? 'Branches' : 'الفروع', String(list.length), 'store', 'orange', (EN ? 'All locations' : 'كل المواقع')) +
+    '</div>';
+
+    var branchCards = '<div class="branch-list">' + list.map(function (b) {
+      var bs = branchStats(ordersForBranch(b.id));
+      return '<button type="button" class="branch-card' + (b.id === current.id ? ' active' : '') + '" data-branch-select="' + esc(b.id) + '">' +
+        '<span class="branch-card-ic">' + icon('store') + '</span>' +
+        '<span class="branch-card-copy"><b>' + esc(branchName(b)) + '</b><i>' + esc(b.address || '—') + '</i>' +
+          '<small>' + bs.orders + ' ' + esc(t('orders')) + ' · ' + money(bs.revenue) + '</small></span>' +
+        (b.id === current.id ? '<span class="branch-card-live">' + icon('check') + '</span>' : icon('arrowRight')) +
+      '</button>';
+    }).join('') + '</div>';
+
+    var topsMarkup = tops.length ? tops.map(function (p, i) {
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-soft)">' +
+        '<span style="font-family:var(--font-display);font-weight:700;color:var(--text-tertiary);width:16px">' + (i + 1) + '</span>' +
+        '<img src="' + esc(DS.data.img(p.image)) + '" alt="" style="width:34px;height:34px;border-radius:8px;object-fit:cover">' +
+        '<div style="flex:1;min-width:0"><div class="truncate" style="font-size:12px;font-weight:600">' + esc(EN ? (p.name_en || p.name) : p.name) + '</div>' +
+        '<div style="font-size:10px;color:var(--text-tertiary)">' + p.qty + ' ' + esc(t('units')) + '</div></div>' +
+        '<b style="font-size:12px">' + money(p.revenue) + '</b></div>';
+    }).join('') : DS.empty({ icon: 'box', title: t('emptyProducts'), text: t('emptyProductsText') });
+
+    var recent = '<div class="table-wrap flush"><table class="table table-compact"><thead><tr><th>' + esc(t('orderId')) + '</th><th>' + esc(t('customerLabel')) + '</th><th>' + esc(t('total')) + '</th><th>' + esc(t('status')) + '</th></tr></thead><tbody>' +
+      (orders.length ? orders.slice(0, 6).map(orderRow).join('') : '<tr><td colspan="4">' + DS.empty({ icon: 'orders', title: t('emptyOrders'), text: t('emptyOrdersText') }) + '</td></tr>') +
+      '</tbody></table></div>';
+
+    return head + pills + kpis +
+      '<div class="two-col"><div class="card"><div class="card-header"><div class="card-title">' + esc(t('topProducts')) + ' · ' + esc(branchName(current)) + '</div></div><div class="card-body">' + topsMarkup + '</div></div>' +
+      '<div class="card"><div class="card-header"><div class="card-title">' + esc(EN ? 'All branches' : 'كل الفروع') + '</div></div><div class="card-body">' + branchCards + '</div></div></div>' +
+      '<div class="card order-list-card"><div class="card-header"><div class="card-title">' + esc(t('recentOrders')) + ' · ' + esc(branchName(current)) + '</div>' +
+        '<a class="btn btn-ghost btn-sm" href="' + url('owner/orders.html') + '">' + esc(t('viewAll')) + icon('arrowRight') + '</a></div>' + recent + '</div>';
+  }
+
+  function openAddBranch() {
+    var EN = DS.lang() === 'en';
+    DS.modal({
+      title: icon('store') + ' ' + esc(EN ? 'Add a branch' : 'إضافة فرع'),
+      sub: esc(EN ? 'Create a new location and switch between its stats.' : 'أنشئ موقعاً جديداً وبدّل بين إحصائياته.'),
+      size: 'sm',
+      body: '<div class="field"><label>' + esc(EN ? 'Branch name' : 'اسم الفرع') + ' *</label>' +
+          '<input class="input" id="brName" maxlength="60" placeholder="' + esc(EN ? 'Smouha branch' : 'فرع سموحة') + '"></div>' +
+        '<div class="field" style="margin-top:10px"><label>' + esc(EN ? 'Address' : 'العنوان') + '</label>' +
+          '<input class="input" id="brAddress" maxlength="120" placeholder="' + esc(EN ? 'Street, city' : 'الشارع، المدينة') + '"></div>',
+      actions: [
+        { label: t('cancel'), variant: 'btn-secondary' },
+        { label: EN ? 'Create branch' : 'إنشاء الفرع', variant: 'btn-primary', icon: icon('check'), onClick: function (root) {
+            var name = (root.querySelector('#brName').value || '').trim();
+            var address = (root.querySelector('#brAddress').value || '').trim();
+            if (!name) { DS.toast(t('required'), 'error'); return false; }
+            var list = branches();
+            var id = 'br-' + Date.now().toString(36);
+            list.push({ id: id, name: name, name_en: name, address: address || (EN ? 'No address' : 'بدون عنوان'), created_at: new Date().toISOString() });
+            DS.store.set(BRANCH_KEY, list);
+            view.tab = 'branches';
+            view.branch = id;
+            DS.toast(EN ? 'Branch created' : 'تم إنشاء الفرع', 'success');
+            render();
+            return true;
+          } }
+      ]
+    });
+  }
+
   function statCard(label, value, ico, tone, foot) {
     return '<div class="stat"><div class="stat-top"><span class="stat-label">' + esc(label) + '</span><span class="stat-icon ' + tone + '">' + icon(ico) + '</span></div>' +
       '<div class="stat-value">' + value + '</div><div class="stat-foot">' + esc(foot || '') + '</div></div>';
@@ -208,6 +468,211 @@
   function quick(ico, label, href, attr) {
     return '<a class="quick-btn" href="' + url(href) + '" ' + (attr || '') + '><span class="qi">' + icon(ico) + '</span><span>' + esc(label) + '</span></a>';
   }
+  function quickAdd(ico, label) {
+    return '<button type="button" class="quick-btn" data-quick-add-user><span class="qi">' + icon(ico) + '</span><span>' + esc(label) + '</span></button>';
+  }
+
+  /* ───────────────── ADMIN · QUICK ADD USER ───────────────── */
+  function openQuickAddUser() {
+    var en = DS.lang() === 'en';
+    var isOwner = user.role === 'owner';
+    var scopedTenants = isOwner ? DS.data.tenants.filter(function (tn) { return tn.id === user.tenant_id; }) : DS.data.tenants;
+    var storeOpts = scopedTenants.map(function (tn) {
+      return '<option value="' + esc(tn.id) + '"' + (isOwner && tn.id === user.tenant_id ? ' selected' : '') + '>' + esc(tn.name) + ' · ' + esc(tn.id) + '</option>';
+    }).join('');
+    var companyOpts = (DS.data.companies || []).map(function (c) {
+      return '<option value="' + esc(c.id) + '">' + esc(c.name) + '</option>';
+    }).join('');
+    var body =
+      '<div class="field-grid">' +
+        '<div class="field"><label>' + esc(en ? 'Full name' : 'الاسم بالكامل') + ' *</label><input class="input" id="qaName" maxlength="60" placeholder="' + esc(en ? 'Mahmoud Ali' : 'محمود علي') + '"></div>' +
+        '<div class="field"><label>' + esc(en ? 'Username' : 'اسم المستخدم') + ' *</label><input class="input" id="qaUser" dir="ltr" maxlength="32" placeholder="ma_store"></div>' +
+        '<div class="field"><label>' + esc(en ? 'Password' : 'كلمة المرور') + ' *</label><input class="input" id="qaPass" dir="ltr" maxlength="64" placeholder="••••••••"></div>' +
+        '<div class="field"><label>' + esc(en ? 'Role' : 'الدور') + ' *</label><select class="select" id="qaRole">' +
+          (isOwner ? '' : '<option value="owner">' + esc(en ? 'Store owner' : 'صاحب متجر') + '</option>') +
+          '<option value="cashier"' + (isOwner ? ' selected' : '') + '>' + esc(en ? 'Cashier' : 'كاشير') + '</option>' +
+          '<option value="delivery">' + esc(en ? 'Driver' : 'مندوب') + '</option>' +
+        '</select></div>' +
+        '<div class="field" data-qa-store hidden><label>' + esc(en ? 'Store (tenant_id)' : 'المتجر (tenant_id)') + ' *</label><select class="select" id="qaTenant">' + storeOpts + '</select></div>' +
+        '<div class="field" data-qa-store-name><label>' + esc(en ? 'Store name' : 'اسم المتجر') + ' *</label><input class="input" id="qaStore" maxlength="60"></div>' +
+        '<div class="field" data-qa-company hidden><label>' + esc(en ? 'Delivery company' : 'شركة التوصيل') + '</label><select class="select" id="qaCompany">' + companyOpts + '</select></div>' +
+        '<div class="field"><label>' + esc(en ? 'Phone' : 'رقم الهاتف') + '</label><input class="input" id="qaPhone" dir="ltr" maxlength="20" placeholder="01012345678"></div>' +
+      '</div>' +
+      '<p style="font-size:11px;color:var(--text-tertiary);margin-top:4px">' + icon('shield') + ' ' +
+        esc(en ? 'A tenant_id is generated automatically for every new owner.' : 'يتم توليد tenant_id تلقائياً لكل صاحب متجر جديد.') + '</p>';
+
+    DS.modal({
+      title: icon('userPlus') + ' ' + esc(en ? 'Quick add user' : 'إضافة مستخدم سريعة'),
+      sub: esc(en ? 'Create an owner, cashier or driver in seconds.' : 'أنشئ صاحب متجر أو كاشير أو مندوباً في ثوانٍ.'),
+      size: 'md',
+      body: body,
+      actions: [
+        { label: t('cancel'), variant: 'btn-secondary' },
+        { label: en ? 'Create account' : 'إنشاء الحساب', variant: 'btn-primary', icon: icon('check'), onClick: function (root) {
+            var name = (root.querySelector('#qaName').value || '').trim();
+            var username = (root.querySelector('#qaUser').value || '').trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
+            var pass = root.querySelector('#qaPass').value || '';
+            var role = root.querySelector('#qaRole').value;
+            var phone = (root.querySelector('#qaPhone').value || '').trim();
+            if (!name || !username || !pass) { DS.toast(t('required'), 'error'); return false; }
+            if (pass.length < 8) { DS.toast(en ? 'Password must be at least 8 characters' : 'كلمة المرور 8 أحرف على الأقل', 'error'); return false; }
+            if (DS.data.users.some(function (u) { return String(u.username || '').toLowerCase() === username; })) {
+              DS.toast(en ? 'Username already used' : 'اسم المستخدم مستخدم بالفعل', 'error'); return false;
+            }
+
+            if (role === 'owner') {
+              var storeName = (root.querySelector('#qaStore').value || '').trim();
+              if (!storeName) { DS.toast(t('required'), 'error'); return false; }
+              var slug = username.replace(/[^a-z0-9]/g, '') || String(Date.now()).slice(-6);
+              var tid = 't-' + slug, n = 2;
+              while (DS.data.tenantById(tid)) { tid = 't-' + slug + n; n++; }
+              var now = new Date().toISOString();
+              var end = new Date(Date.now() + 30 * 86400000).toISOString();
+              DS.data.db.tenants.push({
+                id: tid, slug: slug, name: storeName, name_en: storeName,
+                owner: name, owner_en: name, owner_username: username,
+                phone: phone, email: username + '@dotstudio.app',
+                city: '', city_en: '', address: '', address_en: '',
+                industry: en ? 'Retail' : 'تجارة', industry_en: 'Retail',
+                plan: 'monthly', subscription_start: now, subscription_end: end,
+                status: 'active', avatar_id: 'av' + (1 + Math.floor(Math.random() * 9)),
+                color: '#82FF1F', rating: 4.8, delivery_fee: 30,
+                lat: 30.0444, lng: 31.2357,
+                description: '', description_en: '', created_at: now
+              });
+              DS.data.addUser({
+                username: username, password: pass, role: 'owner', name: name, name_en: name,
+                tenant_id: tid, phone: phone, avatar_id: 'av1', is_active: true
+              });
+              DS.data.audit('إضافة سريعة · متجر «' + storeName + '»', 'Quick add · store “' + storeName + '”', 'store');
+              DS.toast(en ? 'Store + owner created' : 'تم إنشاء المتجر والحساب', 'success');
+            } else {
+              var tenantId = root.querySelector('#qaTenant').value;
+              if (isOwner) tenantId = user.tenant_id;
+              var payload = {
+                username: username, password: pass, role: role, name: name, name_en: name,
+                tenant_id: tenantId, phone: phone, avatar_id: role === 'delivery' ? 'av3' : 'av6', is_active: true
+              };
+              if (role === 'delivery') {
+                var comp = (DS.data.companies || []).filter(function (c) { return c.id === root.querySelector('#qaCompany').value; })[0];
+                if (comp) { payload.delivery_company = comp.id; payload.delivery_company_name = comp.name; }
+              }
+              DS.data.addUser(payload);
+              DS.toast(en ? 'User created' : 'تم إنشاء الحساب', 'success');
+            }
+            render();
+            return true;
+          } }
+      ],
+      onMount: function (root) {
+        var roleSel = root.querySelector('#qaRole');
+        function sync() {
+          var role = roleSel.value;
+          root.querySelector('[data-qa-store]').hidden = role === 'owner';
+          root.querySelector('[data-qa-company]').hidden = role !== 'delivery';
+          root.querySelector('[data-qa-store-name]').hidden = role !== 'owner';
+        }
+        roleSel.addEventListener('change', sync);
+        sync();
+      }
+    });
+  }
+
+  /* ───────────────── OWNER · MANAGE DRIVERS ───────────────── */
+  function tenantDrivers() {
+    return DS.data.users.filter(function (u) {
+      return u.role === 'delivery' && u.tenant_id === user.tenant_id;
+    });
+  }
+
+  function driversCard() {
+    var en = DS.lang() === 'en';
+    var list = tenantDrivers();
+    var running = {};
+    DS.data.visibleOrders(user).forEach(function (o) {
+      if (o.status === 'out_for_delivery' && o.driver_id) running[o.driver_id] = (running[o.driver_id] || 0) + 1;
+    });
+    return '<div class="card" data-drivers-card><div class="card-header"><div>' +
+        '<div class="card-title">' + icon('truck') + ' ' + esc(en ? 'Manage drivers' : 'إدارة المناديب') + '</div>' +
+        '<div class="card-subtitle">' + esc(en ? 'Drivers created here can only see your store’s orders.' : 'المناديب المضافون هنا يرون طلبات متجرك فقط.') + '</div></div>' +
+        '<button class="btn btn-primary btn-sm" data-add-driver>' + icon('plus') + esc(en ? 'Add driver' : 'إضافة مندوب') + '</button></div>' +
+      '<div class="card-body">' +
+      (list.length ? list.map(function (d) {
+        var tn = DS.data.tenantById(d.tenant_id);
+        return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border-soft)">' +
+          '<img class="avatar sm" src="' + esc(DS.avatarUrl(d)) + '" alt="">' +
+          '<div style="flex:1;min-width:0"><div class="truncate" style="font-size:12.5px;font-weight:600">' + esc(DS.loc(d, 'name')) + '</div>' +
+            '<div style="font-size:10.5px;color:var(--text-tertiary)">@' + esc(d.username) + ' · ' + esc(tn ? tn.name : '') + (d.phone ? ' · ' + esc(d.phone) : '') + '</div></div>' +
+          '<span class="badge ' + (running[d.id] ? 'lime' : 'neutral') + '">' + (running[d.id] || 0) + ' ' + esc(en ? 'on the way' : 'جاري') + '</span>' +
+          '<span class="badge ' + (d.is_active === false ? 'danger' : 'success') + '">' + esc(d.is_active === false ? (en ? 'Off' : 'موقوف') : (en ? 'Active' : 'نشط')) + '</span>' +
+          '<button class="btn btn-ghost btn-sm" data-edit-driver="' + esc(d.id) + '" aria-label="edit">' + icon('edit') + '</button>' +
+          '<button class="btn btn-ghost btn-sm" data-toggle-driver="' + esc(d.id) + '" aria-label="toggle">' + icon(d.is_active === false ? 'play' : 'pause') + '</button>' +
+          '<button class="btn btn-ghost btn-sm" style="color:var(--danger)" data-del-driver="' + esc(d.id) + '" aria-label="delete">' + icon('trash') + '</button></div>';
+      }).join('') : DS.empty({ icon: 'truck', title: en ? 'No drivers yet' : 'لا يوجد مناديب بعد', text: en ? 'Add your first driver — he will only see your store’s orders.' : 'أضف أول مندوب — سيرى طلبات متجرك فقط.' })) +
+      '</div></div>';
+  }
+
+  function openDriverModal(driver) {
+    var en = DS.lang() === 'en';
+    var isNew = !driver;
+    var inHouseLabel = en ? 'In-House Delivery' : 'توصيل المحل (داخلي)';
+    var body = '<div class="field-grid">' +
+      '<div class="field"><label>' + esc(en ? 'Full name' : 'الاسم بالكامل') + ' *</label><input class="input" id="drName" maxlength="60" value="' + esc(driver ? driver.name : '') + '"></div>' +
+      '<div class="field"><label>' + esc(en ? 'Phone' : 'رقم الهاتف') + '</label><input class="input" id="drPhone" dir="ltr" maxlength="20" value="' + esc(driver ? (driver.phone || '') : '') + '" placeholder="01012345678"></div>' +
+      '<div class="field"><label>' + esc(en ? 'Username' : 'اسم المستخدم') + ' *</label><input class="input" id="drUser" dir="ltr" maxlength="32" value="' + esc(driver ? driver.username : '') + '"' + (isNew ? '' : ' readonly') + '></div>' +
+      '<div class="field"><label>' + esc(en ? 'Password' : 'كلمة المرور') + (isNew ? ' *' : '') + '</label><input class="input" id="drPass" dir="ltr" maxlength="64" autocomplete="new-password" placeholder="' + esc(isNew ? '' : (en ? 'Leave blank to keep current' : 'اتركه فارغًا للإبقاء على الحالي')) + '"></div>' +
+      '<div class="field"><label>' + esc(en ? 'Status' : 'الحالة') + '</label><select class="select" id="drActive">' +
+        '<option value="1"' + (!driver || driver.is_active !== false ? ' selected' : '') + '>' + esc(en ? 'Active' : 'نشط') + '</option>' +
+        '<option value="0"' + (driver && driver.is_active === false ? ' selected' : '') + '>' + esc(en ? 'Suspended' : 'موقوف') + '</option></select></div>' +
+      '</div>' +
+      '<p style="font-size:11px;color:var(--text-tertiary);margin-top:4px">' + icon('store') + ' ' +
+        esc(en ? 'The driver is tied to ' + (DS.data.tenantById(user.tenant_id) || {}).name + ' and sees its orders only.' : 'المندوب مرتبط بمتجر ' + (DS.data.tenantById(user.tenant_id) || {}).name + ' ويرى طلباته فقط.') + '</p>';
+
+    DS.modal({
+      title: icon('truck') + ' ' + esc(isNew ? (en ? 'Add driver' : 'إضافة مندوب') : (en ? 'Edit driver' : 'تعديل المندوب')),
+      size: 'md',
+      body: body,
+      actions: [
+        { label: t('cancel'), variant: 'btn-secondary' },
+        { label: t('saveChanges'), variant: 'btn-primary', onClick: function (root) {
+            var name = (root.querySelector('#drName').value || '').trim();
+            var username = (root.querySelector('#drUser').value || '').trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
+            var pass = root.querySelector('#drPass').value || '';
+            var phone = (root.querySelector('#drPhone').value || '').trim();
+            var active = root.querySelector('#drActive').value === '1';
+            if (!name || !username || (isNew && pass.length < 8)) {
+              DS.toast(isNew ? (en ? 'Name, username and 8+ character password are required' : 'الاسم واسم المستخدم وكلمة مرور 8 أحرف مطلوبة') : t('required'), 'error');
+              return false;
+            }
+            if (isNew) {
+              if (DS.data.users.some(function (u) { return String(u.username || '').toLowerCase() === username; })) {
+                DS.toast(en ? 'Username already used' : 'اسم المستخدم مستخدم بالفعل', 'error'); return false;
+              }
+              DS.data.addUser({
+                username: username, password: pass, role: 'delivery', name: name, name_en: name,
+                tenant_id: user.tenant_id, phone: phone, avatar_id: 'av3', is_active: active,
+                company_id: 'in_house',
+                delivery_company: null,
+                delivery_company_name: inHouseLabel
+              });
+            } else {
+              DS.data.saveUser({
+                id: driver.id, name: name, phone: phone, is_active: active,
+                tenant_id: user.tenant_id,
+                company_id: 'in_house',
+                delivery_company: null,
+                delivery_company_name: inHouseLabel,
+                password: pass || undefined
+              });
+            }
+            DS.toast(en ? 'Driver saved' : 'تم حفظ المندوب', 'success');
+            render();
+            return true;
+          } }
+      ]
+    });
+  }
+
   function orderRow(o) {
     var meta = DS.statusMeta(o.status);
     return '<tr data-order="' + esc(o.id) + '" style="cursor:pointer"><td><div class="cell-title" style="direction:ltr;text-align:start;font-family:var(--font-mono);font-size:11px">' + esc(o.order_no) + '</div><div class="cell-sub">' + esc(DS.timeAgo(o.created_at)) + '</div></td>' +
@@ -221,7 +686,7 @@
     bind();
     if (!isAdmin) {
       var host = page.body.querySelector('[data-owner-map]');
-      var active = DS.data.visibleOrders(user).filter(function (o) { return o.status === 'delivering'; })[0];
+      var active = DS.data.visibleOrders(user).filter(function (o) { return o.status === 'out_for_delivery'; })[0];
       if (host && active) DS.gps.mount(host, { order: active, height: 260, showStrip: false });
     } else {
       var fleetHost = page.body.querySelector('[data-fleet-map]');
@@ -240,6 +705,50 @@
       b.addEventListener('click', function (e) {
         e.preventDefault();
         DS.productModal({ tenantId: isAdmin ? DS.data.tenants[0].id : user.tenant_id, onSave: render });
+      });
+    });
+    DS.$$('[data-quick-add-user]', page.body).forEach(function (b) {
+      b.addEventListener('click', function (e) { e.preventDefault(); openQuickAddUser(); });
+    });
+    DS.$$('[data-add-driver]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () { openDriverModal(null); });
+    });
+    DS.$$('[data-edit-driver]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () { openDriverModal(DS.data.userById(b.getAttribute('data-edit-driver'))); });
+    });
+    DS.$$('[data-toggle-driver]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var d = DS.data.userById(b.getAttribute('data-toggle-driver'));
+        if (!d) return;
+        DS.data.saveUser({ id: d.id, is_active: d.is_active === false });
+        DS.toast(t('updated'), 'success');
+        render();
+      });
+    });
+    DS.$$('[data-del-driver]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () {
+        DS.confirm({ title: t('confirmDelete'), text: t('confirmDeleteText'), danger: true }).then(function (ok) {
+          if (!ok) return;
+          DS.data.deleteUser(b.getAttribute('data-del-driver'));
+          DS.toast(t('deleted'), 'success');
+          render();
+        });
+      });
+    });
+    DS.$$('[data-owner-tab]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () {
+        view.tab = b.getAttribute('data-owner-tab') === 'branches' ? 'branches' : 'overview';
+        render();
+      });
+    });
+    DS.$$('[data-add-branch]', page.body).forEach(function (b) {
+      b.addEventListener('click', openAddBranch);
+    });
+    DS.$$('[data-branch-select]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () {
+        view.tab = 'branches';
+        view.branch = b.getAttribute('data-branch-select');
+        render();
       });
     });
   }
