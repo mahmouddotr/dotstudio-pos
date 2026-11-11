@@ -2747,6 +2747,16 @@
         if (DS.firebase && DS.firebase.clearRemoteData) DS.firebase.clearRemoteData();
       } catch (e) {}
       try { localStorage.removeItem('ds_cart'); localStorage.removeItem('ds_promo'); } catch (e) {}
+      /* Pro Max local state: saved checkout identity, branch ledger,
+         transfer log and notification opt-in/session flags. */
+      try {
+        localStorage.removeItem('ds_quick_customer');
+        localStorage.removeItem('ds_notify_optin');
+        sessionStorage.removeItem('ds_notify_seen');
+        Object.keys(localStorage).forEach(function (k) {
+          if (k.indexOf('ds_branch_stock_') === 0 || k.indexOf('ds_branch_transfers_') === 0) localStorage.removeItem(k);
+        });
+      } catch (e) {}
       DB = cleanSlate();
       save(DB);
       location.reload();
