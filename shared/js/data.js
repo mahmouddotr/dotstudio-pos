@@ -2754,7 +2754,7 @@
         localStorage.removeItem('ds_notify_optin');
         sessionStorage.removeItem('ds_notify_seen');
         Object.keys(localStorage).forEach(function (k) {
-          if (k.indexOf('ds_branch_stock_') === 0 || k.indexOf('ds_branch_transfers_') === 0) localStorage.removeItem(k);
+          if (k.indexOf('ds_branch_stock_') === 0 || k.indexOf('ds_branch_transfers_') === 0 || k.indexOf('ds_branches_') === 0) localStorage.removeItem(k);
         });
       } catch (e) {}
       DB = cleanSlate();
