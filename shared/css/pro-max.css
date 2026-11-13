@@ -13,16 +13,35 @@
   border: 0 !important;
   box-shadow: none !important;
 }
-.sf-page .sf-hero-bg img,
-.sf-page .sf-hero .sf-hero-bg img {
+.sf-page .sf-hero-bg img:not(.sf-hero-slide),
+.sf-page .sf-hero .sf-hero-bg img:not(.sf-hero-slide) {
   filter: grayscale(1) contrast(1.08) brightness(0.5) !important;
   opacity: 1 !important;
   transform: scale(1.03) !important;
 }
+/* Slider frames own their own opacity so the hero can cross-fade. */
+.sf-page .sf-hero-bg .sf-hero-slide {
+  opacity: 0 !important;
+  transform: scale(1.06) !important;
+  filter: saturate(0.85) contrast(1.06) brightness(0.88) !important;
+  transition: opacity 1200ms var(--ease-out), transform 7000ms var(--ease-out) !important;
+  will-change: opacity, transform;
+}
+.sf-page .sf-hero-bg .sf-hero-slide.is-active {
+  opacity: 1 !important;
+  transform: scale(1) !important;
+}
+/* Dark gradient under the copy — the white text stays readable. */
 .sf-page .sf-hero-bg::after,
 html[dir="rtl"] .sf-page .sf-hero-bg::after {
   background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.18) 38%, rgba(0, 0, 0, 0.86) 100%) !important;
+    linear-gradient(to right, rgba(0, 0, 0, 0.8), transparent),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.26) 0%, rgba(0, 0, 0, 0.06) 40%, rgba(0, 0, 0, 0.62) 100%) !important;
+}
+html[dir="rtl"] .sf-page .sf-hero-bg::after {
+  background:
+    linear-gradient(to left, rgba(0, 0, 0, 0.8), transparent),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.26) 0%, rgba(0, 0, 0, 0.06) 40%, rgba(0, 0, 0, 0.62) 100%) !important;
 }
 .sf-page .sf-hero .sf-title {
   color: #fff !important;
@@ -66,8 +85,8 @@ html[data-customer-theme="dark"] body.saleor-store #products-grid .sf-card-media
 .sf-qv-media,
 .sf-qv-media img,
 .sf-bag-line .sf-bl-media img {
-  background: #F5F5F7 !important;
-  background-color: #F5F5F7 !important;
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
   background-image: none !important;
 }
 body.saleor-store .sf-page .sf-card-media,
@@ -107,7 +126,7 @@ body.saleor-store #products-grid .sf-card-media img,
 /* Fast-selling cards: clean grey product plate, contain art. */
 body.pos-immersive .product-media,
 body.pos-immersive .product-image-container {
-  background: #F5F5F7 !important;
+  background: #FFFFFF !important;
   border: 0 !important;
   box-shadow: none !important;
 }
@@ -115,7 +134,7 @@ body.pos-immersive .product-media img,
 body.pos-immersive .product-image-container img {
   object-fit: contain !important;
   object-position: center !important;
-  background: #F5F5F7 !important;
+  background: #FFFFFF !important;
   mix-blend-mode: normal !important;
   border: 0 !important;
 }

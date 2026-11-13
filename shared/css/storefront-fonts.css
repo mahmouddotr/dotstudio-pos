@@ -1,0 +1,42 @@
+/* ═══════════════════════════════════════════════════════════════
+   DotStudio® POS — Local Apple fonts (storefront / checkout / tracking only)
+   ═══════════════════════════════════════════════════════════════ */
+@font-face {
+  font-family: 'SF Pro Display';
+  src: url('../../font/sf-pro-display%20/SFPRODISPLAYREGULAR.OTF') format('opentype');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'SF Pro Display';
+  src: url('../../font/sf-pro-display%20/SFPRODISPLAYMEDIUM.OTF') format('opentype');
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'SF Pro Display';
+  src: url('../../font/sf-pro-display%20/SFPRODISPLAYSEMIBOLDITALIC.OTF') format('opentype');
+  font-weight: 600; font-style: italic; font-display: swap;
+}
+@font-face {
+  font-family: 'SF Pro Display';
+  src: url('../../font/sf-pro-display%20/SFPRODISPLAYBOLD.OTF') format('opentype');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'SF Pro Display';
+  src: url('../../font/sf-pro-display%20/SFPRODISPLAYHEAVYITALIC.OTF') format('opentype');
+  font-weight: 800; font-style: italic; font-display: swap;
+}
+@font-face {
+  font-family: 'SF Pro AR Display';
+  src: url('../../font/sf-pro-ar-display/sf-pro-ar-display-regular.ttf') format('truetype');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'SF Pro AR Display';
+  src: url('../../font/sf-pro-ar-display/sf-pro-ar-display-semibold.ttf') format('truetype');
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+
+html { font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+html[lang="ar"], html[dir="rtl"] { font-family: 'SF Pro AR Display', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif; }
+body { font-family: inherit; }

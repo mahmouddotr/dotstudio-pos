@@ -128,6 +128,38 @@
   }
   DS.initials = initials;
 
+  /* Read an image file and shrink it into a storable data URL. Payment
+     receipts live inside localStorage, so they must stay small (≈900px,
+     JPEG 0.72). Falls back to the original data URL when canvas is
+     unavailable (very old browsers / exotic formats). */
+  DS.readImage = function (file, cb, maxSize) {
+    if (!file || typeof cb !== 'function') return;
+    var limit = maxSize || 900;
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      var src = ev.target.result;
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var w = img.width || limit, h = img.height || limit;
+          var scale = Math.min(1, limit / Math.max(w, h));
+          var cw = Math.max(1, Math.round(w * scale));
+          var ch = Math.max(1, Math.round(h * scale));
+          var canvas = document.createElement('canvas');
+          canvas.width = cw; canvas.height = ch;
+          var ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, cw, ch);
+          ctx.drawImage(img, 0, 0, cw, ch);
+          cb(canvas.toDataURL('image/jpeg', 0.72));
+        } catch (e) { cb(src); }
+      };
+      img.onerror = function () { cb(src); };
+      img.src = src;
+    };
+    reader.readAsDataURL(file);
+  };
+
   /* ───────────────────────────── STORAGE ───────────────────────────── */
   var storage = {
     get: function (key, fallback) {
@@ -198,6 +230,16 @@
       chats: 'المحادثات', messages: 'الرسائل', jobs: 'الوظائف', reports: 'التقارير', subscriptions: 'الاشتراكات', discounts: 'الخصومات', discountCode: 'كود الخصم',
       audit: 'سجل النشاط', settings: 'الإعدادات', pos: 'نقطة البيع', sell: 'الكاشير', storefront: 'المتجر', checkout: 'إتمام الطلب',
       tracking: 'تتبع الطلب', 'my-orders': 'طلباتي', 'sub-admins': 'المشرفون', marketing: 'الرئيسية',
+      /* giveaway leads (customer/win.html) */
+      leads: 'سجل السحب', leadsSub: 'كل من سجل في سحب كفر الشيخ — أرقام الموبايل والإيميلات اللي جمعناها بموافقتهم.',
+      leadsTotal: 'إجمالي المسجلين', leadsToday: 'مسجلون اليوم', leadsWeek: 'آخر 7 أيام', leadsRepeat: 'سجلوا أكثر من مرة',
+      leadsLast: 'أحدث تسجيل', leadsSource: 'المصدر', leadsAttempts: 'مرات الدخول', leadsExport: 'تصدير CSV',
+      leadsEmptyTitle: 'لا يوجد مسجلون بعد', leadsEmptyText: 'شارك لينك السحب customer/win.html مع عملائك وابدأ التجميع.',
+      leadsClear: 'حذف كل المسجلين', leadsClearConfirm: 'هيحذف كل الأرقام المسجلة في السحب نهائياً. متأكد؟',
+      leadsDeleted: 'تم حذف المسجل', leadsCleared: 'تم حذف كل المسجلين', leadCopy: 'نسخ الرقم', leadCopied: 'تم نسخ الرقم',
+      leadWa: 'فتح واتساب', leadsCorrupt: 'تم إصلاح ملف بيانات تالف — النسخة القديمة محفوظة في ds_leads_corrupt.',
+      leadsNewest: 'الأحدث أولاً', leadsOldest: 'الأقدم أولاً', leadsByName: 'حسب الاسم', leadsSearch: 'ابحث بالاسم أو الرقم أو الإيميل…',
+      leadsNone: 'لا يوجد مسجل مطابق لبحثك.',
       /* common */
       search: 'بحث', searchPlaceholder: 'ابحث عن أي شيء…', save: 'حفظ', cancel: 'إلغاء', delete: 'حذف',
       edit: 'تعديل', add: 'إضافة', view: 'عرض', details: 'تفاصيل', close: 'إغلاق', confirm: 'تأكيد',
@@ -246,6 +288,8 @@
       storeOffline: 'أوفلاين', storeOpenNow: 'مفتوح الآن', storeClosedNow: 'المتجر مغلق الآن',
       storeHours: 'ساعات العمل', storeOpenUntil: 'مفتوح حتى', storeOpensAt: 'يفتح الساعة',
       systemTools: 'أدوات النظام', systemToolsHint: 'الماسح الضوئي · مصمم الاستيكرات · إعدادات الفاتورة',
+      dragon: 'حزمة التنين', dragonHint: 'عشرة محركات نمو في مكان واحد',
+      aiAgency: 'الوكالة الذكية', aiAgencyHint: 'الرقيب الآلي وفحص صحة النظام',
       scanBarcode: 'الماسح الضوئي', labelDesigner: 'مصمم الاستيكرات', invoiceSettings: 'إعدادات الفاتورة',
       liveTracking: 'التتبع المباشر', liveTrackingHint: 'كل المندوبين النشطين على الخريطة الآن',
       labelName: 'اسم المنتج', labelPrice: 'السعر', labelBarcode: 'الباركود', printLabel: 'طباعة الاستيكر',
@@ -374,7 +418,24 @@
       totalSpent: 'إجمالي الإنفاق', lastSeen: 'آخر ظهور', suspend: 'إيقاف', restore: 'استعادة',
       permissionsHint: 'اختر الصفحات التي يمكن للمشرف الوصول إليها.',
       catalog: 'الكتالوج', filters: 'الفلاتر', sortNewest: 'الأحدث', sortPrice: 'السعر', sortName: 'الاسم',
-      searchInStore: 'ابحث في المتجر…', added: 'أُضيف', out: 'نفذ', lowStockShort: 'منخفض'
+      searchInStore: 'ابحث في المتجر…', added: 'أُضيف', out: 'نفذ', lowStockShort: 'منخفض',
+      /* ── Manual payment verification (Vodafone Cash / InstaPay) ── */
+      paymentVerification: 'مراجعة المدفوعات', paymentPendingVerification: 'قيد مراجعة الدفع', paymentRejected: 'تم رفض الإيصال',
+      payInstructionsTitle: 'تعليمات الدفع', payTransferAmount: 'قم بتحويل مبلغ {amount} إلى رقم المحفظة:',
+      payUploadStep: 'بعد التحويل، ارفع صورة الإيصال وأدخل رقم العملية.', payReceiptLabel: 'صورة الإيصال',
+      payTransactionLabel: 'رقم العملية', paySecureBadge: 'جميع المعاملات مؤمنة ومشفرة', payCopy: 'نسخ',
+      payReceiptRequired: 'يرجى رفع صورة الإيصال', payTransactionRequired: 'يرجى إدخال رقم العملية',
+      payTransactionInvalid: 'رقم العملية غير صالح', payDuplicateTransaction: 'رقم العملية هذا مستخدم بالفعل!',
+      payTooManyPending: 'لديك عدد كبير من الطلبات قيد المراجعة — برجاء انتظار المراجعة قبل إرسال طلب جديد.',
+      payReceiptReceived: 'تم استلام إيصالك. سيتم مراجعة الدفع وتأكيد الطلب خلال دقائق.',
+      payReviewing: 'جاري مراجعة إيصال الدفع...', payReupload: 'إعادة رفع الإيصال', payRejectionReason: 'سبب رفض الإيصال',
+      payApprovedTitle: 'تم تأكيد الدفع', payRejectedTitle: 'تم رفض الإيصال', payWalletNumber: 'رقم المحفظة',
+      verificationDeskSub: 'راجع إيصالات فودافون كاش وإنستاباي قبل تجهيز الطلبات.',
+      noPendingVerifications: 'لا توجد إيصالات بانتظار المراجعة', noPendingVerificationsText: 'كل طلبات الدفع اليدوي تم مراجعتها.',
+      approvePayment: 'تأكيد الدفع', rejectReceipt: 'رفض الإيصال', rejectionReasonLabel: 'سبب الرفض (مطلوب)',
+      rejectionReasonPlaceholder: 'مثال: المبلغ غير مطابق', receiptImage: 'صورة الإيصال', transactionId: 'رقم العملية',
+      awaitingReviewCount: 'بانتظار المراجعة', rejectedCount: 'مرفوضة', verifiedBy: 'راجعها',
+      paymentMethodVodafone: 'فودافون كاش', paymentMethodInstapay: 'إنستاباي', manualPayment: 'دفع يدوي'
     },
     en: {
       admin: 'Admin', subadmin: 'Sub-admin', owner: 'Store owner', cashier: 'Cashier', delivery: 'Driver', customer: 'Customer',
@@ -384,6 +445,16 @@
       chats: 'Chats', messages: 'Messages', jobs: 'Jobs', reports: 'Reports', subscriptions: 'Subscriptions', discounts: 'Discounts', discountCode: 'Promo code',
       audit: 'Audit log', settings: 'Settings', pos: 'Point of sale', sell: 'Cashier', storefront: 'Storefront', checkout: 'Checkout',
       tracking: 'Order tracking', 'my-orders': 'My orders', 'sub-admins': 'Sub-admins', marketing: 'Home',
+      /* giveaway leads (customer/win.html) */
+      leads: 'Giveaway leads', leadsSub: 'Everyone who entered the Kafr El-Sheikh giveaway — phones and emails collected with consent.',
+      leadsTotal: 'Total leads', leadsToday: 'Today', leadsWeek: 'Last 7 days', leadsRepeat: 'Entered more than once',
+      leadsLast: 'Latest entry', leadsSource: 'Source', leadsAttempts: 'Entries', leadsExport: 'Export CSV',
+      leadsEmptyTitle: 'No leads yet', leadsEmptyText: 'Share the giveaway link customer/win.html with your customers to start collecting.',
+      leadsClear: 'Delete all leads', leadsClearConfirm: 'This permanently deletes every registered phone number. Are you sure?',
+      leadsDeleted: 'Lead deleted', leadsCleared: 'All leads deleted', leadCopy: 'Copy phone', leadCopied: 'Phone copied',
+      leadWa: 'Open WhatsApp', leadsCorrupt: 'A corrupt lead file was repaired — the old copy is kept under ds_leads_corrupt.',
+      leadsNewest: 'Newest first', leadsOldest: 'Oldest first', leadsByName: 'By name', leadsSearch: 'Search name, phone or email…',
+      leadsNone: 'No lead matches your search.',
       search: 'Search', searchPlaceholder: 'Search anything…', save: 'Save', cancel: 'Cancel', delete: 'Delete',
       edit: 'Edit', add: 'Add', view: 'View', details: 'Details', close: 'Close', confirm: 'Confirm',
       yes: 'Yes', no: 'No', all: 'All', active: 'Active', inactive: 'Suspended', status: 'Status', actions: 'Actions',
@@ -431,6 +502,8 @@
       storeOffline: 'Offline', storeOpenNow: 'Open now', storeClosedNow: 'Store is offline now',
       storeHours: 'Opening hours', storeOpenUntil: 'Open until', storeOpensAt: 'Opens at',
       systemTools: 'System tools', systemToolsHint: 'Barcode scanner · Label designer · Invoice settings',
+      dragon: 'Dragon suite', dragonHint: 'Ten growth engines in one place',
+      aiAgency: 'AI Agency', aiAgencyHint: 'Patrol officer & system health monitor',
       scanBarcode: 'Barcode scanner', labelDesigner: 'Label designer', invoiceSettings: 'Invoice settings',
       liveTracking: 'Live tracking', liveTrackingHint: 'Every active rider, moving live on the map',
       labelName: 'Product name', labelPrice: 'Price', labelBarcode: 'Barcode', printLabel: 'Print label',
@@ -559,7 +632,24 @@
       totalSpent: 'Total spent', lastSeen: 'Last seen', suspend: 'Suspend', restore: 'Restore',
       permissionsHint: 'Choose the pages this sub-admin can access.',
       catalog: 'Catalogue', filters: 'Filters', sortNewest: 'Newest', sortPrice: 'Price', sortName: 'Name',
-      searchInStore: 'Search the store…', added: 'Added', out: 'Out', lowStockShort: 'Low'
+      searchInStore: 'Search the store…', added: 'Added', out: 'Out', lowStockShort: 'Low',
+      /* ── Manual payment verification (Vodafone Cash / InstaPay) ── */
+      paymentVerification: 'Payment verification', paymentPendingVerification: 'Payment review', paymentRejected: 'Receipt rejected',
+      payInstructionsTitle: 'Payment instructions', payTransferAmount: 'Transfer {amount} to the wallet number:',
+      payUploadStep: 'After the transfer, upload the receipt image and enter the transaction ID.', payReceiptLabel: 'Receipt image',
+      payTransactionLabel: 'Transaction ID', paySecureBadge: 'All transactions are secure and encrypted', payCopy: 'Copy',
+      payReceiptRequired: 'Please upload the receipt image', payTransactionRequired: 'Please enter the transaction ID',
+      payTransactionInvalid: 'Invalid transaction ID', payDuplicateTransaction: 'This transaction ID is already used!',
+      payTooManyPending: 'You have too many orders awaiting review — please wait for the review before ordering again.',
+      payReceiptReceived: 'We received your receipt. The payment will be reviewed and confirmed within minutes.',
+      payReviewing: 'Reviewing your payment receipt...', payReupload: 'Re-upload receipt', payRejectionReason: 'Receipt rejection reason',
+      payApprovedTitle: 'Payment confirmed', payRejectedTitle: 'Receipt rejected', payWalletNumber: 'Wallet number',
+      verificationDeskSub: 'Check Vodafone Cash and InstaPay receipts before the orders reach the kitchen.',
+      noPendingVerifications: 'No receipts awaiting review', noPendingVerificationsText: 'Every manual payment has been reviewed.',
+      approvePayment: 'Approve payment', rejectReceipt: 'Reject receipt', rejectionReasonLabel: 'Rejection reason (required)',
+      rejectionReasonPlaceholder: 'e.g. amount does not match', receiptImage: 'Receipt image', transactionId: 'Transaction ID',
+      awaitingReviewCount: 'Awaiting review', rejectedCount: 'Rejected', verifiedBy: 'Reviewed by',
+      paymentMethodVodafone: 'Vodafone Cash', paymentMethodInstapay: 'InstaPay', manualPayment: 'Manual payment'
     }
   };
 
@@ -913,6 +1003,9 @@
     star: '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>',
     flame: '<path d="M12 2c1.5 4 4.5 5.5 4.5 9a4.5 4.5 0 0 1-9 0c0-1.4.6-2.4 1.3-3.3C9.4 9.4 10 11 11 11c1.4 0 1-3 1-9z"/><path d="M12 22a6 6 0 0 0 6-6c0-2.5-1.5-4-3-5.5"/>',
     sparkles: '<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/><path d="M5 3v4M3 5h4M19 17v4M17 19h4"/>',
+    mic: '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/>',
+    gift: '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',
+    camera: '<path d="M14.5 4h-5L8 6.5H5a2 2 0 0 0-2 2V18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5a2 2 0 0 0-2-2h-3L14.5 4Z"/><circle cx="12" cy="13" r="3.5"/>',
     package: '<path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>',
     bike: '<circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6h4l-2 6M5.5 17.5 9 8h5l2 5.5M9 8H6"/>',
     navigation: '<polygon points="3 11 22 2 13 21 11 13 3 11"/>',
@@ -934,8 +1027,8 @@
     play: '<polygon points="6 3 20 12 6 21 6 3"/>',
     pause: '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
     checkSquare: '<path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
-    archive: '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8M10 12h4"/>'
-  };
+    archive: '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8M10 12h4"/>',
+mic: '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>'  };
 
   function icon(name, cls) {
     var svg = ICONS[name] || ICONS.info;
@@ -1070,6 +1163,14 @@
   DS.modal = modal;
 
   /* ───────────────────────── NOTIFICATION SOUND ───────────────────── */
+  /* Real Apple-like notification sounds (Mixkit). */
+  const msgSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+  const orderSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+  window.playMessageSound = () => msgSound.play();
+  window.playOrderSound = () => orderSound.play();
+  DS.playMessageSound = window.playMessageSound;
+  DS.playOrderSound = window.playOrderSound;
+
   function playNotification() {
     try {
       const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
@@ -1334,6 +1435,7 @@
   DS.badge = function (status, label) {
     var map = {
       pending: 'warning', confirmed: 'info', preparing: 'orange', handed_to_company: 'purple', out_for_delivery: 'lime', delivering: 'lime', delivered: 'success', cancelled: 'danger',
+      pending_verification: 'warning', payment_rejected: 'danger',
       active: 'success', inactive: 'neutral', suspended: 'danger', expired: 'danger', paid: 'success', unpaid: 'warning',
       owner: 'lime', cashier: 'info', delivery: 'purple', customer: 'neutral', superadmin: 'lime', subadmin: 'purple'
     };
@@ -1349,7 +1451,11 @@
       out_for_delivery: { label: t('out_for_delivery'), badge: 'lime', icon: 'bike', step: 3, pct: 80 },
       delivering: { label: t('delivering'), badge: 'lime', icon: 'bike', step: 3, pct: 80 },
       delivered: { label: t('delivered'), badge: 'success', icon: 'checkCircle', step: 4, pct: 100 },
-      cancelled: { label: t('cancelled'), badge: 'danger', icon: 'x', step: -1, pct: 0 }
+      cancelled: { label: t('cancelled'), badge: 'danger', icon: 'x', step: -1, pct: 0 },
+      /* Manual transfer waiting for a human check of the receipt. */
+      pending_verification: { label: t('paymentPendingVerification'), badge: 'warning', icon: 'shield', step: 0, pct: 8 },
+      /* The receipt was refused — the customer can send a new one. */
+      payment_rejected: { label: t('paymentRejected'), badge: 'danger', icon: 'alert', step: -1, pct: 0 }
     };
     return map[status] || map.pending;
   };
@@ -1358,6 +1464,11 @@
   /* Statuses that still occupy a rider/company queue. */
   DS.activeStatuses = ['pending', 'preparing', 'handed_to_company', 'out_for_delivery'];
   DS.isActiveOrderStatus = function (status) { return DS.activeStatuses.indexOf(status) > -1; };
+  /* Orders held by the payment-verification desk (customer side only). */
+  DS.holdStatuses = ['pending_verification', 'payment_rejected'];
+  DS.isHoldOrderStatus = function (status) { return DS.holdStatuses.indexOf(status) > -1; };
+  /* Every status an order can carry — used by the filter dropdowns. */
+  DS.allOrderStatuses = DS.statusFlow.concat(['pending_verification', 'payment_rejected', 'cancelled']);
 
   DS.copy = function (text) {
     var done = function () { toast(t('copied'), 'success'); };
@@ -1398,6 +1509,252 @@
   DS.safeImage = function (src, fallback) {
     var f = fallback || url('assets/product-placeholder.svg');
     return 'onerror="this.onerror=null;this.src=\'' + attr(f) + '\'"';
+  };
+
+  /* ─────────────────────── DYNAMIC SEO ───────────────────────
+     Keeps <title>, meta description and the social cards in sync with
+     the page the customer is actually looking at.                  */
+  function setMeta(selector, attrName, value) {
+    var el = document.querySelector(selector);
+    if (!el) {
+      el = document.createElement('meta');
+      var parts = selector.replace(/^meta\[|\]$/g, '').split('=');
+      el.setAttribute(parts[0], String(parts[1] || '').replace(/^["']|["']$/g, ''));
+      document.head.appendChild(el);
+    }
+    el.setAttribute(attrName, value);
+  }
+  function seo(opts) {
+    opts = opts || {};
+    var brand = 'DotStudio® POS';
+    var title = opts.title ? String(opts.title) + ' · ' + brand : (opts.titleOnly || document.title || brand);
+    var desc = opts.description || (lang() === 'ar'
+      ? 'DotStudio® POS — كل متاجرك في سلة واحدة: تسوق، توصيل لحظي، ودفع آمن.'
+      : 'DotStudio® POS — every store in one bag: shopping, live delivery and secure checkout.');
+    document.title = title;
+    setMeta('meta[name="description"]', 'content', desc);
+    setMeta('meta[property="og:title"]', 'content', title);
+    setMeta('meta[property="og:description"]', 'content', desc);
+    setMeta('meta[property="og:type"]', 'content', 'website');
+    setMeta('meta[name="twitter:card"]', 'content', 'summary_large_image');
+    setMeta('meta[name="twitter:title"]', 'content', title);
+    setMeta('meta[name="twitter:description"]', 'content', desc);
+    if (opts.image) {
+      var img = opts.image;
+      setMeta('meta[property="og:image"]', 'content', img);
+      setMeta('meta[name="twitter:image"]', 'content', img);
+    }
+    if (opts.url) setMeta('meta[property="og:url"]', 'content', opts.url);
+    return title;
+  }
+  DS.seo = seo;
+
+  /* ─────────────────── ATTENTION TOAST (geofence) ─────────────────── */
+  function bigToast(message, opts) {
+    opts = opts || {};
+    var host = $('.ds-big-toasts');
+    if (!host) {
+      host = document.createElement('div');
+      host.className = 'ds-big-toasts';
+      document.body.appendChild(host);
+    }
+    var el = document.createElement('div');
+    el.className = 'ds-big-toast' + (opts.tone ? ' is-' + opts.tone : '');
+    el.setAttribute('role', 'status');
+    el.innerHTML = '<span class="ds-big-ico">' + icon(opts.icon || 'bike') + '</span>' +
+      '<span class="ds-big-copy"><b>' + esc(message) + '</b>' +
+      (opts.sub ? '<i>' + esc(opts.sub) + '</i>' : '') + '</span>' +
+      '<button type="button" class="ds-big-x" aria-label="close">' + icon('x') + '</button>';
+    host.appendChild(el);
+    requestAnimationFrame(function () { el.classList.add('in'); });
+    function remove() {
+      el.classList.remove('in');
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 260);
+    }
+    el.querySelector('.ds-big-x').addEventListener('click', remove);
+    setTimeout(remove, opts.duration || 5200);
+    return el;
+  }
+  DS.bigToast = bigToast;
+
+  /* ───────────────── VOICE SEARCH (Web Speech API) ───────────────── */
+  function voiceSearch(onResult, opts) {
+    opts = opts || {};
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      toast(lang() === 'en' ? 'Voice search is not supported on this browser.' : 'البحث الصوتي غير مدعوم في هذا المتصفح.', 'warning');
+      return null;
+    }
+    var rec = new SR();
+    rec.lang = opts.lang || (lang() === 'en' ? 'en-US' : 'ar-EG');
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    rec.continuous = false;
+    rec.onresult = function (e) {
+      var text = '';
+      try { text = e.results[0][0].transcript || ''; } catch (err) {}
+      if (text && typeof onResult === 'function') onResult(text);
+    };
+    rec.onerror = function (e) {
+      if (opts.onError) opts.onError(e);
+      else if (e && e.error === 'not-allowed') toast(lang() === 'en' ? 'Microphone permission is required.' : 'نحتاج إذن الميكروفون للبحث الصوتي.', 'warning');
+    };
+    rec.onstart = function () { if (opts.onStart) opts.onStart(); };
+    rec.onend = function () { if (opts.onEnd) opts.onEnd(); };
+    try { rec.start(); } catch (e) { if (opts.onError) opts.onError(e); }
+    return rec;
+  }
+  DS.voiceSearch = voiceSearch;
+
+  /* ─────────────────────── BACKUP / EXPORT ─────────────────────── */
+  DS.backupData = function () {
+    var payload = {
+      app: 'DotStudio® POS',
+      version: '2026.11',
+      exported_at: new Date().toISOString(),
+      origin: location.origin,
+      storage: {}
+    };
+    try {
+      Object.keys(localStorage).forEach(function (key) {
+        if (!/^(ds_|cz_)/.test(key)) return;
+        /* Credentials never leave the device. */
+        if (key === 'cz_user' || key === 'cz_session' || key === 'ds_jwt') return;
+        payload.storage[key] = localStorage.getItem(key);
+      });
+    } catch (e) {}
+    var name = 'dotstudio-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    try {
+      var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 600);
+      toast(lang() === 'en' ? 'Backup downloaded' : 'تم تحميل النسخة الاحتياطية', 'success');
+    } catch (e) {
+      toast(lang() === 'en' ? 'Backup failed' : 'تعذّر إنشاء النسخة الاحتياطية', 'error');
+    }
+    return payload;
+  };
+
+  /* ─────────── MARKET BASKET + DEMAND FORECAST (fallback) ───────────
+     Identical maths to worker.js, executed synchronously when a Worker
+     is unavailable (file://, old WebViews, blocked workers).          */
+  function pairKey(a, b) { return a < b ? a + '|' + b : b + '|' + a; }
+  function marketBasket(orders, limit) {
+    limit = limit || 8;
+    var singles = {}, pairs = {}, baskets = 0;
+    (orders || []).forEach(function (o) {
+      if (!o) return;
+      var ids = [];
+      (o.items || []).forEach(function (it) {
+        var id = it && (it.product_id || it.id);
+        if (id && ids.indexOf(id) === -1) ids.push(id);
+      });
+      if (ids.length < 2) { ids.forEach(function (id) { singles[id] = (singles[id] || 0) + 1; }); return; }
+      baskets++;
+      ids.forEach(function (id) {
+        singles[id] = (singles[id] || 0) + 1;
+        ids.forEach(function (other) {
+          if (other === id) return;
+          var k = pairKey(id, other);
+          pairs[k] = (pairs[k] || 0) + 1;
+        });
+      });
+    });
+    var rows = Object.keys(pairs).map(function (k) {
+      var parts = k.split('|');
+      var together = pairs[k] / 2;
+      var a = singles[parts[0]] || 1, b = singles[parts[1]] || 1;
+      return {
+        a: parts[0], b: parts[1], together: together,
+        support: baskets ? together / baskets : 0,
+        confidence: together / a,
+        lift: baskets ? (together * baskets) / (a * b) : 0
+      };
+    }).sort(function (x, y) { return y.together - x.together || y.lift - x.lift; }).slice(0, limit);
+    return { baskets: baskets, pairs: rows };
+  }
+  function demandForecast(products, orders, horizon) {
+    horizon = horizon || 7;
+    var DAY = 86400000, now = Date.now(), WINDOW = 30, sold = {};
+    (orders || []).forEach(function (o) {
+      if (!o || !o.created_at) return;
+      var at = new Date(o.created_at).getTime();
+      if (!isFinite(at) || now - at > WINDOW * DAY) return;
+      (o.items || []).forEach(function (it) {
+        var id = it && (it.product_id || it.id);
+        if (!id) return;
+        sold[id] = sold[id] || { qty: 0, recent: 0, older: 0 };
+        var qty = Number(it.qty) || 0;
+        sold[id].qty += qty;
+        if (now - at <= 7 * DAY) sold[id].recent += qty; else sold[id].older += qty;
+      });
+    });
+    var rows = (products || []).map(function (p) {
+      if (!p || !p.id) return null;
+      var s = sold[p.id] || { qty: 0, recent: 0, older: 0 };
+      var forecastDaily = (s.qty / WINDOW) * (s.older ? Math.max(0.6, Math.min(1.8, (s.recent / 7) / (s.older / 23))) : (s.recent ? 1.35 : 1));
+      var next7 = Math.max(0, Math.round(forecastDaily * horizon));
+      var stock = Math.max(0, Number(p.stock) || 0);
+      var cover = forecastDaily > 0 ? stock / forecastDaily : null;
+      return {
+        id: p.id, name: p.name, name_en: p.name_en || p.name,
+        sold_30d: s.qty, next_7d: next7,
+        days_cover: cover == null ? null : Math.round(cover * 10) / 10,
+        reorder: cover != null && cover <= horizon,
+        suggested_qty: Math.max(0, next7 - stock)
+      };
+    }).filter(Boolean).sort(function (a, b) { return b.next_7d - a.next_7d; });
+    return { days: WINDOW, horizon: horizon, rows: rows.slice(0, 12), all: rows };
+  }
+  DS.marketBasket = marketBasket;
+  DS.demandForecast = demandForecast;
+
+  /* Off-main-thread runner with a timed synchronous fallback. */
+  DS.workerRun = function (type, payload, cb) {
+    var done = false;
+    function finish(result, error) {
+      if (done) return;
+      done = true;
+      if (error || result == null) result = syncFallback(type, payload);
+      if (typeof cb === 'function') cb(result);
+    }
+    function syncFallback(kind, data) {
+      data = data || {};
+      if (kind === 'market-basket') return marketBasket(data.orders || []);
+      if (kind === 'forecast') return demandForecast(data.products || [], data.orders || []);
+      return null;
+    }
+    try {
+      if (!DS._worker && window.Worker) {
+        DS._worker = new Worker(url('worker.js'));
+        DS._worker._pending = {};
+        DS._worker.onmessage = function (e) {
+          var d = e.data || {};
+          var fn = DS._worker && DS._worker._pending && DS._worker._pending[d.id];
+          if (fn) { delete DS._worker._pending[d.id]; fn(d.result, d.error); }
+        };
+        DS._worker.onerror = function () {
+          var map = DS._worker && DS._worker._pending;
+          DS._worker = null;
+          if (map) Object.keys(map).forEach(function (k) { map[k](null, 'worker'); });
+        };
+      }
+      if (!DS._worker) { finish(syncFallback(type, payload)); return; }
+      var id = 'w-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
+      DS._worker._pending[id] = finish;
+      DS._worker.postMessage({ id: id, type: type, payload: payload, orders: payload && payload.orders, products: payload && payload.products });
+      setTimeout(function () {
+        if (done) return;
+        var map = DS._worker && DS._worker._pending;
+        if (map && map[id]) { delete map[id]; finish(syncFallback(type, payload)); }
+      }, 1600);
+    } catch (e) {
+      finish(syncFallback(type, payload));
+    }
   };
 
   /* Audit shortcut */

@@ -62,6 +62,8 @@
       mini(t('outOfStock'), out, 'x', out ? 'red' : 'green') +
       mini(DS.lang() === 'en' ? 'Stock value' : 'قيمة المخزون', money(value), 'wallet', 'info') + '</div>';
 
+    var dragon = DS.dragon ? dragonStrip(base) : '';
+
     var grid = list.length ? '<div class="product-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px">' +
       list.map(function (p) {
         return DS.productCard(p, {
@@ -76,12 +78,62 @@
       }).join('') + '</div>'
       : DS.empty({ icon: 'box', title: t('emptyProducts'), text: t('emptyProductsText'), cta: { label: t('addFirstProduct'), icon: 'plus', onclick: 'document.querySelector("[data-add]").click()' } });
 
-    page.setContent(stats + toolbar + grid + '<div class="text-muted" style="font-size:11px;text-align:center">' + esc(t('showing')) + ' ' + list.length + ' ' + esc(t('of')) + ' ' + base.length + ' ' + esc(t('results')) + '</div>');
+    page.setContent(stats + dragon + toolbar + grid + '<div class="text-muted" style="font-size:11px;text-align:center">' + esc(t('showing')) + ' ' + list.length + ' ' + esc(t('of')) + ' ' + base.length + ' ' + esc(t('results')) + '</div>');
     bind();
   }
 
   function mini(label, value, ico, tone) {
     return '<div class="stat"><div class="stat-top"><span class="stat-label">' + esc(label) + '</span><span class="stat-icon ' + tone + '">' + icon(ico) + '</span></div><div class="stat-value" style="font-size:24px">' + value + '</div></div>';
+  }
+
+  /* ── Dragon strip: dynamic pricing · expiry · wholesale ───────── */
+  function dragonStrip(base) {
+    var EN = DS.lang() === 'en';
+    /* 3 · dynamic pricing */
+    var priced = base.map(function (p) { return { p: p, s: DS.dragon.priceSuggestion(p) }; })
+      .filter(function (x) { return x.s && x.s.direction !== 'flat'; })
+      .sort(function (a, b) { return Math.abs(b.s.pct) - Math.abs(a.s.pct); })
+      .slice(0, 3);
+    /* 9 · expiry tracking */
+    var expiring = base.map(function (p) { return { p: p, s: DS.dragon.expiryStatus(p) }; })
+      .filter(function (x) { return x.s && (x.s.state === 'expired' || x.s.state === 'critical' || x.s.state === 'warning'); })
+      .slice(0, 3);
+    /* 6 · B2B wholesale */
+    var wholesale = base.filter(function (p) { return (Number(p.stock) || 0) >= 10; }).slice(0, 2);
+
+    function head(ico, title, sub) {
+      return '<div class="dr-strip-head"><span class="dr-ico">' + icon(ico) + '</span>' +
+        '<div><b>' + esc(title) + '</b><span>' + esc(sub) + '</span></div></div>';
+    }
+
+    var pricingCard = '<div class="card dr-strip-card">' + head('tag', EN ? 'Dynamic pricing' : 'التسعير الديناميكي',
+      EN ? 'The price your demand supports' : 'السعر الذي يدعمه الطلب') +
+      (priced.length ? '<div class="dr-strip-list">' + priced.map(function (x) {
+        return '<div class="dr-strip-row"><b>' + esc(DS.loc(x.p, 'name')) + '</b>' +
+          '<span>' + money(x.s.current) + ' → <strong class="is-' + x.s.direction + '">' + money(x.s.suggested) + '</strong></span>' +
+          '<button class="btn btn-secondary btn-sm" data-dragon-price="' + esc(x.p.id) + '">' + esc(EN ? 'Apply' : 'تطبيق') + '</button></div>';
+      }).join('') + '</div>' : '<p class="dr-hint">' + esc(EN ? 'Every price is in line with demand.' : 'كل الأسعار متوافقة مع الطلب.') + '</p>') +
+      '</div>';
+
+    var expiryCard = '<div class="card dr-strip-card">' + head('clock', EN ? 'Expiry tracking' : 'تتبع الصلاحية',
+      EN ? 'Sell it before it dies' : 'بِيعه قبل أن يتهيّب') +
+      (expiring.length ? '<div class="dr-strip-list">' + expiring.map(function (x) {
+        return '<div class="dr-strip-row"><b>' + esc(DS.loc(x.p, 'name')) + '</b>' +
+          '<span class="is-' + x.s.state + '">' + esc(x.s.label) + '</span>' +
+          (x.s.discount ? '<button class="btn btn-secondary btn-sm" data-dragon-mark="' + esc(x.p.id) + '">−' + x.s.discount + '%</button>' : '<span></span>') + '</div>';
+      }).join('') + '</div>' : '<p class="dr-hint">' + esc(EN ? 'Nothing is close to its expiry date.' : 'لا توجد منتجات قاربت على الانتهاء.') + '</p>') +
+      '</div>';
+
+    var wholesaleCard = '<div class="card dr-strip-card">' + head('users', EN ? 'B2B wholesale' : 'الجملة B2B',
+      EN ? 'Volume pricing tiers' : 'أسعار الجملة حسب الكمية') +
+      (wholesale.length ? '<div class="dr-strip-list">' + wholesale.map(function (p) {
+        var tiers = DS.dragon.wholesaleTiers(p).filter(function (x) { return x.available; }).slice(0, 3);
+        return '<div class="dr-strip-row"><b>' + esc(DS.loc(p, 'name')) + '</b>' +
+          '<span>' + tiers.map(function (x) { return x.min + '+ → ' + money(x.price); }).join(' · ') + '</span><span></span></div>';
+      }).join('') + '</div>' : '<p class="dr-hint">' + esc(EN ? 'Not enough stock for wholesale yet.' : 'المخزون لا يكفي للجملة بعد.') + '</p>') +
+      '</div>';
+
+    return '<div class="dr-strip">' + pricingCard + expiryCard + wholesaleCard + '</div>';
   }
 
   function bind() {
@@ -132,6 +184,31 @@
       allProducts().forEach(function (p) { rows.push([p.name, p.sku, p.category, p.price, p.cost, p.stock, p.min_stock]); });
       DS.download('dotstudio-products.csv', DS.csv(rows));
       DS.toast(t('saved'), 'success');
+    });
+
+    /* Dragon · dynamic pricing apply */
+    DS.$$('[data-dragon-price]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var p = allProducts().filter(function (x) { return x.id === b.getAttribute('data-dragon-price'); })[0];
+        if (!p) return;
+        var s = DS.dragon.priceSuggestion(p);
+        if (!s) return;
+        DS.dragon.applySuggestedPrice(p.id, s.suggested);
+        DS.toast((DS.lang() === 'en' ? 'New price: ' : 'السعر الجديد: ') + money(s.suggested), 'success');
+        render();
+      });
+    });
+    /* Dragon · expiry markdown */
+    DS.$$('[data-dragon-mark]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var p = allProducts().filter(function (x) { return x.id === b.getAttribute('data-dragon-mark'); })[0];
+        if (!p) return;
+        var st = DS.dragon.expiryStatus(p);
+        var cut = Math.round((Number(p.price) || 0) * (1 - (st.discount || 10) / 100));
+        DS.data.updateProduct(p.id, { price: cut });
+        DS.toast((DS.lang() === 'en' ? 'Marked down to ' : 'تم الخصم إلى ') + money(cut), 'success');
+        render();
+      });
     });
   }
 

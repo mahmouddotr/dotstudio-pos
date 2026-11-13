@@ -63,6 +63,22 @@
     return DS.lang() === 'en' ? (contact.subtitle_en || contact.subtitle) : (contact.subtitle || contact.subtitle_en);
   }
 
+  /* Gold customers: more than 10 lifetime orders. */
+  function contactOrders(contact) {
+    if (!contact || contact.type !== 'user') return 0;
+    var u = DS.data.userById ? DS.data.userById(contact.id) : null;
+    if (!u || u.role !== 'customer') return 0;
+    return (DS.data.orders || []).filter(function (o) {
+      if (!o) return false;
+      if (o.customer_id === u.id) return true;
+      return !!(o.customer && o.customer.phone && u.phone && o.customer.phone === u.phone);
+    }).length;
+  }
+  function goldBadge(contact) {
+    if (contactOrders(contact) <= 10) return '';
+    return ' <span class="gold-customer-badge" title="' + esc(DS.lang() === 'en' ? 'Gold customer · 10+ orders' : 'عميل ذهبي · أكثر من 10 طلبات') + '">★ ' + esc(DS.lang() === 'en' ? 'Gold customer' : 'عميل ذهبي') + '</span>';
+  }
+
   function avatarFor(contact, cls) {
     cls = cls || 'avatar sm';
     if (contact.type === 'user') {
@@ -111,23 +127,27 @@
         html += '<div class="chat-day"><span>' + esc(day) + '</span></div>';
         lastDay = day;
       }
+      /* Outgoing = mine (right + MY avatar). Incoming = the other person
+         (left + THEIR avatar and name). Never mix the two. */
       var mine = m.user_id === user.id;
       var prev = msgs[i - 1];
       var grouped = prev && prev.user_id === m.user_id && (new Date(m.at) - new Date(prev.at)) < 5 * 60000;
       var name = DS.lang() === 'en' ? (m.name_en || m.name) : (m.name || m.name_en);
       var u = DS.data.userById(m.user_id);
       if (u) name = langText(u, 'name');
-      var av = '';
-      if (!mine) {
-        av = grouped
-          ? '<span class="chat-msg-av"></span>'
-          : '<img class="chat-msg-av" src="' + esc(DS.avatarUrl(u || { name: name })) + '" alt="">';
+      var av;
+      if (grouped) {
+        av = '<span class="chat-msg-av"></span>';
+      } else {
+        /* Mine → my own avatar. Theirs → the sender's avatar. */
+        var who = mine ? user : (u || { name: name });
+        av = '<img class="chat-msg-av" src="' + esc(DS.avatarUrl(who)) + '" alt="">';
       }
       html += '<div class="chat-msg' + (mine ? ' mine' : '') + (grouped ? ' grouped' : '') + '">' + av +
         '<div class="chat-msg-body">' +
           (!mine && !grouped ? '<div class="chat-name">' + esc(name) + '</div>' : '') +
           '<div class="chat-bubble">' + esc(DS.lang() === 'en' ? (m.text_en || m.text) : m.text) + '</div>' +
-          '<div class="chat-meta">' + esc(DS.timeShort(m.at)) + (mine ? '<span class="ticks">' + icon('check') + '</span>' : '') + '</div>' +
+          '<div class="chat-meta">' + esc(DS.timeShort(m.at)) + (mine ? '<span class="ticks seen">✓✓</span>' : '') + '</div>' +
         '</div></div>';
     });
     return html;
@@ -155,7 +175,7 @@
       var last = msgs[msgs.length - 1] || {};
       var me = (DS.session() || {}).id;
       var incoming = last.user_id !== me;
-      if (incoming && DS.playNotification) { try { DS.playNotification(); } catch (e) {} }
+      if (incoming) { try { if (window.playMessageSound) window.playMessageSound(); else if (DS.playMessageSound) DS.playMessageSound(); } catch (e) {} }
       if (onChange) onChange(incoming);
     }
     var timer = setInterval(tick, 2400);
@@ -182,7 +202,7 @@
       var count = room ? (room.messages || []).length : 0;
       return '<button type="button" class="chat-room' + (c.key === activeKey ? ' active' : '') + (blocked ? ' is-blocked' : '') + '" data-contact="' + esc(c.key) + '">' +
         avatarFor(c) +
-        '<span class="chat-room-info"><span class="chat-room-name">' + esc(contactName(c)) +
+        '<span class="chat-room-info"><span class="chat-room-name">' + esc(contactName(c)) + goldBadge(c) +
           (blocked ? ' <span class="chat-blocked-chip">' + icon('lock') + '</span>' : '') + '</span>' +
         '<span class="chat-room-preview">' + (mineLast ? '<i>' + esc(t('you')) + ':</i> ' : '') + esc(String(preview).slice(0, 80)) + '</span></span>' +
         '<span class="chat-room-side"><span class="chat-room-time">' + (last ? esc(DS.timeShort(last.at)) : '') + '</span>' +
@@ -210,6 +230,38 @@
       '<img class="avatar" src="' + esc(DS.avatarUrl(user)) + '" alt="">' +
       '<div class="chat-me-info"><b>' + esc(langText(user, 'name')) + '</b><span>' + esc(t(user.role === 'superadmin' ? 'admin' : user.role)) + '</span></div>' +
       '<span class="chat-online" title="' + esc(t('chatOnline')) + '"></span></div>';
+  }
+
+  /* ─────────────────────────── presence ────────────────────────────
+     Green dot = the peer can answer right now. Red dot = offline. */
+  function presenceOf(contact, scope) {
+    var en = DS.lang() === 'en';
+    if (!contact) return { online: false, label: en ? 'Offline' : 'غير متصل' };
+    var res = null;
+    if (DS.data && DS.data.peerPresence) {
+      try { res = DS.data.peerPresence(scope, contact.id, contact); } catch (e) { res = null; }
+    }
+    if (res && typeof res.online === 'boolean') {
+      return { online: res.online, label: res.online ? (en ? 'Online' : 'متصل') : (en ? 'Offline' : 'غير متصل') };
+    }
+    return { online: true, label: en ? 'Online' : 'متصل' };
+  }
+
+  function presenceDot(contact, scope) {
+    var p = presenceOf(contact, scope);
+    return '<i class="chat-presence-dot ' + (p.online ? 'is-online' : 'is-offline') + '" title="' + esc(p.label) + '" aria-label="' + esc(p.label) + '"></i>';
+  }
+
+  /* ───────────────────────── quick replies ───────────────────────── */
+  function quickRepliesMarkup(extraClass) {
+    var en = DS.lang() === 'en';
+    var list = en
+      ? ['On my way', 'Picked up', 'Thank you']
+      : ['أنا في الطريق', 'تم الاستلام', 'شكراً'];
+    return '<div class="chat-quick-replies' + (extraClass ? ' ' + extraClass : '') + '">' +
+      list.map(function (q) {
+        return '<button type="button" class="chat-quick-pill" data-quick-reply="' + esc(q) + '">' + esc(q) + '</button>';
+      }).join('') + '</div>';
   }
 
   /* ─────────────────── Block / report sheets (shared) ─────────────────── */
@@ -339,11 +391,30 @@
       return '<div class="chat-conv-head">' +
         '<button type="button" class="chat-back" data-chat-back aria-label="back">' + icon('chevronRight') + '</button>' +
         avatarFor(contact, 'avatar') +
-        '<div class="chat-conv-id"><b>' + esc(contactName(contact)) + '</b>' +
-          '<span><i class="chat-live-dot"></i>' + esc(contactSub(contact) || t(meta(state.scope).hintKey)) + '</span></div>' +
+        '<div class="chat-conv-id"><b>' + esc(contactName(contact)) + presenceDot(contact, state.scope) + '</b>' +
+          '<span><i class="chat-live-dot ' + (presenceOf(contact, state.scope).online ? 'is-online' : 'is-offline') + '"></i>' + esc(contactSub(contact) || t(meta(state.scope).hintKey)) + '</span></div>' +
         '<span class="chat-conv-tag">' + icon(meta(state.scope).icon) + esc(t(meta(state.scope).labelKey)) + '</span>' +
         '<button type="button" class="chat-settings-btn' + (blocked ? ' is-blocked' : '') + '" data-chat-settings aria-label="' + esc(t('chatSettings')) + '" title="' + esc(t('chatSettings')) + '">' + icon('settings') + '</button>' +
       '</div>';
+    }
+
+    /* A closed store cannot receive messages — say so instead of failing
+       silently when the customer presses send. */
+    function storeClosedFor(contact) {
+      if (state.scope !== 'stores') return null;
+      var tn = null;
+      if (contact && contact.type === 'tenant') tn = DS.data.tenantById(contact.id);
+      else if (user && user.tenant_id) tn = DS.data.tenantById(user.tenant_id);  /* store staff replying */
+      if (!tn) return null;
+      if (DS.data.isStoreOpen && DS.data.isStoreOpen(tn)) return null;
+      var st = DS.data.storeStatus ? DS.data.storeStatus(tn) : null;
+      var opensAt = st ? st.openLabel : (DS.data.nextOpenLabel ? DS.data.nextOpenLabel(tn) : '10:00');
+      return {
+        title: DS.lang() === 'en' ? 'The store is closed' : 'المتجر مغلق',
+        text: DS.lang() === 'en'
+          ? 'The store is closed right now — it opens at ' + opensAt + '. You can\'t send messages now.'
+          : 'المتجر مغلق حالياً — نفتح الساعة ' + opensAt + '. لا يمكنك إرسال رسائل الآن.'
+      };
     }
 
     function threadMarkup(contact, room, blocked) {
@@ -354,8 +425,17 @@
             '<button type="button" class="btn btn-secondary btn-sm" data-chat-unblock>' + esc(t('chatUnblock')) + '</button>' +
           '</div>';
       }
+      var closed = storeClosedFor(contact);
+      if (closed) {
+        return '<div class="chat-thread" data-chat-thread>' + messagesMarkup(room, user) + '</div>' +
+          '<div class="chat-blocked-bar is-closed">' + icon('clock') +
+            '<span><b>' + esc(closed.title) + '</b>' + esc(closed.text) + '</span>' +
+          '</div>';
+      }
       return '<div class="chat-thread" data-chat-thread>' + messagesMarkup(room, user) + '</div>' +
+        quickRepliesMarkup() +
         '<div class="chat-compose">' +
+          '<button type="button" class="chat-mic-btn" aria-label="Voice note" title="Voice note">' + icon('mic') + '</button>' +
           '<div class="chat-compose-box"><textarea rows="1" data-chat-input placeholder="' + esc(t('sendMessage')) + '" aria-label="' + esc(t('sendMessage')) + '"></textarea></div>' +
           '<button type="button" class="chat-send" data-chat-send aria-label="' + esc(t('send')) + '">' + icon('send') + '</button>' +
         '</div>';
@@ -450,6 +530,13 @@
         });
       }
       if (sendBtn) sendBtn.addEventListener('click', send);
+      DS.$$('[data-quick-reply]', el).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (!input) return;
+          input.value = b.getAttribute('data-quick-reply') || '';
+          send();
+        });
+      });
       scrollThread();
 
       function send() {
@@ -545,7 +632,10 @@
         (blocked
           ? '<div class="dsc-blocked">' + icon('lock') + '<span>' + esc(t('chatBlockedNotice')) + '</span>' +
               '<button type="button" class="btn btn-secondary btn-sm" data-dsc-unblock>' + esc(t('chatUnblock')) + '</button></div>'
-          : '<div class="chat-compose dsc-compose"><div class="chat-compose-box">' +
+          : quickRepliesMarkup('dsc-quick-replies') +
+            '<div class="chat-compose dsc-compose">' +
+              '<button type="button" class="chat-mic-btn" aria-label="Voice note" title="Voice note">' + icon('mic') + '</button>' +
+              '<div class="chat-compose-box">' +
               '<textarea rows="1" data-dsc-input placeholder="' + esc(t('sendMessage')) + '" aria-label="' + esc(t('sendMessage')) + '"></textarea></div>' +
               '<button type="button" class="chat-send" data-dsc-send aria-label="' + esc(t('send')) + '">' + icon('send') + '</button></div>') +
       '</div>';
@@ -636,6 +726,13 @@
         });
       }
       if (sendBtn) sendBtn.addEventListener('click', send);
+      DS.$$('[data-quick-reply]', root).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (!input) return;
+          input.value = b.getAttribute('data-quick-reply') || '';
+          send();
+        });
+      });
     }
 
     return m;
@@ -669,7 +766,10 @@
         (blocked
           ? '<div class="dsc-blocked">' + icon('lock') + '<span>' + esc(t('chatBlockedNotice')) + '</span>' +
               '<button type="button" class="btn btn-secondary btn-sm" data-dsc-unblock>' + esc(t('chatUnblock')) + '</button></div>'
-          : '<div class="chat-compose dsc-compose"><div class="chat-compose-box">' +
+          : quickRepliesMarkup('dsc-quick-replies') +
+            '<div class="chat-compose dsc-compose">' +
+              '<button type="button" class="chat-mic-btn" aria-label="Voice note" title="Voice note">' + icon('mic') + '</button>' +
+              '<div class="chat-compose-box">' +
               '<textarea rows="1" data-dsc-input placeholder="' + esc(t('sendMessage')) + '" aria-label="' + esc(t('sendMessage')) + '"></textarea></div>' +
               '<button type="button" class="chat-send" data-dsc-send aria-label="' + esc(t('send')) + '">' + icon('send') + '</button></div>') +
       '</div>';
@@ -760,6 +860,13 @@
         });
       }
       if (sendBtn) sendBtn.addEventListener('click', send);
+      DS.$$('[data-quick-reply]', root).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (!input) return;
+          input.value = b.getAttribute('data-quick-reply') || '';
+          send();
+        });
+      });
     }
 
     return m;
@@ -855,7 +962,10 @@
         (blocked
           ? '<div class="dsc-blocked">' + icon('lock') + '<span>' + esc(t('chatBlockedNotice')) + '</span>' +
               '<button type="button" class="btn btn-secondary btn-sm" data-dsc-unblock>' + esc(t('chatUnblock')) + '</button></div>'
-          : '<div class="chat-compose dsc-compose"><div class="chat-compose-box">' +
+          : quickRepliesMarkup('dsc-quick-replies') +
+            '<div class="chat-compose dsc-compose">' +
+              '<button type="button" class="chat-mic-btn" aria-label="Voice note" title="Voice note">' + icon('mic') + '</button>' +
+              '<div class="chat-compose-box">' +
               '<textarea rows="1" data-dsc-input placeholder="' + esc(t('sendMessage')) + '" aria-label="' + esc(t('sendMessage')) + '"></textarea></div>' +
               '<button type="button" class="chat-send" data-dsc-send aria-label="' + esc(t('send')) + '">' + icon('send') + '</button></div>') +
       '</div>';
@@ -946,6 +1056,13 @@
         });
       }
       if (sendBtn) sendBtn.addEventListener('click', send);
+      DS.$$('[data-quick-reply]', root).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (!input) return;
+          input.value = b.getAttribute('data-quick-reply') || '';
+          send();
+        });
+      });
     }
 
     return m;

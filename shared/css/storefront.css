@@ -59,13 +59,67 @@
   position: absolute;
   inset: 0;
   background:
+    linear-gradient(to right, rgba(0, 0, 0, 0.8), transparent),
     linear-gradient(90deg, rgba(0, 0, 0, 0.94) 0%, rgba(0, 0, 0, 0.78) 42%, rgba(0, 0, 0, 0.28) 72%, rgba(0, 0, 0, 0.55) 100%),
     linear-gradient(0deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0) 60%);
 }
 html[dir="rtl"] .sf-hero-bg::after {
   background:
+    linear-gradient(to left, rgba(0, 0, 0, 0.8), transparent),
     linear-gradient(270deg, rgba(0, 0, 0, 0.94) 0%, rgba(0, 0, 0, 0.78) 42%, rgba(0, 0, 0, 0.28) 72%, rgba(0, 0, 0, 0.55) 100%),
     linear-gradient(0deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0) 60%);
+}
+
+/* ── HERO SLIDER ─────────────────────────────────────────────────
+   The copy never moves: only the background frames cross-fade.
+   ─────────────────────────────────────────────────────────────── */
+.sf-hero-slider { overflow: hidden; }
+.sf-hero-bg .sf-hero-slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  transform: scale(1.06);
+  transition: opacity 1200ms var(--ease-out), transform 7000ms var(--ease-out);
+  will-change: opacity, transform;
+}
+.sf-hero-bg .sf-hero-slide.is-active {
+  opacity: 1;
+  transform: scale(1.0);
+}
+.sf-hero-dots {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 18px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.sf-hero-dot {
+  pointer-events: auto;
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  min-height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.42);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  transition: width 320ms var(--ease-out), background 320ms var(--ease-out), opacity 320ms var(--ease-out);
+}
+.sf-hero-dot:hover { background: rgba(255, 255, 255, 0.75); }
+.sf-hero-dot.is-active {
+  width: 26px;
+  background: #fff;
 }
 
 .sf-hero-inner {
@@ -189,19 +243,19 @@ html[dir="rtl"] .sf-hero-cards { align-items: flex-start; }
   width: min(280px, 100%);
   padding: 9px 13px 9px 9px;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(20, 20, 22, 0.58);
-  -webkit-backdrop-filter: blur(34px) saturate(160%);
-  backdrop-filter: blur(34px) saturate(160%);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  backdrop-filter: blur(10px) saturate(150%);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.35);
   text-align: start;
   transition: transform var(--transition-base), border-color var(--transition-base), background var(--transition-base);
 }
 html[dir="rtl"] .sf-float-card { padding: 9px 9px 9px 13px; }
 .sf-float-card:hover {
   transform: translateY(-3px);
-  border-color: rgba(130, 255, 31, 0.34);
-  background: rgba(26, 26, 30, 0.72);
+  border-color: rgba(255, 255, 255, 0.34);
+  background: rgba(255, 255, 255, 0.16);
 }
 .sf-float-card img {
   width: 48px;
@@ -1136,6 +1190,68 @@ html[lang="ar"] .sf-hero-mega .sf-title { font-size: clamp(36px, 5vw, 66px); }
   max-width: 480px;
 }
 .sf-offline-note svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* ── Closed-store banner (business hours) ───────────────────────── */
+.sf-closed-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg, 18px);
+  border: 1px solid rgba(245, 158, 11, 0.42);
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.16), rgba(245, 158, 11, 0.07));
+  color: #FFD79A;
+}
+html[data-customer-theme="light"] .sf-closed-banner {
+  color: #8A5200;
+  border-color: rgba(245, 158, 11, 0.5);
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.18), rgba(245, 158, 11, 0.08));
+}
+.sf-closed-banner svg { width: 20px; height: 20px; flex-shrink: 0; color: #F59E0B; }
+.sf-closed-banner > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sf-closed-banner b { font-size: var(--fs-sm, 13px); font-weight: 800; }
+.sf-closed-banner span { font-size: var(--fs-xs, 12px); line-height: 1.6; opacity: 0.92; }
+
+/* ── Dragon suite floating actions (spin-to-win + WhatsApp share) ── */
+.sf-dragon-fabs {
+  position: fixed;
+  inset-inline-end: 20px;
+  bottom: max(20px, env(safe-area-inset-bottom, 20px));
+  z-index: 67;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sf-dragon-fab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 16px;
+  border-radius: 50px;
+  border: 1px solid var(--border);
+  background: var(--surface, #141416);
+  color: var(--text-primary, #f5f5f7);
+  font-size: 12.5px;
+  font-weight: 800;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.sf-dragon-fab:hover { transform: translateY(-2px); }
+.sf-dragon-fab svg { width: 19px; height: 19px; flex: 0 0 auto; }
+.sf-dragon-fab.is-spin { border-color: rgba(130, 255, 31, 0.5); color: #82ff1f; }
+.sf-dragon-fab.is-wa { border-color: rgba(37, 211, 102, 0.5); color: #25d366; }
+@media (max-width: 960px) {
+  body.ds-has-bottom-nav .sf-dragon-fabs {
+    bottom: calc(150px + env(safe-area-inset-bottom, 0px));
+  }
+  .sf-dragon-fab span { display: none; }
+  .sf-dragon-fab { width: 46px; padding: 0; justify-content: center; }
+}
 
 /* Store directory cards */
 .sf-store-directory {

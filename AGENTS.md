@@ -26,6 +26,10 @@ and cross-page navigation tests.
 - `shared/js/gps-track.js` — 2 km route simulation, moves only while `status === 'delivering'`,
   ETA refresh every 10 s.
 - `shared/js/pages/*.js` — one module per page.
+- `shared/js/dragon.js` — the ten Dragon engines (AR shopping, voice POS, dynamic pricing,
+  spin-to-win, automated purchase orders, B2B wholesale, heatmaps, WhatsApp storefront,
+  expiry tracking, churn prediction). Surfaced on `owner/dragon.html` / `admin/dragon.html`
+  and wired into the storefront, POS, products, customers and reports pages.
 - `shared/css/design-system.css` → `components.css` → `app.css` (load in that order).
 
 Every authenticated page calls:
@@ -55,6 +59,7 @@ DS.shell.mount({ roles: [...], active: 'orders', title, eyebrow, sub, actions, c
 | Owners | `caznova`, `smozy`, `bnsheikh`, `mastore` | `<username>2026` |
 | Cashiers | `ca_cashier`, `sm_cashier`, `bn_cashier`, `ma_cashier` | `<username>2026` |
 | Delivery | `talqa`, `hala`, `ahla` | `<username>2026` |
+| Delivery rider | `ahmed` (Talqa / طلقة) | `123` |
 | Customer | `customer` | `customer2026` |
 
 Role home routes: admin/subadmin → `admin/dashboard.html`; owner → `owner/dashboard.html`;

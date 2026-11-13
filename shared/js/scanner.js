@@ -202,3 +202,132 @@
   DS.mountBarcodeScanner = mountBarcodeScanner;
   DS.initScanner = mountBarcodeScanner;
 })();
+
+/* ─────────────────────────── CAMERA SCANNER ───────────────────────────
+   HTML5 getUserMedia + (when available) BarcodeDetector. Falls back to a
+   manual text field when the API or camera is unavailable. */
+(function () {
+  var DS = window.DS;
+  if (!DS) return;
+
+  function L(ar, en) { return (DS.lang && DS.lang() === 'en') ? en : ar; }
+
+  function openCameraScanner(opts) {
+    opts = opts || {};
+    var old = document.querySelector('.ds-scan-backdrop');
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+
+    var backdrop = document.createElement('div');
+    backdrop.className = 'ds-scan-backdrop';
+    backdrop.innerHTML =
+      '<div class="ds-scan" role="dialog" aria-modal="true">' +
+        '<div class="ds-scan-head"><b>' + esc(L('مسح الباركود', 'Scan barcode')) + '</b>' +
+          '<button type="button" data-scan-close aria-label="Close">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>' +
+          '</button></div>' +
+        '<div class="ds-scan-stage">' +
+          '<video data-scan-video autoplay playsinline muted></video>' +
+          '<canvas data-scan-canvas hidden></canvas>' +
+          '<div class="ds-scan-frame"></div>' +
+        '</div>' +
+        '<div class="ds-scan-note">' + esc(L('وجّه الكاميرا نحو الباركود. أو اكتب الرمز يدوياً.', 'Point the camera at the barcode. Or type the code manually.')) + '</div>' +
+        '<div class="ds-scan-manual">' +
+          '<input data-scan-manual type="text" inputmode="numeric" placeholder="' + esc(L('أدخل الباركود', 'Enter barcode')) + '" dir="ltr">' +
+          '<button type="button" data-scan-submit>' + esc(L('بحث', 'Search')) + '</button>' +
+        '</div>' +
+        '<div class="ds-scan-err" data-scan-err></div>' +
+      '</div>';
+
+    document.body.appendChild(backdrop);
+    document.body.classList.add('ds-gsi-open');
+
+    var video = backdrop.querySelector('[data-scan-video]');
+    var manual = backdrop.querySelector('[data-scan-manual]');
+    var errEl = backdrop.querySelector('[data-scan-err]');
+    var stream = null;
+    var raf = null;
+    var detector = null;
+    var closed = false;
+
+    function close() {
+      if (closed) return;
+      closed = true;
+      if (raf) cancelAnimationFrame(raf);
+      if (stream) stream.getTracks().forEach(function (tr) { try { tr.stop(); } catch (e) {} });
+      document.body.classList.remove('ds-gsi-open');
+      if (backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
+    }
+
+    function setError(msg) { if (errEl) errEl.textContent = msg || ''; }
+
+    function handleCode(code) {
+      code = String(code || '').trim();
+      if (!code) return;
+      if (typeof opts.onFound === 'function') {
+        /* Let caller decide; close on success. */
+      }
+      if (typeof DS.scanner !== 'undefined' && DS.scanner && typeof DS.scanner.processCode === 'function') {
+        var res = DS.scanner.processCode(code);
+        if (res && res.ok) { close(); return; }
+      }
+      if (typeof opts.onFound === 'function') {
+        try { opts.onFound({ id: code, barcode: code, name: code }); } catch (e) {}
+      }
+      close();
+    }
+
+    backdrop.querySelector('[data-scan-close]').addEventListener('click', close);
+    backdrop.addEventListener('click', function (e) { if (e.target === backdrop) close(); });
+
+    backdrop.querySelector('[data-scan-submit]').addEventListener('click', function () {
+      handleCode(manual.value);
+      manual.value = '';
+    });
+    manual.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); handleCode(manual.value); manual.value = ''; }
+    });
+
+    if ('BarcodeDetector' in window) {
+      try { detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'code_128', 'code_39', 'upc_a', 'upc_e', 'qr_code'] }); } catch (e) { detector = null; }
+    }
+
+    function detectLoop() {
+      if (closed) return;
+      if (detector && video && video.readyState >= 2) {
+        detector.detect(video).then(function (codes) {
+          if (closed) return;
+          if (codes && codes.length) {
+            var val = codes[0].rawValue;
+            if (val) { setError(''); handleCode(val); return; }
+          }
+          raf = requestAnimationFrame(detectLoop);
+        }).catch(function () { raf = requestAnimationFrame(detectLoop); });
+      } else {
+        raf = requestAnimationFrame(detectLoop);
+      }
+    }
+
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(function (s) {
+        stream = s;
+        video.srcObject = s;
+        video.play().catch(function () {});
+        backdrop.classList.add('is-open');
+        raf = requestAnimationFrame(detectLoop);
+      }).catch(function (err) {
+        setError(L('تعذّر الوصول إلى الكاميرا. أدخل الرمز يدوياً.', 'Camera unavailable. Enter the code manually.'));
+        backdrop.classList.add('is-open');
+      });
+    } else {
+      setError(L('المتصفح لا يدعم الكاميرا. أدخل الرمز يدوياً.', 'Camera not supported. Enter the code manually.'));
+      backdrop.classList.add('is-open');
+    }
+
+    requestAnimationFrame(function () { backdrop.classList.add('is-open'); });
+  }
+
+  function esc(v) { var DS = window.DS; return DS.esc ? DS.esc(v) : String(v == null ? '' : v); }
+
+  DS.openCameraScanner = openCameraScanner;
+  DS.openBarcodeScanner = openCameraScanner;
+})();

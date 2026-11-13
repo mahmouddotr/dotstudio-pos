@@ -36,7 +36,6 @@ body.saleor-store {
 /* Remove the admin shell — the storefront owns the full viewport. */
 body.saleor-store .ds-sidebar,
 body.saleor-store .ds-topbar,
-body.saleor-store .ds-help-fab,
 body.saleor-store .drawer-scrim,
 body.saleor-store .ds-sidebar-close { display: none !important; }
 body.saleor-store .ds-app {
@@ -466,7 +465,6 @@ body.saleor-checkout {
 }
 body.saleor-checkout .ds-sidebar,
 body.saleor-checkout .ds-topbar,
-body.saleor-checkout .ds-help-fab,
 body.saleor-checkout .drawer-scrim { display: none !important; }
 body.saleor-checkout .ds-app { display: block; grid-template-columns: 1fr; }
 body.saleor-checkout .ds-main { min-height: 100vh; background: #fff; }

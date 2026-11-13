@@ -1,0 +1,36 @@
+
+def fetch_osm():
+    print("⏳ سحب بيانات المحلات من OpenStreetMap...")
+    url = "http://overpass-api.de/api/interpreter"
+    query = """
+    [out:json];
+    area["name:ar"="كفر الشيخ"]->.searchArea;
+    (
+      node["amenity"~"restaurant|cafe|fast_food|pharmacy"](area.searchArea);
+      node["shop"~"clothes|electronics|supermarket|bakery"](area.searchArea);
+    );
+    out body;
+    """
+    try:
+        response = requests.get(url, params={'data': query})
+        data = response.json()
+        
+        leads = []
+        for el in data.get('elements', []):
+            tags = el.get('tags', {})
+            name = tags.get('name', tags.get('name:ar', 'بدون اسم'))
+            phone = tags.get('phone', tags.get('contact:phone', 'لا يوجد'))
+            cat = tags.get('amenity', tags.get('shop', 'نشاط'))
+            if name != 'بدون اسم':
+                leads.append([name, cat, phone, "OpenStreetMap"])
+                
+        with open('osm_businesses.csv', 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(['الاسم', 'النشاط', 'رقم الهاتف', 'المصدر'])
+            writer.writerows(leads)
+        print(f"✅ تم حفظ {len(leads)} محل في ملف osm_businesses.csv")
+    except Exception as e:
+        print(f"❌ خطأ: {e}")
+
+fetch_osm()
+

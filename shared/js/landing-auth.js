@@ -152,6 +152,27 @@
       '</svg>';
   }
 
+  /* Single entry point for the mock Google account picker. Every surface
+     (landing button, signup modal, command palette) calls this, so the
+     modal can never end up half-open or bound to a dead handler. */
+  function openGooglePicker() {
+    try {
+      if (typeof DS.openGoogleSignIn === 'function') {
+        DS.openGoogleSignIn({ remember: rememberChoice() });
+        return true;
+      }
+      if (DS.auth && typeof DS.auth.googleSignIn === 'function') {
+        DS.auth.googleSignIn({ remember: rememberChoice() });
+        return true;
+      }
+    } catch (e) {
+      console.error('[landing] google sign-in failed', e);
+    }
+    DS.toast && DS.toast(L('تعذّر بدء الدخول عبر Google', 'Could not start Google sign-in'), 'error');
+    return false;
+  }
+  window.dsOpenGoogle = openGooglePicker;
+
   function installGoogleButton() {
     if (document.getElementById('dsLandingAuthAlt')) return;
     var btn = document.getElementById('loginBtn');
@@ -159,15 +180,22 @@
     var wrap = document.createElement('div');
     wrap.id = 'dsLandingAuthAlt';
     wrap.className = 'landing-auth-alt';
+    /* NOTE: the button carries an explicit `onclick` (not only a delegated
+       listener) so the mock Google modal always opens, even if the page's
+       own script wiring is replaced later. */
     wrap.innerHTML =
       '<div class="landing-auth-divider"><span id="dsLandingOr"></span></div>' +
-      '<button type="button" class="landing-google-btn" id="dsLandingGoogle">' + googleSvg() +
+      '<button type="button" class="landing-google-btn" id="dsLandingGoogle" ' +
+        'onclick="window.dsOpenGoogle ? window.dsOpenGoogle(event) : null">' + googleSvg() +
         '<span id="dsLandingGoogleLabel"></span></button>';
     btn.parentNode.insertBefore(wrap, btn.nextSibling);
-    wrap.querySelector('#dsLandingGoogle').addEventListener('click', function () {
-      try { DS.auth.googleSignIn({ remember: rememberChoice() }); }
-      catch (e) { DS.toast && DS.toast(L('تعذّر بدء الدخول عبر Google', 'Could not start Google sign-in'), 'error'); }
-    });
+    var gBtn = wrap.querySelector('#dsLandingGoogle');
+    if (gBtn) {
+      gBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        openGooglePicker();
+      });
+    }
   }
 
   /* ──────────────────────────── signup modal ───────────────────────────── */
@@ -235,7 +263,7 @@
     });
     overlay.querySelector('#dsSuGoogle').addEventListener('click', function () {
       closeSignup();
-      setTimeout(function () { try { DS.auth.googleSignIn({ remember: rememberChoice() }); } catch (e) {} }, 180);
+      setTimeout(function () { openGooglePicker(); }, 180);
     });
 
     var form = overlay.querySelector('#dsSignupForm');
@@ -401,7 +429,6 @@
 
   window.openSignup = openSignup;
   window.closeSignup = closeSignup;
-  window.dsOpenGoogle = function () { try { DS.auth.googleSignIn(); } catch (e) {} };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();

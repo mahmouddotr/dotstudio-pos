@@ -63,8 +63,32 @@
             '<td>' + p.qty + '</td><td><b>' + money(p.revenue) + '</b></td><td><span class="badge ' + (full.stock <= (full.min_stock || 0) ? 'warning' : 'success') + '">' + (full.stock || 0) + '</span></td></tr>';
         }).join('') + '</tbody></table></div></div>';
 
-    page.setContent(stats + chart + breakdown + table);
+    var heatmap = DS.dragon ? heatmapCard(tid) : '';
+
+    page.setContent(stats + chart + breakdown + heatmap + table);
     bind();
+  }
+
+  /* ── Dragon · sales heatmap (day × hour) ─────────────────────── */
+  function heatmapCard(tid) {
+    var orders = scoped(tid);
+    var hm = DS.dragon.salesHeatmap(orders);
+    if (!hm.max) return '';
+    var head = '<div class="dr-heat-hours">' + hm.hours.map(function (h) {
+      return '<span>' + (h % 3 === 0 ? h : '') + '</span>';
+    }).join('') + '</div>';
+    var rows = hm.grid.map(function (row, d) {
+      return '<div class="dr-heat-row"><span class="dr-heat-day">' + esc(hm.days[d]) + '</span>' +
+        row.map(function (v) {
+          return '<i style="' + DS.dragon.heatmapCellStyle(v, hm.max) + '" title="' + esc(hm.days[d] + ' · ' + money(v)) + '"></i>';
+        }).join('') + '</div>';
+    }).join('');
+    return '<div class="card" style="margin-bottom:16px"><div class="card-header"><div>' +
+      '<div class="card-title">' + icon('chart') + esc(DS.lang() === 'en' ? 'Sales heatmap' : 'الخريطة الحرارية للمبيعات') + '</div>' +
+      '<div class="card-subtitle">' + esc(DS.lang() === 'en'
+        ? 'Busiest day: ' + hm.days[hm.best.day] + ' · peak hour: ' + hm.best.hour + ':00'
+        : 'أكثر يوم مبيعاً: ' + hm.days[hm.best.day] + ' · أعلى ساعة: ' + hm.best.hour + ':00') + '</div></div>' +
+      '</div><div class="card-body"><div class="dr-heatmap">' + head + rows + '</div></div></div>';
   }
 
   function stat(label, value, ico, tone, foot) {

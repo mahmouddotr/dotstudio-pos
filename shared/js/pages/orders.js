@@ -62,7 +62,7 @@
     var toolbar = '<div class="card"><div class="card-body" style="padding:12px 14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">' +
       '<div class="search-mini" style="flex:1;min-width:220px">' + icon('search') + '<input data-q placeholder="' + esc(t('search')) + ' #ORD / ' + esc(t('customerLabel')) + '" value="' + esc(state.q) + '"></div>' +
       '<select class="select" data-status style="width:auto;min-width:150px"><option value="">' + esc(t('allStatuses')) + '</option>' +
-        DS.statusFlow.concat(['cancelled']).map(function (s) { return '<option value="' + s + '"' + (state.status === s ? ' selected' : '') + '>' + esc(DS.statusMeta(s).label) + '</option>'; }).join('') + '</select>' +
+        (DS.allOrderStatuses || DS.statusFlow.concat(['cancelled'])).map(function (s) { return '<option value="' + s + '"' + (state.status === s ? ' selected' : '') + '>' + esc(DS.statusMeta(s).label) + '</option>'; }).join('') + '</select>' +
       (isAdmin ? '<select class="select" data-store style="width:auto;min-width:150px"><option value="">' + esc(t('allStores')) + '</option>' +
         DS.data.tenants.map(function (tn) { return '<option value="' + tn.id + '"' + (state.store === tn.id ? ' selected' : '') + '>' + esc(tn.name) + '</option>'; }).join('') + '</select>' : '') +
       '<select class="select" data-range style="width:auto;min-width:130px"><option value="all">' + esc(t('all')) + '</option><option value="1"' + (state.range === '1' ? ' selected' : '') + '>' + esc(t('today')) + '</option><option value="7"' + (state.range === '7' ? ' selected' : '') + '>' + esc(t('last7')) + '</option><option value="30"' + (state.range === '30' ? ' selected' : '') + '>' + esc(t('last30')) + '</option></select>' +

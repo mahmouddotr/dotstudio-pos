@@ -17,6 +17,7 @@
       { key: 'dashboard', href: 'admin/dashboard.html', icon: 'dashboard' },
       { section: 'operations' },
       { key: 'orders', href: 'admin/orders.html', icon: 'orders', badge: 'pending' },
+      { key: 'paymentVerification', href: 'admin/payment-verification.html', icon: 'shield', badge: 'verification' },
       { key: 'products', href: 'admin/products.html', icon: 'box' },
       { key: 'stores', href: 'admin/stores.html', icon: 'store' },
       { key: 'customers', href: 'admin/customers.html', icon: 'users' },
@@ -29,11 +30,14 @@
       { key: 'subscriptions', href: 'admin/subscriptions.html', icon: 'card' },
       { key: 'discounts', href: 'admin/discounts.html', icon: 'percent' },
       { key: 'reviews', href: 'admin/reviews.html', icon: 'star' },
+      { key: 'leads', href: 'admin/leads.html', icon: 'gift' },
       { key: 'jobs', href: 'admin/jobs.html', icon: 'jobs' },
       { key: 'audit', href: 'admin/audit-logs.html', icon: 'activity' },
+      { key: 'dragon', href: 'admin/dragon.html', icon: 'sparkles' },
       { section: 'communication' },
       { key: 'chats', href: 'admin/chats.html', icon: 'chat' },
       { section: 'system' },
+      { key: 'aiAgency', href: 'admin/ai-agency.html', icon: 'target' },
       { key: 'systemTools', href: 'admin/hardware-tools.html', icon: 'settings' },
       { key: 'settings', href: 'admin/settings.html', icon: 'settings' }
     ],
@@ -42,6 +46,7 @@
       { key: 'dashboard', href: 'admin/dashboard.html', icon: 'dashboard' },
       { section: 'operations' },
       { key: 'orders', href: 'admin/orders.html', icon: 'orders', perm: 'orders' },
+      { key: 'paymentVerification', href: 'admin/payment-verification.html', icon: 'shield', perm: 'orders' },
       { key: 'products', href: 'admin/products.html', icon: 'box', perm: 'products' },
       { key: 'stores', href: 'admin/stores.html', icon: 'store', perm: 'stores' },
       { key: 'customers', href: 'admin/customers.html', icon: 'users', perm: 'customers' },
@@ -52,11 +57,13 @@
       { key: 'subscriptions', href: 'admin/subscriptions.html', icon: 'card', perm: 'subscriptions' },
       { key: 'discounts', href: 'admin/discounts.html', icon: 'percent', perm: 'discounts' },
       { key: 'reviews', href: 'admin/reviews.html', icon: 'star', perm: 'products' },
+      { key: 'leads', href: 'admin/leads.html', icon: 'gift', perm: 'customers' },
       { key: 'jobs', href: 'admin/jobs.html', icon: 'jobs', perm: 'jobs' },
       { key: 'audit', href: 'admin/audit-logs.html', icon: 'activity', perm: 'audit' },
       { section: 'communication' },
       { key: 'chats', href: 'admin/chats.html', icon: 'chat', perm: 'chats' },
       { section: 'system' },
+      { key: 'aiAgency', href: 'admin/ai-agency.html', icon: 'target', perm: 'settings' },
       { key: 'systemTools', href: 'admin/hardware-tools.html', icon: 'settings', perm: 'products' },
       { key: 'settings', href: 'admin/settings.html', icon: 'settings' }
     ],
@@ -65,11 +72,13 @@
       { key: 'dashboard', href: 'owner/dashboard.html', icon: 'dashboard' },
       { key: 'sell', href: 'owner/sell.html', icon: 'cashier' },
       { key: 'orders', href: 'owner/orders.html', icon: 'orders', badge: 'pending' },
+      { key: 'paymentVerification', href: 'owner/payment-verification.html', icon: 'shield', badge: 'verification' },
       { key: 'products', href: 'owner/products.html', icon: 'box' },
       { key: 'customers', href: 'owner/customers.html', icon: 'users' },
       { section: 'growth' },
       { key: 'reports', href: 'owner/reports.html', icon: 'chart' },
       { key: 'subscriptions', href: 'owner/subscriptions.html', icon: 'card' },
+      { key: 'dragon', href: 'owner/dragon.html', icon: 'sparkles' },
       { key: 'jobs', href: 'admin/jobs.html', icon: 'jobs' },
       { section: 'team' },
       { key: 'cashiers', href: 'owner/cashiers.html', icon: 'cashier' },
@@ -178,6 +187,7 @@
   function navBadgeCount(key, user) {
     if (!DS.data || !user) return 0;
     try {
+      if (key === 'paymentVerification' && DS.data.pendingVerifications) return DS.data.pendingVerifications(user).length;
       if (key === 'orders' && !(DS.data.isDeliveryRole && DS.data.isDeliveryRole(user))) return DS.data.visibleOrders(user).filter(function (o) { return o.status === 'pending'; }).length;
       if (key === 'orders' && DS.data.isDeliveryRole && DS.data.isDeliveryRole(user)) return DS.data.visibleOrders(user).filter(function (o) { return o.status === 'out_for_delivery'; }).length;
     } catch (e) {}
@@ -228,6 +238,7 @@
 
   /* Profile sheet — never logs the user out, never navigates away. */
   function openProfile() {
+    var EN = DS.lang() === 'en';
     var user = DS.session();
     if (!user) return;
     var entity = workspaceEntity(user);
@@ -239,6 +250,33 @@
     if (user.email) rows.push([t('email'), user.email]);
     if (user.city) rows.push([t('city'), DS.loc(user, 'city')]);
 
+    var customerExtra = '';
+    if (user.role === 'customer') {
+      var uid = String(user.id || user.username || user.phone || 'guest');
+      var walletKey = 'ds_wallet_' + uid;
+      var walletBal = Number(DS.store.get(walletKey, 0)) || 0;
+      var pts = DS.loyalty ? DS.loyalty.get(user) : 0;
+      var refCode = DS.store.get('ds_referral_code_' + uid, '');
+      if (!refCode) {
+        var base = String(user.name || user.username || 'USER').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 8) || 'USER';
+        refCode = base + '50';
+        DS.store.set('ds_referral_code_' + uid, refCode);
+        var reg = DS.store.get('ds_referral_registry', {}) || {};
+        reg[refCode] = uid;
+        DS.store.set('ds_referral_registry', reg);
+      }
+      customerExtra = '<div class="ds-profile-extra" style="margin-top:12px;display:flex;flex-direction:column;gap:10px">' +
+        '<div class="ds-profile-row"><span>' + esc(EN ? 'Wallet balance' : 'رصيد المحفظة') + '</span><b>' + esc(String(walletBal)) + ' EGP</b></div>' +
+        '<button type="button" class="btn btn-secondary btn-sm" data-wallet-recharge>' + (EN ? 'Recharge wallet' : 'شحن المحفظة') + '</button>' +
+        '<div class="ds-profile-row"><span>' + esc(EN ? 'My points' : 'نقاطي') + '</span><b>' + pts + '</b></div>' +
+        '<div class="ds-profile-row"><span>' + esc(EN ? 'Referral code' : 'كود الإحالة') + '</span><b data-ref-code>' + esc(refCode) + '</b></div>' +
+        '<button type="button" class="btn btn-secondary btn-sm" data-ref-share>' + (EN ? 'Share referral code' : 'مشاركة كود الإحالة') + '</button>' +
+        '<div style="display:flex;gap:6px">' +
+          '<input class="input" data-ref-input placeholder="' + esc(EN ? 'Enter friend code' : 'أدخل كود صديق') + '" style="flex:1">' +
+          '<button type="button" class="btn btn-primary btn-sm" data-ref-redeem>' + (EN ? 'Redeem' : 'استبدال') + '</button>' +
+        '</div>' +
+      '</div>';
+    }
     var body = '<div class="ds-profile">' +
       '<div class="ds-profile-top">' +
         '<img class="ds-profile-avatar" src="' + esc(DS.avatarUrl(user)) + '" alt="">' +
@@ -248,6 +286,7 @@
       '<div class="ds-profile-rows">' + rows.map(function (r) {
         return '<div class="ds-profile-row"><span>' + esc(r[0]) + '</span><b>' + esc(r[1]) + '</b></div>';
       }).join('') + '</div>' +
+      customerExtra +
       '<div class="ds-profile-actions">' +
         '<button type="button" class="btn btn-secondary" data-profile-avatar>' + icon('image') + esc(t('changeAvatar')) + '</button>' +
         '<button type="button" class="btn btn-danger" data-profile-logout>' + icon('logout') + esc(t('logout')) + '</button>' +
@@ -267,6 +306,49 @@
           DS.confirm({ title: t('logout'), text: t('confirmDeleteText'), danger: true }).then(function (ok) {
             if (ok) DS.logout();
           });
+        });
+        var recharge = root.querySelector('[data-wallet-recharge]');
+        if (recharge) recharge.addEventListener('click', function () {
+          var amt = window.prompt(EN ? 'Recharge amount (EGP):' : 'مبلغ الشحن (جنيه):', '50');
+          var n = Number(amt);
+          if (!isFinite(n) || n <= 0) return;
+          var uid = String(user.id || user.username || user.phone || 'guest');
+          var key = 'ds_wallet_' + uid;
+          var bal = Number(DS.store.get(key, 0)) || 0;
+          DS.store.set(key, bal + n);
+          DS.toast(EN ? 'Wallet recharged' : 'تم شحن المحفظة', 'success');
+          m.close();
+          setTimeout(function () { DS.openProfile(); }, 120);
+        });
+        var share = root.querySelector('[data-ref-share]');
+        if (share) share.addEventListener('click', function () {
+          var code = root.querySelector('[data-ref-code]').textContent;
+          if (navigator.share) {
+            navigator.share({ title: 'DotStudio referral', text: code }).catch(function () {});
+          } else {
+            try { navigator.clipboard.writeText(code); } catch (e) {}
+            DS.toast(EN ? 'Referral code copied' : 'تم نسخ كود الإحالة', 'success');
+          }
+        });
+        var redeem = root.querySelector('[data-ref-redeem]');
+        if (redeem) redeem.addEventListener('click', function () {
+          var input = root.querySelector('[data-ref-input]');
+          var code = (input.value || '').trim().toUpperCase();
+          if (!code) return;
+          var reg = DS.store.get('ds_referral_registry', {}) || {};
+          var ownerId = reg[code];
+          var uid = String(user.id || user.username || user.phone || 'guest');
+          if (!ownerId || ownerId === uid) { DS.toast(EN ? 'Invalid code' : 'كود غير صالح', 'error'); return; }
+          DS.loyalty.add(user, 50);
+          var ownerUser = (DS.data.users || []).filter(function (u) { return String(u.id || u.username) === String(ownerId); })[0];
+          if (ownerUser) DS.loyalty.add(ownerUser, 50);
+          else {
+            var ownerKey = 'ds_referral_credit_' + ownerId;
+            var prev = Number(DS.store.get(ownerKey, 0)) || 0;
+            DS.store.set(ownerKey, prev + 50);
+          }
+          DS.toast(EN ? 'You and your friend got 50 points!' : 'أنت وصديقك حصلتما على 50 نقطة!', 'success');
+          input.value = '';
         });
       }
     });
@@ -433,29 +515,32 @@
 
   function openHelp(user) {
     var en = DS.lang() === 'en';
-    var steps = guideSteps(user && user.role);
-    var roleLabel = en ? 'your workspace' : 'مساحة عملك';
-    var body = '<div class="help-guide">' +
-      '<div class="help-guide-head">' +
-        '<span class="help-guide-ic">' + icon('sparkles') + '</span>' +
-        '<div><b>' + esc(en ? 'Step-by-step guides' : 'أدلة خطوة بخطوة') + '</b>' +
-          '<span>' + esc(en ? 'Everything you need for ' + roleLabel + '.' : 'كل ما تحتاجه داخل ' + roleLabel + '.') + '</span></div>' +
+    var items = [
+      { t: 'كيف تضيف منتج؟', d: 'المنتجات ← إضافة منتج' },
+      { t: 'كيف تطبع فاتورة؟', d: 'نقطة البيع ← أضف عناصر ← طباعة' },
+      { t: 'كيف تتابع الطلبات؟', d: 'الطلبات ← التتبع' }
+    ];
+    var body = '<div style="background:rgba(15,15,18,0.72);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(130,255,31,0.22);border-radius:18px;padding:22px;box-shadow:0 18px 60px rgba(0,0,0,0.45)">' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">' +
+        '<span style="width:38px;height:38px;border-radius:12px;background:rgba(130,255,31,0.15);color:#82FF1F;display:grid;place-items:center;font-size:20px">?</span>' +
+        '<div><b style="color:#fff;font-size:16px;display:block">' + (en ? 'Quick help' : 'مساعدة سريعة') + '</b>' +
+        '<span style="color:rgba(255,255,255,0.6);font-size:12px">' + (en ? 'Three steps to get started' : 'ثلاث خطوات للبدء') + '</span></div>' +
       '</div>' +
-      '<ol class="help-steps">' + steps.map(function (s, i) {
-        return '<li class="help-step">' +
-          '<span class="help-step-num">' + (i + 1) + '</span>' +
-          '<span class="help-step-ic">' + icon(s.icon) + '</span>' +
-          '<div class="help-step-copy"><b>' + esc(s.title) + '</b><p>' + esc(s.text) + '</p></div></li>';
-      }).join('') + '</ol>' +
-      '<div class="help-guide-foot">' + icon('message') +
-        '<span>' + esc(en ? 'Still stuck? Open Support from the chat dock.' : 'ما زلت تحتاج مساعدة؟ افتح الدعم من لوحة المحادثات.') + '</span></div></div>';
+      '<ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px">' +
+      items.map(function (it) {
+        return '<li style="display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06)">' +
+          '<span style="width:26px;height:26px;border-radius:8px;background:#82FF1F;color:#0A0A0A;display:grid;place-items:center;font-weight:800;flex-shrink:0">→</span>' +
+          '<div><b style="color:#82FF1F;display:block;margin-bottom:2px">' + it.t + '</b>' +
+          '<span style="color:rgba(255,255,255,0.7);font-size:13px">' + it.d + '</span></div></li>';
+      }).join('') +
+      '</ul></div>';
 
     DS.modal({
-      title: '? ' + esc(en ? 'Help & guides' : 'المساعدة والأدلة'),
-      sub: esc(en ? 'A quick tour of your most common tasks.' : 'جولة سريعة على أكثر المهام استخداماً.'),
-      size: 'md',
+      title: (en ? 'Help' : 'المساعدة'),
+      sub: (en ? 'Quick guide' : 'دليل سريع'),
+      size: 'sm',
       body: body,
-      actions: [{ label: t('close'), variant: 'btn-primary' }]
+      actions: [{ label: (en ? 'Close' : 'إغلاق'), variant: 'btn-primary' }]
     });
   }
 
@@ -463,7 +548,7 @@
   /* Plays the notification beep whenever a new order joins the feed.
      A sub-driver also gets a toast the moment a task is assigned to him. */
   function watchOrderFeed(user) {
-    if (!DS.data || !DS.data.visibleOrders || !user || user.role === 'customer') return;
+    if (!DS.data || !DS.data.visibleOrders || !user) return;
     var isRider = !!(DS.data.isSubDriver && DS.data.isSubDriver(user));
     var seen = {};
     var primed = false;
@@ -473,7 +558,8 @@
       var fresh = 0;
       list.forEach(function (o) { if (o && !seen[o.id]) { seen[o.id] = true; fresh++; } });
       if (primed && fresh > 0) {
-        if (DS.playNotification) DS.playNotification();
+        if (window.playOrderSound) { try { window.playOrderSound(); } catch (e) {} }
+        else if (DS.playOrderSound) { try { DS.playOrderSound(); } catch (e) {} }
         if (isRider) DS.toast(DS.lang() === 'en' ? 'You have a new delivery task' : 'لديك طلب توصيل جديد', 'success');
       }
       primed = true;
@@ -672,6 +758,10 @@
         : 'نقاطك: ' + pts + ' نقطة · كل 100 نقطة = خصم 10 جنيه', 'info');
       return;
     }
+    if (target.closest('.ds-bottom-nav') && target.closest('[data-profile]')) {
+      DS.openProfile();
+      return;
+    }
     var cartNav = target.closest('[data-cart-nav]');
     if (cartNav) return; /* normal link navigation */
   });
@@ -718,7 +808,7 @@
       '<div class="ds-main">' + topbarMarkup(user, opts) +
       '<main class="ds-content" id="dsContent"></main></div></div>' +
       '<div class="drawer-scrim" data-scrim></div>' +
-      '<button type="button" class="ds-help-fab help-btn" id="helpBtn" data-help-btn aria-label="' + esc(DS.lang() === 'en' ? 'Help & guides' : 'المساعدة والأدلة') + '" title="' + esc(DS.lang() === 'en' ? 'Help & guides' : 'المساعدة والأدلة') + '">?</button>';
+      '<button type="button" class="ds-help-fab help-btn" id="helpBtn" data-help-btn style="display:grid !important" aria-label="' + esc(DS.lang() === 'en' ? 'Help & guides' : 'المساعدة والأدلة') + '" title="' + esc(DS.lang() === 'en' ? 'Help & guides' : 'المساعدة والأدلة') + '">?</button>';
 
     /* Customer surface: the storefront owns the viewport, so the only
        navigation on small screens is the fixed bottom bar. */
@@ -937,7 +1027,9 @@
         handed_to_company: EN ? 'Handed to the delivery company' : 'تم تسليم طلبك لشركة التوصيل',
         out_for_delivery: EN ? 'The courier is on the way' : 'المندوب في الطريق إليك',
         delivered: EN ? 'Delivered — enjoy!' : 'تم تسليم طلبك — بالهنا والشفا',
-        cancelled: EN ? 'Your order was cancelled' : 'تم إلغاء طلبك'
+        cancelled: EN ? 'Your order was cancelled' : 'تم إلغاء طلبك',
+        pending_verification: EN ? 'We are reviewing your payment receipt' : 'جاري مراجعة إيصال الدفع',
+        payment_rejected: EN ? 'Your payment receipt was rejected' : 'تم رفض إيصال الدفع'
       };
       return map[status] || status;
     }
@@ -1012,6 +1104,9 @@
       if (!isCustomerOrder(d, sessionUser())) return;
       sweep(false);
       show(d);
+      if (d.status === 'out_for_delivery' && navigator.serviceWorker && navigator.serviceWorker.controller) {
+        try { navigator.serviceWorker.controller.postMessage({ type: 'DS_PUSH', notification: { title: (DS.lang() === 'en' ? 'Order ' + d.order_no : 'طلبك ' + d.order_no), body: (DS.lang() === 'en' ? 'The courier is on the way' : 'المندوب في الطريق إليك'), url: DS.url('customer/tracking.html?order=' + encodeURIComponent(d.order_id || '')), order_id: d.order_id || '' } }); } catch (err) {}
+      }
     });
     window.addEventListener('ds:data', function () { sweep(true); });
     window.addEventListener('storage', function () { sweep(true); });

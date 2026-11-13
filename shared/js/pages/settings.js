@@ -78,6 +78,8 @@
     var tn = DS.data.tenantById(user.tenant_id);
     if (!tn) return DS.empty({ icon: 'store', title: t('noData'), text: '' });
     var sub = DS.data.activeSubscription(tn.id);
+    var st = DS.data.storeStatus ? DS.data.storeStatus(tn) : { open: true, hoursLabel: '', openLabel: '', closeLabel: '' };
+    var en = DS.lang() === 'en';
     return '<div class="card"><div class="card-header"><div class="card-title">' + esc(t('storeProfile')) + '</div><span class="badge ' + (sub && sub.daysLeft <= 15 ? 'warning' : 'success') + '">' + esc(t(tn.plan)) + ' · ' + Math.max(0, sub ? sub.daysLeft : 0) + ' ' + esc(t('daysLeft')) + '</span></div><div class="card-body">' +
       '<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px"><img src="' + esc(DS.avatarUrl(tn)) + '" alt="" style="width:64px;height:64px;border-radius:16px;object-fit:cover;border:2px solid var(--border)">' +
       '<div><div style="font-weight:600">' + esc(tn.name) + '</div><div style="font-size:11px;color:var(--text-tertiary)">' + esc(DS.loc(tn, 'industry')) + ' · ' + esc(DS.loc(tn, 'city')) + '</div>' +
@@ -89,8 +91,16 @@
         '<div class="field"><label>' + esc(t('city')) + '</label><input class="input" id="stCity" value="' + esc(tn.city) + '"></div>' +
         '<div class="field"><label>' + esc(t('storeAddress')) + '</label><input class="input" id="stAddr" value="' + esc(tn.address) + '"></div>' +
         '<div class="field"><label>' + esc(t('delivery')) + ' (EGP)</label><input class="input" id="stFee" type="number" value="' + esc(tn.delivery_fee) + '"></div>' +
+        '<div class="field"><label>' + esc(t('storeHours')) + ' · ' + esc(en ? 'Opening time' : 'وقت الفتح') + '</label>' +
+          '<input class="input" id="stOpenTime" type="time" value="' + esc(tn.openTime || '10:00') + '" style="direction:ltr"></div>' +
+        '<div class="field"><label>' + esc(t('storeHours')) + ' · ' + esc(en ? 'Closing time' : 'وقت الإغلاق') + '</label>' +
+          '<input class="input" id="stCloseTime" type="time" value="' + esc(tn.closeTime || '22:00') + '" style="direction:ltr"></div>' +
         '<div class="field" style="grid-column:1/-1"><label>' + esc(t('storeDesc')) + '</label><textarea class="textarea" id="stDesc" rows="2">' + esc(tn.description || '') + '</textarea></div>' +
       '</div>' +
+      '<div class="store-hours-status ' + (st.open ? 'is-open' : 'is-closed') + '" style="margin-top:12px;display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px solid var(--border);border-radius:var(--radius-md);font-size:12px">' +
+        icon(st.open ? 'checkCircle' : 'clock') +
+        '<span><b>' + esc(st.open ? (en ? 'Open now' : 'مفتوح الآن') : (en ? 'Closed now' : 'مغلق الآن')) + '</b> · ' +
+          esc(en ? 'Open ' : 'يفتح ') + esc(st.openLabel) + ' — ' + esc(en ? 'closes ' : 'يغلق ') + esc(st.closeLabel) + '</span></div>' +
       '<div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">' +
         toggle('stOpen',
           DS.lang() === 'en' ? 'Accept new orders' : 'استقبال طلبات جديدة',
@@ -129,6 +139,10 @@
       '</div>' +
       '<div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn btn-primary" data-save-pass>' + icon('key') + esc(t('saveChanges')) + '</button></div>' +
       '</div></div>' +
+      '<div class="card"><div class="card-header"><div class="card-title">' + esc(DS.lang() === 'en' ? 'Backup' : 'النسخ الاحتياطي') + '</div></div><div class="card-body">' +
+      '<p style="font-size:12px;color:var(--text-secondary);line-height:1.7;margin-bottom:12px">' + esc(DS.lang() === 'en' ? 'Download a JSON snapshot of every local setting, product and order. Credentials are never included.' : 'حمّل نسخة JSON من كل الإعدادات والمنتجات والطلبات المحلية. بيانات الدخول لا تُضمَّن أبداً.') + '</p>' +
+      '<button class="btn btn-secondary" data-backup>' + icon('download') + esc('تحميل نسخة احتياطية') + '</button>' +
+      '</div></div>' +
       '<div class="card" style="border-color:rgba(255,69,58,.35)"><div class="card-header"><div class="card-title" style="color:var(--danger)">' + esc(DS.lang() === 'en' ? 'Danger zone' : 'منطقة الخطر') + '</div></div><div class="card-body">' +
       '<p style="font-size:12px;color:var(--text-secondary);line-height:1.7;margin-bottom:12px">' + esc(DS.lang() === 'en' ? 'Reset the demo database back to its original seed. All local changes will be lost.' : 'إعادة قاعدة البيانات التجريبية لحالتها الأصلية. كل التغييرات المحلية ستُفقد.') + '</p>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-danger" data-reset>' + icon('refresh') + esc(DS.lang() === 'en' ? 'Reset demo data' : 'إعادة تعيين البيانات') + '</button>' +
@@ -162,12 +176,15 @@
     var saveStore = page.body.querySelector('[data-save-store]');
     if (saveStore) saveStore.addEventListener('click', function () {
       var tn = DS.data.tenantById(user.tenant_id);
+      var openTime = (page.body.querySelector('#stOpenTime') || {}).value || tn.openTime || '10:00';
+      var closeTime = (page.body.querySelector('#stCloseTime') || {}).value || tn.closeTime || '22:00';
       DS.data.saveTenant({
         id: tn.id, name: page.body.querySelector('#stName').value.trim() || tn.name,
         name_en: page.body.querySelector('#stNameEn').value.trim() || tn.name,
         phone: page.body.querySelector('#stPhone').value.trim(), city: page.body.querySelector('#stCity').value.trim(),
         address: page.body.querySelector('#stAddr').value.trim(), delivery_fee: Number(page.body.querySelector('#stFee').value) || 30,
-        description: page.body.querySelector('#stDesc').value.trim()
+        description: page.body.querySelector('#stDesc').value.trim(),
+        openTime: openTime, closeTime: closeTime
       });
       DS.toast(t('settingsSaved'), 'success');
       render();
@@ -228,6 +245,10 @@
       DS.confirm({ title: t('confirmDelete'), text: t('confirmDeleteText'), danger: true }).then(function (ok) {
         if (ok) DS.data.reset();
       });
+    });
+    var backup = page.body.querySelector('[data-backup]');
+    if (backup) backup.addEventListener('click', function () {
+      if (DS.backupData) DS.backupData();
     });
     DS.$$('[data-logout]', page.body).forEach(function (b) { b.addEventListener('click', function () { DS.logout(); }); });
   }

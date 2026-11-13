@@ -277,6 +277,22 @@
     var x = Math.sin(dLat / 2) ** 2 + Math.cos(a[0] * rad) * Math.cos(b[0] * rad) * Math.sin(dLng / 2) ** 2;
     return 6371 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
   }
+  /* ── Driver ETA ──────────────────────────────────────────────────
+     The demo fleet drives at a fixed average city speed, so every ETA
+     in the product (map badge, tracking card, dispatch board) is
+     computed from the same mock speed. */
+  var MOCK_SPEED_KMH = 25;
+  function etaMinutes(km) {
+    var speed = MOCK_SPEED_KMH || 25;
+    var kmNum = Math.max(0, Number(km) || 0);
+    return Math.max(1, Math.ceil((kmNum / speed) * 60));
+  }
+  function etaLabel(minutes) {
+    var value = Math.max(1, Math.round(Number(minutes) || 1));
+    return document.documentElement.lang === 'ar'
+      ? 'الوقت المتوقع للوصول: ' + value + ' دقيقة'
+      : 'ETA: ' + value + ' min';
+  }
   function setEta(el, minutes, km) {
     var targetId = el.id === 'trkMap' ? 'trkEta' : el.id === 'dlvMap' ? 'dlvEta' : el.id === 'dstMap' ? 'dstEta' : '';
     var target = targetId && document.getElementById(targetId);
@@ -284,9 +300,7 @@
     if (target) {
       target.textContent = el.id === 'trkMap'
         ? '~' + value + ' دقيقة'
-        : (document.documentElement.lang === 'ar'
-          ? 'الوقت المتوقع للوصول: ' + value + ' دقيقة'
-          : 'ETA: ' + value + ' min');
+        : etaLabel(value);
     }
     var box = el.parentNode && el.parentNode.querySelector('.dst-live-eta[data-for="' + el.id + '"]');
     if (box) {
@@ -311,7 +325,7 @@
     var km = distanceKm(st.driver, st.customer);
     return {
       km: km,
-      minutes: Math.max(1, Math.ceil(km)),
+      minutes: etaMinutes(km),
       driver: st.driver.slice(),
       customer: st.customer.slice(),
       active: deliveryActive()
@@ -456,7 +470,7 @@
       st.driverMarker.setLatLng(st.driver);
       st.line.setLatLngs([st.driver, to]);
       var left = distanceKm(st.driver, to);
-      setEta(el, Math.max(1, Math.ceil(left * 1)), left);
+      setEta(el, etaMinutes(left), left);
     }, 2000);
   }
 
@@ -488,7 +502,7 @@
     var initialKm = distanceKm(driver, customer);
     ensureLiveUi(el, role);
     setMapState(el);
-    setEta(el, Math.max(1, Math.ceil(initialKm * 1)), initialKm);
+    setEta(el, etaMinutes(initialKm), initialKm);
     loadLeaflet(function (ok) {
       if (ok && window.L) {
         if (!el.clientWidth || !el.clientHeight) {
@@ -540,7 +554,7 @@
           st.line = L.polyline([st.driver, st.customer], { color: (document.body.classList.contains('saleor-store') || document.body.classList.contains('saleor-checkout')) ? '#A8D400' : '#82FF1F', weight: 4, opacity: .9, dashArray: '9 8', lineCap: 'round' }).addTo(map._dsTrackingLayers);
           var km = distanceKm(st.driver, st.customer);
           /* Product rule: 1 km ≈ 1 minute. */
-          setEta(el, Math.max(1, Math.ceil(km)), km);
+          setEta(el, etaMinutes(km), km);
           startSim(el, st);
           setTimeout(function () { map.invalidateSize(); }, 100);
           return;
@@ -580,7 +594,9 @@
     statusOf: statusOf, setStatus: setStatus, nextStage: nextStage, stageMeta: stageMeta,
     openTrackingModal: openTrackingModal, renderMap: renderMap, stages: STAGES, order: ORDER,
     getEta: getEta, messageDriver: openDriverChat, messageCustomer: openCustomerChat,
-    messageStore: openStoreOwnerChat, deliveryActive: deliveryActive
+    messageStore: openStoreOwnerChat, deliveryActive: deliveryActive,
+    etaMinutes: etaMinutes, etaLabel: etaLabel, MOCK_SPEED_KMH: MOCK_SPEED_KMH,
+    distanceKm: distanceKm
   };
 
   /* ─── Fleet map — every active rider, moving live (admin) ─── */
@@ -794,6 +810,10 @@
       },
       askLocation: requestLocation,
       requestLocation: requestLocation,
+      etaMinutes: etaMinutes,
+      etaLabel: etaLabel,
+      MOCK_SPEED_KMH: MOCK_SPEED_KMH,
+      distanceKm: distanceKm,
       simulate: function (host) {
         if (!host) return false;
         var st = host._dstState;

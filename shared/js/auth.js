@@ -76,6 +76,15 @@
       if (clean.email) localStorage.setItem(LS_LAST_EMAIL, clean.email);
     } catch (e) {}
 
+    /* Mock JWT lives in sessionStorage only — it dies with the tab. */
+    try {
+      if (DS.security && DS.security.issueToken) {
+        sessionStorage.setItem('ds_jwt', DS.security.issueToken({
+          sub: clean.id, role: clean.role, name: clean.name, tenant: clean.tenant_id || null
+        }));
+      }
+    } catch (e) {}
+
     return clean;
   }
   DS.setSession = setSession;
@@ -218,21 +227,150 @@
   }
   DS.googleIcon = googleIcon;
 
+  var GOOGLE_ACCOUNTS = [
+    { name: 'ياسمين محمد', name_en: 'Yasmin Mohamed', email: 'yasmin@gmail.com', color: '#1a73e8', initial: 'ي' },
+    { name: 'محمود علي', name_en: 'Mahmoud Ali', email: 'mahmoud@gmail.com', color: '#34a853', initial: 'م' },
+    { name: 'سارة سميزي', name_en: 'Sara Smozy', email: 'sara@gmail.com', color: '#fbbc05', initial: 'س' },
+    { name: 'أحمد كازنوفا', name_en: 'Ahmed Caznova', email: 'ahmed@gmail.com', color: '#ea4335', initial: 'أ' }
+  ];
+
+  function googleLoginAccount(account, opts) {
+    opts = opts || {};
+    var name = (account && (account.name || account.name_en)) || 'عميل جوجل';
+    var email = String((account && account.email) || 'google@customer.com').trim().toLowerCase();
+    var existing = findByEmail(email);
+    if (!existing) {
+      var store = null;
+      try { store = localStorage.getItem('ds_customer_store'); } catch (e) {}
+      var user = {
+        id: DS.uid('u'),
+        username: slugUsername(name, email),
+        name: name,
+        name_en: account && account.name_en ? account.name_en : name,
+        email: email,
+        phone: '',
+        role: 'customer',
+        tenant_id: store || 't-caznova',
+        avatar_id: 'av5',
+        provider: 'google',
+        is_active: true,
+        created_at: new Date().toISOString()
+      };
+      try { (db().users = db().users || []).push(user); } catch (e) {}
+      try { localStorage.setItem('ds_db_v1', JSON.stringify(db())); } catch (e) {}
+      existing = user;
+    }
+    var clean = setSession(existing, opts.remember !== false);
+    try {
+      if (DS.firebase && DS.firebase.configured && existing.email) DS.firebase.signIn(existing.email, '');
+    } catch (e) {}
+    return { ok: true, user: clean, redirect: 'customer/storefront.html' };
+  }
+
   function googleSignIn(opts) {
     opts = opts || {};
-    var user = { name: 'عميل جوجل', email: 'google@customer.com', role: 'customer' };
-    try { localStorage.setItem('ds_user', JSON.stringify(user)); } catch (e) {}
-    try {
-      if (typeof DS.setSession === 'function') DS.setSession(user, opts.remember !== false);
-      else {
-        try { localStorage.setItem('cz_user', JSON.stringify(user)); } catch (e) {}
-        try { localStorage.setItem('cz_role', user.role); } catch (e) {}
-      }
-    } catch (e) {}
-    window.location.href = '/customer/storefront.html';
-    return { ok: true, user: user, redirect: '/customer/storefront.html' };
+    /* Backwards-compatible entry point: open the account picker. */
+    openGoogleSignIn(opts);
+    return { ok: true, redirect: 'customer/storefront.html' };
   }
   DS.googleSignIn = googleSignIn;
+
+  function openGoogleSignIn(opts) {
+    opts = opts || {};
+    /* Remove any existing popup. */
+    var old = document.querySelector('.ds-gsi-backdrop');
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+
+    var backdrop = document.createElement('div');
+    backdrop.className = 'ds-gsi-backdrop';
+    backdrop.innerHTML =
+      '<div class="ds-gsi" role="dialog" aria-modal="true" aria-labelledby="dsGsiTitle">' +
+        '<button type="button" class="ds-gsi-close" data-gsi-close aria-label="Close">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>' +
+        '</button>' +
+        '<div class="ds-gsi-logo">' + googleIcon() + '</div>' +
+        '<h2 id="dsGsiTitle">' + esc(DS.lang() === 'en' ? 'Choose an account' : 'اختر حساباً') + '</h2>' +
+        '<p class="ds-gsi-sub">' + esc(DS.lang() === 'en' ? 'to continue to ' : 'للمتابعة إلى ') + '<b>DotStudio®</b></p>' +
+        '<div class="ds-gsi-accounts" data-gsi-accounts>' +
+          GOOGLE_ACCOUNTS.map(function (a, i) {
+            return '<button type="button" class="ds-gsi-acc' + (i === 0 ? ' is-active' : '') + '" data-gsi-acc="' + i + '">' +
+              '<span class="ds-gsi-avatar" style="background:' + esc(a.color) + '">' + esc(a.initial) + '</span>' +
+              '<span class="ds-gsi-acc-copy"><b>' + esc(DS.lang() === 'en' ? (a.name_en || a.name) : a.name) + '</b><span>' + esc(a.email) + '</span></span>' +
+              '<span class="ds-gsi-radio"></span>' +
+            '</button>';
+          }).join('') +
+        '</div>' +
+        '<div class="ds-gsi-divider"></div>' +
+        '<button type="button" class="ds-gsi-link" data-gsi-toggle-manual>' + esc(DS.lang() === 'en' ? 'Use another account' : 'استخدام حساب آخر') + '</button>' +
+        '<div class="ds-gsi-manual" data-gsi-manual>' +
+          '<div class="ds-gsi-field"><input type="email" data-gsi-email placeholder=" " dir="ltr"><label>' + esc(DS.lang() === 'en' ? 'Email or phone' : 'البريد الإلكتروني أو الهاتف') + '</label></div>' +
+          '<div class="ds-gsi-err" data-gsi-err></div>' +
+        '</div>' +
+        '<div class="ds-gsi-actions">' +
+          '<button type="button" class="ds-gsi-link" data-gsi-cancel>' + esc(DS.lang() === 'en' ? 'Cancel' : 'إلغاء') + '</button>' +
+          '<button type="button" class="ds-gsi-continue" data-gsi-continue>' + esc(DS.lang() === 'en' ? 'Continue' : 'متابعة') + '</button>' +
+        '</div>' +
+        '<div class="ds-gsi-foot"><span>' + esc(DS.lang() === 'en' ? 'Not shared with DotStudio®' : 'لن تتم مشاركته مع DotStudio®') + '</span><a href="#" data-gsi-help>' + esc(DS.lang() === 'en' ? 'Learn more' : 'المزيد') + '</a></div>' +
+      '</div>';
+
+    document.body.appendChild(backdrop);
+    document.body.classList.add('ds-gsi-open');
+
+    var selected = 0;
+    function close() {
+      document.body.classList.remove('ds-gsi-open');
+      if (backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
+    }
+
+    function updateActive() {
+      backdrop.querySelectorAll('[data-gsi-acc]').forEach(function (b, i) {
+        b.classList.toggle('is-active', i === selected);
+      });
+    }
+
+    backdrop.addEventListener('click', function (e) {
+      if (e.target === backdrop) close();
+    });
+    backdrop.querySelector('[data-gsi-close]').addEventListener('click', close);
+    backdrop.querySelector('[data-gsi-cancel]').addEventListener('click', close);
+
+    backdrop.querySelectorAll('[data-gsi-acc]').forEach(function (b, i) {
+      b.addEventListener('click', function () { selected = i; updateActive(); });
+    });
+
+    var manual = backdrop.querySelector('[data-gsi-manual]');
+    backdrop.querySelector('[data-gsi-toggle-manual]').addEventListener('click', function () {
+      manual.classList.toggle('is-open');
+    });
+
+    var continueBtn = backdrop.querySelector('[data-gsi-continue]');
+    continueBtn.addEventListener('click', function () {
+      var emailInput = backdrop.querySelector('[data-gsi-email]');
+      var email = (emailInput && emailInput.value || '').trim();
+      var account = null;
+      if (manual.classList.contains('is-open') && email) {
+        account = { name: email.split('@')[0] || 'Google User', name_en: email.split('@')[0] || 'Google User', email: email };
+      } else {
+        account = GOOGLE_ACCOUNTS[selected];
+      }
+      if (!account || !account.email) {
+        var err = backdrop.querySelector('[data-gsi-err]');
+        if (err) err.textContent = DS.lang() === 'en' ? 'Enter a valid email' : 'أدخل بريداً إلكترونياً صالحاً';
+        return;
+      }
+      continueBtn.disabled = true;
+      continueBtn.innerHTML = '<span class="ds-gsi-spinner"></span>';
+      setTimeout(function () {
+        var res = googleLoginAccount(account, opts);
+        close();
+        window.location.href = DS.url(res.redirect || 'customer/storefront.html');
+      }, 420);
+    });
+
+    /* Open animation. */
+    requestAnimationFrame(function () { backdrop.classList.add('is-open'); });
+  }
+  DS.openGoogleSignIn = openGoogleSignIn;
 
   /* Reusable Google button markup (used by the login page + checkout). */
   DS.googleButton = function (label) {
@@ -245,7 +383,7 @@
     var btn = e.target && e.target.closest ? e.target.closest('[data-google-signin]') : null;
     if (!btn) return;
     e.preventDefault();
-    googleSignIn();
+    openGoogleSignIn();
   });
 
   function esc(v) { return DS.esc ? DS.esc(v) : String(v == null ? '' : v); }

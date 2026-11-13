@@ -132,12 +132,124 @@
     return { password_hash: hashPassword(password), password: null };
   }
 
+  /* ───────────────────────── LOCAL CIPHER + MOCK JWT ─────────────────────────
+     Local-only obfuscation layer. Passwords stay salted+iterated hashes; this
+     cipher is used for small non-secret payloads stored in localStorage and
+     for the mock session token kept in sessionStorage. */
+
+  var CIPHER_KEY = 'ds-local-key-v1';
+
+  function toBytes(str) { return utf8(str); }
+
+  function fromBytes(bytes) {
+    var out = '', i = 0, c;
+    while (i < bytes.length) {
+      c = bytes[i++];
+      if (c < 0x80) out += String.fromCharCode(c);
+      else if (c < 0xe0) out += String.fromCharCode(((c & 0x1f) << 6) | (bytes[i++] & 0x3f));
+      else if (c < 0xf0) out += String.fromCharCode(((c & 0x0f) << 12) | ((bytes[i++] & 0x3f) << 6) | (bytes[i++] & 0x3f));
+      else {
+        var cp = ((c & 0x07) << 18) | ((bytes[i++] & 0x3f) << 12) | ((bytes[i++] & 0x3f) << 6) | (bytes[i++] & 0x3f);
+        cp -= 0x10000;
+        out += String.fromCharCode(0xd800 + (cp >> 10), 0xdc00 + (cp & 0x3ff));
+      }
+    }
+    return out;
+  }
+
+  function b64encode(str) {
+    var bytes = toBytes(str), bin = '';
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    try { return btoa(bin); } catch (e) { return bin; }
+  }
+
+  function b64decode(str) {
+    var bin;
+    try { bin = atob(String(str || '')); } catch (e) { return ''; }
+    var bytes = [];
+    for (var i = 0; i < bin.length; i++) bytes.push(bin.charCodeAt(i));
+    return fromBytes(bytes);
+  }
+
+  /* XOR stream cipher over UTF-8 bytes, then Base64 for safe storage. */
+  function xorCipher(text, key) {
+    var bytes = toBytes(text);
+    key = toBytes(key || CIPHER_KEY);
+    var out = '';
+    for (var i = 0; i < bytes.length; i++) {
+      out += String.fromCharCode(bytes[i] ^ key[i % key.length]);
+    }
+    return out;
+  }
+
+  function encrypt(text) {
+    try { return 'enc1$' + btoa(xorCipher(String(text == null ? '' : text))); } catch (e) { return String(text == null ? '' : text); }
+  }
+
+  function decrypt(payload) { return decryptBytes(payload); }
+
+  /* Decode helper: XOR output is a byte string, so rebuild it explicitly. */
+  function decryptBytes(payload) {
+    var s = String(payload == null ? '' : payload);
+    if (s.indexOf('enc1$') !== 0) return s;
+    try {
+      var raw = atob(s.slice(5));
+      var bytes = [];
+      for (var i = 0; i < raw.length; i++) bytes.push(raw.charCodeAt(i));
+      var keyBytes = toBytes(CIPHER_KEY);
+      var plain = [];
+      for (i = 0; i < bytes.length; i++) plain.push(bytes[i] ^ keyBytes[i % keyBytes.length]);
+      return fromBytes(plain);
+    } catch (e) { return ''; }
+  }
+
+  /* ── mock JWT (header.payload.signature) — HS256-style via sha256 ── */
+  var JWT_TTL = 8 * 60 * 60 * 1000; /* 8 hours */
+
+  function b64url(str) {
+    return b64encode(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  function b64urlDecode(str) {
+    var s = String(str || '').replace(/-/g, '+').replace(/_/g, '/');
+    while (s.length % 4) s += '=';
+    return b64decode(s);
+  }
+
+  function sign(data) { return b64url(sha256(CIPHER_KEY + '|' + data + '|' + CIPHER_KEY)); }
+
+  function issueToken(claims) {
+    var header = { alg: 'HS256', typ: 'JWT' };
+    var now = Date.now();
+    var body = Object.assign({ iat: now, exp: now + JWT_TTL, iss: 'dotstudio-local' }, claims || {});
+    var head = b64url(JSON.stringify(header));
+    var payload = b64url(JSON.stringify(body));
+    return head + '.' + payload + '.' + sign(head + '.' + payload);
+  }
+
+  function verifyToken(token) {
+    var parts = String(token || '').split('.');
+    if (parts.length !== 3) return null;
+    if (sign(parts[0] + '.' + parts[1]) !== parts[2]) return null;
+    var body;
+    try { body = JSON.parse(b64urlDecode(parts[1])); } catch (e) { return null; }
+    if (!body || !body.exp || body.exp < Date.now()) return null;
+    return body;
+  }
+
   var security = {
     sha256: sha256,
     hashPassword: hashPassword,
     verifyPassword: verifyPassword,
     isHashed: isHashed,
     passwordPatch: passwordPatch,
+    b64encode: b64encode,
+    b64decode: b64decode,
+    encrypt: encrypt,
+    decrypt: decrypt,
+    decryptBytes: decryptBytes,
+    issueToken: issueToken,
+    verifyToken: verifyToken,
     strength: function (pw) {
       pw = String(pw || '');
       var score = 0;
@@ -241,4 +353,6 @@
   DS.isPhone = isPhone;
   DS.normalizePhone = normalizePhone;
   DS.setText = setText;
+  DS.encrypt = encrypt;
+  DS.decrypt = decrypt;
 })();

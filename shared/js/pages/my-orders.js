@@ -35,7 +35,7 @@
   function filtered() {
     var q = state.q.trim().toLowerCase();
     return orders().filter(function (o) {
-      if (state.status === 'active' && !DS.isActiveOrderStatus(o.status)) return false;
+      if (state.status === 'active' && !DS.isActiveOrderStatus(o.status) && !DS.isHoldOrderStatus(o.status)) return false;
       if (state.status && state.status !== 'active' && o.status !== state.status) return false;
       if (!q) return true;
       return (o.order_no + ' ' + (o.items || []).map(function (i) { return i.name; }).join(' ')).toLowerCase().indexOf(q) > -1;
@@ -57,7 +57,7 @@
     }).join('');
     var firstName = lines[0] ? (EN ? (lines[0].name_en || lines[0].name) : lines[0].name) : '';
     var extra = lines.length > 1 ? ' +' + (lines.length - 1) : '';
-    var live = DS.isActiveOrderStatus(o.status);
+    var live = DS.isActiveOrderStatus(o.status) || DS.isHoldOrderStatus(o.status);
     return '<article class="ct-order">' +
       '<div class="ct-order-top">' +
         '<div class="ct-order-idwrap">' +
@@ -92,7 +92,7 @@
 
   function render() {
     var all = orders();
-    var active = all.filter(function (o) { return DS.isActiveOrderStatus(o.status); });
+    var active = all.filter(function (o) { return DS.isActiveOrderStatus(o.status) || DS.isHoldOrderStatus(o.status); });
     var delivered = all.filter(function (o) { return o.status === 'delivered'; });
     var spent = delivered.reduce(function (s, o) { return s + (Number(o.total) || 0); }, 0);
     var list = filtered();
@@ -118,7 +118,7 @@
       '<div class="search-mini" style="flex:1;min-width:200px">' + icon('search') + '<input data-q placeholder="' + esc(t('search')) + ' ' + esc(t('orders')) + '" value="' + esc(state.q) + '"></div>' +
       '<select class="select" data-status style="width:auto;min-width:160px"><option value="">' + esc(t('allStatuses')) + '</option>' +
         '<option value="active"' + (state.status === 'active' ? ' selected' : '') + '>' + esc(t('activeOrders')) + '</option>' +
-        DS.statusFlow.map(function (s) { return '<option value="' + s + '"' + (state.status === s ? ' selected' : '') + '>' + esc(DS.statusMeta(s).label) + '</option>'; }).join('') +
+        (DS.allOrderStatuses || DS.statusFlow).map(function (s) { return '<option value="' + s + '"' + (state.status === s ? ' selected' : '') + '>' + esc(DS.statusMeta(s).label) + '</option>'; }).join('') +
       '</select></div>';
 
     var body = list.length ? '<div class="ct-orders">' + list.map(orderCard).join('') + '</div>' :

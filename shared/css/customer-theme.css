@@ -1,6 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700&display=swap');
+/* Local Apple faces only — no remote font request (see assets/css/fonts.css). */
 
-body, button, input { font-family: 'Cairo', 'Inter', sans-serif !important; }
+body, button, input { font-family: 'SF Pro AR', 'SF Pro Display', sans-serif !important; }
 
 /* ═══════════════════════════════════════════════════════════════
    DotStudio® POS — CUSTOMER THEME · 2026
@@ -1859,12 +1859,14 @@ html[data-customer-theme="dark"] body.saleor-checkout .badge.neutral {
    the floating cards sit close to the copy. */
 body.saleor-store .sf-page .sf-hero-bg::after {
   background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.44) 0%, rgba(0, 0, 0, 0.16) 32%, rgba(0, 0, 0, 0.76) 78%, rgba(0, 0, 0, 0.96) 100%),
+    linear-gradient(to right, rgba(0, 0, 0, 0.8), transparent),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.26) 0%, rgba(0, 0, 0, 0.06) 40%, rgba(0, 0, 0, 0.62) 100%),
     linear-gradient(90deg, rgba(0, 0, 0, 0.86) 0%, rgba(0, 0, 0, 0.46) 46%, rgba(0, 0, 0, 0.06) 100%);
 }
 html[dir="rtl"] body.saleor-store .sf-page .sf-hero-bg::after {
   background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.44) 0%, rgba(0, 0, 0, 0.16) 32%, rgba(0, 0, 0, 0.76) 78%, rgba(0, 0, 0, 0.96) 100%),
+    linear-gradient(to left, rgba(0, 0, 0, 0.8), transparent),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.26) 0%, rgba(0, 0, 0, 0.06) 40%, rgba(0, 0, 0, 0.62) 100%),
     linear-gradient(270deg, rgba(0, 0, 0, 0.86) 0%, rgba(0, 0, 0, 0.46) 46%, rgba(0, 0, 0, 0.06) 100%);
 }
 
@@ -1974,10 +1976,10 @@ body.saleor-store .sl-header-bar {
 
 body.saleor-store .sl-logo { order: 1; }
 body.saleor-store .sl-logo img {
-  height: 40px !important;
+  height: 32px !important;
   width: auto !important;
   max-width: 220px !important;
-  max-height: 40px !important;
+  max-height: 32px !important;
   object-fit: contain;
   border-radius: 0;
   display: block;
@@ -2043,7 +2045,7 @@ html[data-customer-theme="dark"] body.saleor-store .sl-links a.active { backgrou
   body.saleor-store .sl-logo img { max-width: 150px !important; }
 }
 @media (max-width: 480px) {
-  body.saleor-store .sl-logo img { max-width: 118px !important; height: 34px !important; max-height: 34px !important; }
+  body.saleor-store .sl-logo img { max-width: 118px !important; height: 32px !important; max-height: 32px !important; }
   body.saleor-store .sl-lang-toggle { display: none !important; }
 }
 

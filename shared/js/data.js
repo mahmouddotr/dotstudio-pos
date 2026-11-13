@@ -38,10 +38,11 @@
       id: 't-caznova', slug: 'caznova', name: 'Caznova', name_en: 'Caznova',
       owner: 'أحمد كازنوفا', owner_en: 'Ahmed Caznova', owner_username: 'caznova',
       phone: '01000000001', email: 'ahmed@caznova.com', city: 'القاهرة', city_en: 'Cairo', address: 'مدينة نصر · شارع عباس العقاد', address_en: 'Nasr City · Abbas El Akkad St.',
+      wallet_vodafone: '01000000001', wallet_instapay: 'caznova@instapay',
       industry: 'أزياء وإكسسوارات', industry_en: 'Fashion & accessories',
       plan: 'yearly', subscription_start: daysAgo(120), subscription_end: daysAhead(245),
       status: 'active', avatar_id: 'av1', color: '#82FF1F', rating: 4.9, delivery_fee: 35,
-      openTime: '00:00', closeTime: '24:00', offline: false,
+      openTime: '10:00', closeTime: '22:00', offline: false,
       lat: 30.0511, lng: 31.3656,
       description: 'ساعات، خواتم، عطور وإكسسوارات مختارة بعناية.', description_en: 'Curated watches, rings, perfumes and accessories.',
       created_at: daysAgo(420)
@@ -50,10 +51,11 @@
       id: 't-smozy', slug: 'smozy', name: 'Smozy Fresh', name_en: 'Smozy Fresh',
       owner: 'سارة سميزي', owner_en: 'Sara Smozy', owner_username: 'smozy',
       phone: '01000000002', email: 'sara@smozy.com', city: 'القاهرة', city_en: 'Cairo', address: 'المعادي · شارع 9', address_en: 'Maadi · Street 9',
+      wallet_vodafone: '01000000002', wallet_instapay: 'smozy@instapay',
       industry: 'عصائر طازجة', industry_en: 'Fresh juices',
       plan: 'monthly', subscription_start: daysAgo(20), subscription_end: daysAhead(10),
       status: 'active', avatar_id: 'av2', color: '#FF6B9D', rating: 4.8, delivery_fee: 25,
-      openTime: '00:00', closeTime: '24:00', offline: false,
+      openTime: '10:00', closeTime: '22:00', offline: false,
       lat: 29.9602, lng: 31.2569,
       description: 'عصائر وسموذي وميلك شيك طازج يومياً.', description_en: 'Fresh juices, smoothies and milkshakes every day.',
       created_at: daysAgo(300)
@@ -62,10 +64,11 @@
       id: 't-bnsheikh', slug: 'bnsheikh', name: 'Bn Alsheikh', name_en: 'Bn Alsheikh',
       owner: 'بن الشيخ', owner_en: 'Bn Alsheikh', owner_username: 'bnsheikh',
       phone: '01000000003', email: 'hello@bnsheikh.com', city: 'القاهرة', city_en: 'Cairo', address: 'مصر الجديدة · شارع الحجاز', address_en: 'Heliopolis · Al Hegaz St.',
+      wallet_vodafone: '01000000003', wallet_instapay: 'bnsheikh@instapay',
       industry: 'قهوة مختصة', industry_en: 'Specialty coffee',
       plan: 'sixmonths', subscription_start: daysAgo(80), subscription_end: daysAhead(100),
       status: 'active', avatar_id: 'av3', color: '#F59E0B', rating: 4.9, delivery_fee: 30,
-      openTime: '00:00', closeTime: '24:00', offline: false,
+      openTime: '10:00', closeTime: '22:00', offline: false,
       lat: 30.0912, lng: 31.3275,
       description: 'قهوة مختصة محمصة طازجة وحبوب مختارة.', description_en: 'Specialty coffee, freshly roasted beans.',
       created_at: daysAgo(260)
@@ -74,10 +77,11 @@
       id: 't-mastore', slug: 'mastore', name: 'MA Store', name_en: 'MA Store',
       owner: 'محمود علي', owner_en: 'Mahmoud Ali', owner_username: 'mastore',
       phone: '01000000004', email: 'mahmoud@mastore.com', city: 'الجيزة', city_en: 'Giza', address: '6 أكتوبر · الحي الأول', address_en: '6th of October · First District',
+      wallet_vodafone: '01000000004', wallet_instapay: 'mastore@instapay',
       industry: 'ملابس وإكسسوارات', industry_en: 'Apparel & accessories',
       plan: 'monthly', subscription_start: daysAgo(12), subscription_end: daysAhead(18),
       status: 'active', avatar_id: 'av4', color: '#60A5FA', rating: 4.7, delivery_fee: 40,
-      openTime: '00:00', closeTime: '24:00', offline: false,
+      openTime: '10:00', closeTime: '22:00', offline: false,
       lat: 29.9285, lng: 30.9188,
       description: 'ملابس عصرية بجودة عالية لكل المناسبات.', description_en: 'Modern quality apparel for every occasion.',
       created_at: daysAgo(210)
@@ -111,8 +115,8 @@
     { id: 'u-del-ahla', username: 'ahla', password: 'ahla2026', role: 'delivery', name: 'أهلا', name_en: 'Ahla', delivery_company: 'dc-ahla', company_id: 'dc-ahla', delivery_company_name: 'أهلا', company_owner: true, avatar_id: 'av9', is_active: true, online: true, created_at: daysAgo(130) },
 
     /* B2B sub-drivers working for a delivery company (managed by its owner). */
-    { id: 'u-del-talqa-ahmed', username: 'ahmed', password: 'ahmed2026', role: 'driver', name: 'أحمد', name_en: 'Ahmed', delivery_company: 'dc-talqa', company_id: 'dc-talqa', delivery_company_name: 'طلقة', parent_id: 'u-del-talqa', company_owner: false, phone: '01011110001', avatar_id: 'av1', is_active: true, online: true, created_at: daysAgo(45) },
-    { id: 'u-del-talqa-mostafa', username: 'mostafa', password: 'mostafa2026', role: 'driver', name: 'مصطفى', name_en: 'Mostafa', delivery_company: 'dc-talqa', company_id: 'dc-talqa', delivery_company_name: 'طلقة', parent_id: 'u-del-talqa', company_owner: false, phone: '01011110002', avatar_id: 'av2', is_active: true, online: true, created_at: daysAgo(40) },
+    { id: 'u-del-talqa-ahmed', username: 'ahmed', password: '123', role: 'driver', name: 'أحمد', name_en: 'Ahmed', delivery_company: 'dc-talqa', company_id: 'dc-talqa', delivery_company_name: 'طلقة', delivery_company_username: 'talqa', parent_id: 'u-del-talqa', company_owner: false, phone: '01011110001', avatar_id: 'av1', is_active: true, online: true, created_at: daysAgo(45) },
+    { id: 'u-del-talqa-mostafa', username: 'mostafa', password: 'mostafa2026', role: 'driver', name: 'مصطفى', name_en: 'Mostafa', delivery_company: 'dc-talqa', company_id: 'dc-talqa', delivery_company_name: 'طلقة', delivery_company_username: 'talqa', parent_id: 'u-del-talqa', company_owner: false, phone: '01011110002', avatar_id: 'av2', is_active: true, online: true, created_at: daysAgo(40) },
 
     { id: 'u-customer', username: 'customer', password: 'customer2026', role: 'customer', name: 'ياسمين محمد', name_en: 'Yasmin Mohamed', tenant_id: 't-caznova', phone: '01123456789', city: 'القاهرة', city_en: 'Cairo', address: 'مدينة نصر · شارع مصطفى النحاس · عمارة 12', address_en: 'Nasr City · Mostafa El Nahas St. · Building 12', avatar_id: 'av5', is_active: true, created_at: daysAgo(90),
       addresses: [
@@ -209,6 +213,7 @@
           featured: p.featured != null ? p.featured : (Number(p.rating) || 0) >= 4.9,
           best_seller: p.best_seller != null ? p.best_seller : (Number(p.sold) || 0) >= 250,
           review_count: Number(p.review_count) || 0,
+          expiry_date: p.expiry_date || daysAhead(i % 6 === 0 ? 4 : 45),
           created_at: daysAgo(200 - i * 3),
           updated_at: daysAgo(4 + i)
         }));
@@ -958,10 +963,44 @@
     commit();
     return DB.settings.store_sale;
   }
+  /* ─────────────────── HAPPY HOUR SETTINGS ─────────────────── */
+  function happyHour() {
+    return (DB.settings && DB.settings.happy_hour) || { enabled: false, start: '14:00', end: '16:00', percent: 15 };
+  }
+  function saveHappyHour(patch) {
+    DB.settings = DB.settings || {};
+    DB.settings.happy_hour = Object.assign({ enabled: false, start: '14:00', end: '16:00', percent: 15 }, DB.settings.happy_hour || {}, patch || {});
+    DB.settings.happy_hour.percent = Math.max(0, Math.min(90, Number(DB.settings.happy_hour.percent) || 0));
+    commit();
+    return DB.settings.happy_hour;
+  }
+  function happyHourActive() {
+    var h = happyHour();
+    if (!h.enabled) return false;
+    var now = new Date();
+    var mins = now.getHours() * 60 + now.getMinutes();
+    function toMins(str) { var p = String(str || '0:0').split(':'); return (Number(p[0]) || 0) * 60 + (Number(p[1]) || 0); }
+    var s = toMins(h.start), e = toMins(h.end);
+    if (s <= e) return mins >= s && mins <= e;
+    return mins >= s || mins <= e;
+  }
+  function happyHourAmount(subtotal) {
+    var h = happyHour();
+    if (!happyHourActive() || !(Number(h.percent) > 0)) return 0;
+    return Math.round((Number(subtotal) || 0) * Number(h.percent)) / 100;
+  }
   function storeSaleAmount(subtotal) {
     var s = storeSale();
-    if (!s.enabled || !(Number(s.percent) > 0)) return 0;
-    return Math.round((Number(subtotal) || 0) * Number(s.percent)) / 100;
+    var amount = 0;
+    if (s.enabled && Number(s.percent) > 0) amount += Math.round((Number(subtotal) || 0) * Number(s.percent)) / 100;
+    /* Happy hour automatic discount. */
+    amount += happyHourAmount(subtotal);
+    /* B2B wholesale: 20% cheaper for wholesale accounts. */
+    try {
+      var u = DS.session && DS.session();
+      if (u && u.wholesale) amount += Math.round((Number(subtotal) || 0) * 20) / 100;
+    } catch (e) {}
+    return Math.min(Number(subtotal) || 0, amount);
   }
 
   function seed() {
@@ -994,8 +1033,10 @@
         maintenance: false,
         allow_signups: true,
         default_delivery_fee: 30,
+        vat_rate: 15,
         store_sale: { enabled: false, percent: 10, label: 'تخفيضات المتجر', label_en: 'Store sale' },
-        free_delivery: { enabled: false, mode: 'threshold', min_order: 500, company_id: '', note: '', note_en: '', until: null }
+        free_delivery: { enabled: false, mode: 'threshold', min_order: 500, company_id: '', note: '', note_en: '', until: null },
+        happy_hour: { enabled: false, start: '14:00', end: '16:00', percent: 15 }
       }
     };
     return db;
@@ -1006,6 +1047,9 @@
     try { db = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
     if (!db || db.version !== VERSION || !Array.isArray(db.tenants) || !db.tenants.length) {
       db = seed();
+      /* Hash seeded passwords before the very first localStorage write so a
+         plain demo password never reaches disk, not even for a moment. */
+      migrateSecurity(db);
       save(db);
       return db;
     }
@@ -1019,27 +1063,43 @@
         if (typeof tn.offline !== 'boolean') { tn.offline = false; changed = true; }
       });
     }
-    /* Migration — 2026.10: demo stores trade around the clock by default so the
-       storefront is always demo-ready; owners pause ordering explicitly with the
-       "accept orders" switch instead of hitting a scheduled closing time. */
+    /* Migration — 2026.11: stores trade on real business hours again
+       (10:00 → 22:00 by default). Databases created by the "all day" release
+       are converted once; owners can then tune the window in Settings. */
     db.migrations = db.migrations || {};
-    if (!db.migrations.allDayStores) {
-      var LEGACY_HOURS = {
-        't-caznova': ['10:00', '23:00'],
-        't-smozy': ['00:00', '24:00'],
-        't-bnsheikh': ['07:00', '23:30'],
-        't-mastore': ['10:00', '22:00']
-      };
+    if (!db.migrations.businessHours) {
       (db.tenants || []).forEach(function (tn) {
-        var legacy = LEGACY_HOURS[tn.id];
-        if (legacy && tn.openTime === legacy[0] && tn.closeTime === legacy[1]) {
-          tn.openTime = '00:00';
-          tn.closeTime = '24:00';
+        var seedTn = TENANTS.filter(function (x) { return x.id === tn.id; })[0];
+        var allDay = (!tn.openTime || !tn.closeTime) ||
+          (tn.openTime === '00:00' && (tn.closeTime === '24:00' || tn.closeTime === '00:00'));
+        if (allDay) {
+          tn.openTime = seedTn ? seedTn.openTime : '10:00';
+          tn.closeTime = seedTn ? seedTn.closeTime : '22:00';
         }
+        if (!tn.openTime) tn.openTime = '10:00';
+        if (!tn.closeTime) tn.closeTime = '22:00';
       });
-      db.migrations.allDayStores = true;
+      db.migrations.businessHours = true;
       changed = true;
     }
+    /* Migration — 2026.11: the demo rider «ahmed» signs in with the short
+       password 123 and always stays attached to the «طلقة / talqa» company. */
+    if (!db.migrations.ahmedDriver) {
+      (db.users || []).forEach(function (u) {
+        if (String(u.username || '').toLowerCase() !== 'ahmed') return;
+        u.password = '123';
+        u.password_hash = null;
+        u.role = 'driver';
+        u.delivery_company = 'dc-talqa';
+        u.company_id = 'dc-talqa';
+        u.delivery_company_name = 'طلقة';
+        u.delivery_company_username = 'talqa';
+        u.is_active = true;
+      });
+      db.migrations.ahmedDriver = true;
+      changed = true;
+    }
+
     /* Migration — remove the legacy demo orders ORD-1001 … ORD-1003 once.
        Match the seeded ids only: a real first order can legitimately reuse
        the ORD-1001 order number, so order_no must never be the filter. */
@@ -1078,11 +1138,17 @@
       db.settings.store_sale = { enabled: false, percent: 10, label: 'تخفيضات المتجر', label_en: 'Store sale' };
       changed = true;
     }
+    if (!db.settings.happy_hour) {
+      db.settings.happy_hour = { enabled: false, start: '14:00', end: '16:00', percent: 15 };
+      changed = true;
+    }
+    if (db.settings.vat_rate == null) { db.settings.vat_rate = 15; changed = true; }
     /* Merchandising flags for databases created before they existed. */
-    (db.products || []).forEach(function (p) {
+    (db.products || []).forEach(function (p, i) {
       if (typeof p.featured !== 'boolean') { p.featured = (Number(p.rating) || 0) >= 4.9; changed = true; }
       if (typeof p.best_seller !== 'boolean') { p.best_seller = (Number(p.sold) || 0) >= 250; changed = true; }
       if (p.review_count == null) { p.review_count = 0; changed = true; }
+      if (!p.expiry_date) { p.expiry_date = daysAhead(i % 6 === 0 ? 4 : 45); changed = true; }
     });
     var before = (db.chats || []).map(function (c) { return c.id; }).join('|');
     ensureChats(db);
@@ -1123,7 +1189,9 @@
     db.migrations = db.migrations || {};
     var changed = false;
     var LEGACY = { confirmed: 'preparing', delivering: 'out_for_delivery' };
-    var KNOWN = ['pending', 'preparing', 'handed_to_company', 'out_for_delivery', 'delivered', 'cancelled'];
+    /* The payment-verification statuses are real lifecycle states — a held
+       order must never be downgraded back to «pending» by this migration. */
+    var KNOWN = ['pending', 'preparing', 'handed_to_company', 'out_for_delivery', 'delivered', 'cancelled', 'pending_verification', 'payment_rejected'];
     db.orders.forEach(function (o) {
       if (!o) return;
       if (LEGACY[o.status]) { o.status = LEGACY[o.status]; changed = true; }
@@ -1247,9 +1315,78 @@
     return changed;
   }
 
+  /* ───────────────────── INDEXEDDB MIRROR (async, non-blocking) ─────────────────────
+     localStorage stays the fast synchronous source of truth for the demo;
+     IndexedDB keeps a durable copy of orders + products for the worker and
+     for instant reads after a crash. Every failure degrades silently. */
+  var idb = (function () {
+    var DB_NAME = 'ds_local_v1';
+    var DB_VER = 1;
+    var STORES = ['orders', 'products', 'meta'];
+    var conn = null, broken = false;
+
+    function open() {
+      if (conn) return Promise.resolve(conn);
+      if (broken || typeof indexedDB === 'undefined') return Promise.reject(new Error('idb-unavailable'));
+      return new Promise(function (resolve, reject) {
+        var req;
+        try { req = indexedDB.open(DB_NAME, DB_VER); } catch (e) { broken = true; return reject(e); }
+        req.onupgradeneeded = function () {
+          var db = req.result;
+          STORES.forEach(function (s) {
+            if (!db.objectStoreNames.contains(s)) db.createObjectStore(s, { keyPath: 'id' });
+          });
+        };
+        req.onsuccess = function () { conn = req.result; resolve(conn); };
+        req.onerror = function () { reject(req.error || new Error('idb-open-failed')); };
+        req.onblocked = function () { reject(new Error('idb-blocked')); };
+      });
+    }
+
+    function tx(store, mode, fn) {
+      return open().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var t, s;
+          try { t = db.transaction(store, mode); s = t.objectStore(store); } catch (e) { return reject(e); }
+          var req;
+          try { req = fn(s); } catch (e) { return reject(e); }
+          t.oncomplete = function () { resolve(req && req.result !== undefined ? req.result : true); };
+          t.onerror = function () { reject(t.error); };
+          t.onabort = function () { reject(t.error); };
+        });
+      });
+    }
+
+    function put(store, value) { return tx(store, 'readwrite', function (s) { return s.put(value); }); }
+    function get(store, id) { return tx(store, 'readonly', function (s) { return s.get(id); }); }
+    function all(store) { return tx(store, 'readonly', function (s) { return s.getAll(); }); }
+    function clear(store) { return tx(store, 'readwrite', function (s) { return s.clear(); }); }
+
+    /* Replace the mirrored collections with the current database snapshot. */
+    function mirror(db) {
+      if (!db) return Promise.resolve(false);
+      return Promise.all(['orders', 'products'].map(function (name) {
+        var rows = Array.isArray(db[name]) ? db[name] : [];
+        return tx(name, 'readwrite', function (s) {
+          s.clear();
+          rows.forEach(function (r) { if (r && r.id) s.put(r); });
+        }).then(function () { return true; }).catch(function () { return false; });
+      })).then(function () { return true; }).catch(function () { return false; });
+    }
+
+    return {
+      available: function () { return typeof indexedDB !== 'undefined' && !broken; },
+      open: open, put: put, get: get, all: all, clear: clear, mirror: mirror
+    };
+  })();
+
+  DS.idb = idb;
+
   function save(db) {
     try { localStorage.setItem(KEY, JSON.stringify(db)); }
     catch (e) { console.warn('[DS] storage write failed', e); }
+    /* Fire-and-forget mirror; never blocks the UI thread. */
+    if (DS.idb) { try { DS.idb.mirror(db); } catch (e) {} }
   }
 
   var DB = load();
@@ -1306,6 +1443,10 @@
       if (clean.role === 'subadmin') localStorage.setItem('ds_permissions', JSON.stringify(clean.permissions || []));
       if (clean.role === 'owner' && clean.tenant_id) localStorage.setItem('ds_customer_store', clean.tenant_id);
       if (clean.role === 'customer' && clean.tenant_id) localStorage.setItem('ds_customer_store', clean.tenant_id);
+      /* Mock JWT — short-lived, session-scoped, signed locally. */
+      if (DS.security && DS.security.issueToken) {
+        sessionStorage.setItem('ds_jwt', DS.security.issueToken({ sub: clean.id, role: clean.role, name: clean.name, tenant: clean.tenant_id || null }));
+      }
     } catch (e) {}
     audit('تسجيل دخول · ' + (clean.name || username), 'Signed in · ' + (clean.name || username), 'shield', clean);
     return { ok: true, user: clean, redirect: DS.roleHome(clean) };
@@ -1346,6 +1487,71 @@
     var hours = storeHours(tn);
     return hours.open;
   }
+
+  /* "10:00" → "10:00 AM" / "10:00 ص" — used in every closed-store notice. */
+  function formatHM(value) {
+    var m = /^(\d{1,2}):(\d{2})$/.exec(String(value == null ? '' : value).trim());
+    if (!m) return String(value || '');
+    var h = Number(m[1]), mi = m[2];
+    var en = DS.lang() === 'en';
+    var suffix = en ? (h < 12 ? 'AM' : 'PM') : (h < 12 ? 'ص' : 'م');
+    var hh = h % 12; if (!hh) hh = 12;
+    return hh + ':' + mi + ' ' + suffix;
+  }
+
+  /* Everything the UI needs to explain a closed store. */
+  function storeStatus(tn, when) {
+    var hours = storeHours(tn);
+    var open = isStoreOpen(tn, when);
+    return {
+      open: open,
+      offline: !!(tn && tn.offline === true),
+      suspended: !!(tn && tn.status === 'suspended'),
+      openTime: hours.open,
+      closeTime: hours.close,
+      openLabel: formatHM(hours.open),
+      closeLabel: formatHM(hours.close),
+      hoursLabel: formatHM(hours.open) + ' – ' + formatHM(hours.close),
+      nextOpen: hours.open
+    };
+  }
+
+  /* ───────────────────────── chat presence ─────────────────────────
+     Green dot = the peer can answer right now, red dot = offline. */
+  function peerPresence(scope, peerId, contact) {
+    var peer = null;
+    if (contact && (contact.entity || contact.type)) {
+      peer = contact.entity || null;
+      if (!peer && contact.type === 'user') peer = userById(contact.id);
+      if (!peer && contact.type === 'tenant') peer = tenantById(contact.id);
+      if (!peer && contact.type === 'company') {
+        peer = (DB.delivery_companies || []).filter(function (c) { return c.id === contact.id; })[0] || null;
+      }
+    }
+    if (!peer) peer = chatPeerFor(scope, peerId);
+
+    if (!peer) return { online: false, reason: 'unknown' };
+
+    /* A store is "online" while it is open. */
+    if (peer.openTime !== undefined) {
+      if (peer.offline === true || peer.status === 'suspended') return { online: false, reason: 'closed' };
+      var isOpen = isStoreOpen(peer);
+      return { online: isOpen, reason: isOpen ? 'open' : 'closed' };
+    }
+    /* Delivery riders carry an explicit online flag. */
+    if (isDeliveryRole(peer)) {
+      if (peer.online === false) return { online: false, reason: 'offline' };
+      return { online: true, reason: 'online' };
+    }
+    /* Anyone with a recent activity timestamp is online. */
+    if (peer.last_seen) {
+      var ts = new Date(peer.last_seen).getTime();
+      if (!isNaN(ts)) return { online: (Date.now() - ts) < 5 * 60 * 1000, reason: 'last_seen' };
+    }
+    if (peer.online === false) return { online: false, reason: 'offline' };
+    return { online: true, reason: 'online' };
+  }
+
   function userByUsername(name) { return DB.users.filter(function (u) { return u.username === name; })[0] || null; }
   function userById(id) { return DB.users.filter(function (u) { return u.id === id; })[0] || null; }
 
@@ -1386,6 +1592,13 @@
     return Array.isArray(order.vendor_ids) && order.vendor_ids.indexOf(tenantId) > -1;
   }
 
+  /* An order whose money was not verified yet (waiting on the desk, or
+     refused) must never reach the cashier / kitchen queues. */
+  function isPaymentHold(order) {
+    if (!order) return false;
+    return order.status === PAY_HOLD || order.status === PAY_REJECTED;
+  }
+
   function visibleOrders(user) {
     user = user || DS.session();
     if (!user) return [];
@@ -1393,6 +1606,10 @@
       if (user.role === 'subadmin' && user.permissions && user.permissions.indexOf('orders') === -1) return [];
       return DB.orders.slice();
     }
+    /* An order waiting for payment verification is invisible to the store
+       side (cashier + kitchen) — it only lives on the verification desk.
+       A rejected receipt stays hidden too: nobody may start preparing an
+       order whose money was not verified. */
     if (isDeliveryRole(user)) {
       /* B2B sub-driver: created by a delivery company → only sees the orders
          assigned to him. Company owners see their whole company queue. */
@@ -1402,10 +1619,12 @@
       /* Store-managed driver: only that store's orders. */
       if (user.tenant_id) {
         return DB.orders.filter(function (o) {
+          if (isPaymentHold(o)) return false;
           return orderHasTenant(o, user.tenant_id) || (o.driver_id && o.driver_id === user.id);
         });
       }
       return DB.orders.filter(function (o) {
+        if (isPaymentHold(o)) return false;
         if (o.driver_id && o.driver_id === user.id) return true;
         return !!(user.delivery_company && o.delivery_company_id === user.delivery_company);
       });
@@ -1413,7 +1632,10 @@
     if (user.role === 'customer') {
       return DB.orders.filter(function (o) { return (o.customer && o.customer.phone === user.phone) || o.customer_id === user.id; });
     }
-    return DB.orders.filter(function (o) { return orderHasTenant(o, user.tenant_id); });
+    return DB.orders.filter(function (o) {
+      if (isPaymentHold(o)) return false;
+      return orderHasTenant(o, user.tenant_id);
+    });
   }
 
   function visibleInvoices(user) {
@@ -1759,6 +1981,20 @@
     return tn;
   }
 
+  /* Admin: grant a 7-day (or N-day) free trial to an owner store. */
+  function grantFreeTrial(tenantId, days) {
+    var tn = tenantById(tenantId);
+    if (!tn) return null;
+    days = Number(days) || 7;
+    var until = new Date(Date.now() + days * 86400000);
+    tn.free_trial_until = until.toISOString();
+    tn.subscription_end = until.toISOString();
+    tn.status = 'active';
+    audit('منح فترة تجريبية ' + days + ' يوم لـ ' + tn.name, 'Granted ' + days + '-day free trial to ' + (tn.name_en || tn.name), 'card');
+    commit();
+    return tn;
+  }
+
   function setTenantStatus(tenantId, status) {
     var tn = tenantById(tenantId);
     if (!tn) return null;
@@ -1833,9 +2069,11 @@
       created_at: now,
       updated_at: now,
       timeline: [{ status: 'pending', at: now, label: 'تم إنشاء الطلب' }],
+      history: [],
       proof: null
     }, data);
     order.order_no = orderNo;
+    if (!Array.isArray(order.history)) order.history = [];
     DB.orders.unshift(order);
     /* Keep stock truthful: every ordered unit leaves inventory. */
     (order.items || []).forEach(function (it) {
@@ -1853,10 +2091,13 @@
   /* Strict pipeline — an order can only move one step forward and every
      step belongs to exactly one side of the hand-off:
      pending → preparing (store) → handed_to_company (store stops here)
-     → out_for_delivery (delivery company / rider) → delivered (rider only). */
-  var NEXT_STATUS = { pending: 'preparing', confirmed: 'preparing', preparing: 'handed_to_company', handed_to_company: 'out_for_delivery', out_for_delivery: 'delivered' };
+     → out_for_delivery (delivery company / rider) → delivered (rider only).
+     A manually paid order waits on the verification desk first:
+     pending_verification → preparing (admin only) and
+     payment_rejected → pending_verification (customer re-uploads). */
+  var NEXT_STATUS = { pending: 'preparing', confirmed: 'preparing', preparing: 'handed_to_company', handed_to_company: 'out_for_delivery', out_for_delivery: 'delivered', pending_verification: 'preparing', payment_rejected: 'pending_verification' };
   function canTransition(from, to) {
-    if (to === 'cancelled') return ['pending', 'preparing', 'handed_to_company'].indexOf(from) > -1;
+    if (to === 'cancelled') return ['pending', 'preparing', 'handed_to_company', 'pending_verification'].indexOf(from) > -1;
     return NEXT_STATUS[from] === to;
   }
 
@@ -1871,6 +2112,10 @@
     var companyOwner = isCompanyOwner(user);
     /* Nobody, not even the assigned rider, may skip a lifecycle step. */
     if (order.status && order.status !== to && !canTransition(order.status, to)) return false;
+    /* An order held for payment verification is released by the verification
+       desk only — the cashier, the kitchen and the generic order editor can
+       never unblock it. */
+    if (order.status === PAY_HOLD && to !== 'cancelled') return false;
     if (to === 'cancelled') return admin || storeSide;
     if (to === 'preparing') return admin || storeSide;
     if (to === 'handed_to_company') return admin || storeSide;
@@ -1973,6 +2218,267 @@
       }));
     } catch (e) {}
     return order;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     MANUAL PAYMENT VERIFICATION — VODAFONE CASH / INSTAPAY
+     ───────────────────────────────────────────────────────────────
+     A manual transfer is only trusted after a human checked the receipt
+     image and the transaction id. Until then the order stays HIDDEN from
+     the cashier / kitchen queues and lives on the verification desk.
+
+     Anti-fraud rules enforced here (never in the UI alone):
+       1. A transaction id may be used exactly once on the platform.
+       2. The receipt image is mandatory for every manual transfer.
+       3. One customer cannot stack more than a few unverified orders.
+       4. Every verification action is written to order.history + audit.
+     ═══════════════════════════════════════════════════════════════ */
+  var PAY_HOLD = 'pending_verification';
+  var PAY_REJECTED = 'payment_rejected';
+  var MAX_PENDING_VERIFICATIONS = 3;
+  var PAYMENT_LABELS = {
+    vodafone: 'فودافون كاش', instapay: 'إنستاباي',
+    pending_verification: 'قيد مراجعة الدفع', payment_rejected: 'تم رفض الإيصال'
+  };
+
+  /* Normalised transaction id — case and spacing must never let a scammer
+     replay the same reference with a different format. */
+  function normalizeTransactionId(value) {
+    return String(value == null ? '' : value).trim().toUpperCase().replace(/[\s\-_]+/g, '');
+  }
+
+  /* Shape check: real references are 4–40 letters/digits. Rejects the classic
+     "0000" / "aaaa" filler that scammers type to pass a naive check. */
+  function validTransactionId(value) {
+    var v = normalizeTransactionId(value);
+    if (v.length < 4 || v.length > 40) return false;
+    if (!/^[A-Z0-9]+$/.test(v)) return false;
+    if (/^([A-Z0-9])\1+$/.test(v)) return false;   /* one repeated character */
+    return true;
+  }
+
+  /* The order that already owns this transaction id (excluding the order
+     being edited) — the duplicate check behind "رقم العملية هذا مستخدم بالفعل!".
+     Every reference ever submitted for an order stays blocked, even after a
+     rejection: a refused receipt may never be replayed. */
+  function orderByTransaction(transactionId, exceptOrderId) {
+    var key = normalizeTransactionId(transactionId);
+    if (!key) return null;
+    var found = null;
+    DB.orders.forEach(function (o) {
+      if (found) return;
+      if (exceptOrderId && o.id === exceptOrderId) return;
+      if (normalizeTransactionId(o.payment_transaction_id) === key) { found = o; return; }
+      var used = o.used_transaction_ids || [];
+      for (var i = 0; i < used.length; i++) {
+        if (normalizeTransactionId(used[i]) === key) { found = o; return; }
+      }
+    });
+    return found;
+  }
+
+  function transactionIdUsed(transactionId, exceptOrderId) {
+    return !!orderByTransaction(transactionId, exceptOrderId);
+  }
+
+  /* Wallet numbers shown on the checkout instructions box. */
+  function paymentAccounts(tenantId) {
+    var tn = tenantById(tenantId) || {};
+    var slug = tn.slug || 'store';
+    return {
+      vodafone: String(tn.wallet_vodafone || tn.phone || '01000000000'),
+      instapay: String(tn.wallet_instapay || (slug + '@instapay')),
+      name: tn.name || ''
+    };
+  }
+
+  function customerKeyOf(order) {
+    if (!order) return '';
+    if (order.customer_id) return String(order.customer_id);
+    if (order.customer && order.customer.phone) return String(order.customer.phone);
+    return '';
+  }
+
+  /* How many transfers of this customer are still waiting on the desk. */
+  function pendingVerificationCount(customerKey) {
+    if (!customerKey) return 0;
+    var key = String(customerKey);
+    return DB.orders.filter(function (o) {
+      if (o.status !== PAY_HOLD) return false;
+      if (customerKeyOf(o) === key) return true;
+      /* the same shopper may be identified by phone instead of id */
+      return !!(o.customer && o.customer.phone && o.customer.phone === key);
+    }).length;
+  }
+
+  /* Append an immutable entry to the order audit trail. */
+  function pushOrderHistory(order, entry) {
+    if (!order) return null;
+    if (!Array.isArray(order.history)) order.history = [];
+    var actor = entry.actor || DS.session() || {};
+    var row = Object.assign({
+      action: entry.action,
+      at: entry.at || nowISO(),
+      by: actor.name || entry.by || 'System',
+      by_role: actor.role || entry.by_role || 'system'
+    }, entry);
+    delete row.actor;
+    order.history.push(row);
+    return row;
+  }
+
+  function pushTimeline(order, status, label) {
+    if (!order) return;
+    if (!Array.isArray(order.timeline)) order.timeline = [];
+    var last = order.timeline[order.timeline.length - 1];
+    if (!last || last.status !== status) order.timeline.push({ status: status, at: nowISO(), label: label });
+  }
+
+  /* Attach a receipt + transaction id to an existing order and put it back on
+     hold (used when the customer re-uploads a rejected receipt). */
+  function submitPaymentProof(orderId, opts) {
+    opts = opts || {};
+    var order = DB.orders.filter(function (o) { return o.id === orderId; })[0];
+    if (!order) return { ok: false, error: 'not_found' };
+    if (order.status !== PAY_HOLD && order.status !== PAY_REJECTED) {
+      return { ok: false, error: 'not_pending' };
+    }
+    var txId = normalizeTransactionId(opts.transactionId);
+    if (!txId) return { ok: false, error: 'missing_transaction' };
+    if (!validTransactionId(txId)) return { ok: false, error: 'invalid_transaction' };
+    if (transactionIdUsed(txId, order.id)) return { ok: false, error: 'duplicate_transaction' };
+    if (!opts.receipt) return { ok: false, error: 'missing_receipt' };
+    var actor = DS.session() || {};
+    var now = nowISO();
+    order.payment_method = opts.method || order.payment_method;
+    order.payment_transaction_id = txId;
+    /* Keep every reference ever used on this order — a rejected receipt may
+       never be replayed on another order. */
+    if (!Array.isArray(order.used_transaction_ids)) order.used_transaction_ids = [];
+    if (order.used_transaction_ids.indexOf(txId) === -1) order.used_transaction_ids.push(txId);
+    order.payment_receipt = opts.receipt;
+    order.payment_receipt_at = now;
+    order.payment_status = 'pending_verification';
+    order.rejection_reason = '';
+    order.rejected_at = '';
+    order.status = PAY_HOLD;
+    order.updated_at = now;
+    pushOrderHistory(order, {
+      action: 'receipt_resubmitted', at: now, by: actor.name || 'Customer', by_role: actor.role || 'customer',
+      transaction_id: txId, method: order.payment_method
+    });
+    pushTimeline(order, PAY_HOLD, PAYMENT_LABELS.pending_verification);
+    audit('إعادة رفع إيصال الدفع للطلب ' + order.order_no, 'Payment receipt resubmitted for ' + order.order_no, 'upload');
+    commit();
+    try {
+      window.dispatchEvent(new CustomEvent('ds:order-status', {
+        detail: {
+          order_id: order.id, order_no: order.order_no, status: order.status,
+          previous: PAY_REJECTED, label: PAYMENT_LABELS.pending_verification,
+          customer_id: order.customer_id,
+          customer_phone: order.customer && order.customer.phone,
+          customer_name: order.customer && order.customer.name,
+          tenant_id: order.tenant_id
+        }
+      }));
+      window.dispatchEvent(new CustomEvent('ds:order-updated', { detail: { id: order.id } }));
+    } catch (e) {}
+    return { ok: true, order: order };
+  }
+
+  /* The verification desk decision: approve (release to the kitchen) or
+     reject (with a mandatory reason the customer can read). */
+  function verifyPayment(orderId, approved, reason) {
+    var order = DB.orders.filter(function (o) { return o.id === orderId; })[0];
+    if (!order) return { ok: false, error: 'not_found' };
+    if (order.status !== PAY_HOLD) return { ok: false, error: 'not_pending' };
+    var actor = DS.session() || {};
+    var allowed = isAdmin(actor) || (actor.role === 'owner' && !!actor.tenant_id && orderHasTenant(order, actor.tenant_id));
+    if (!allowed) return { ok: false, error: 'forbidden' };
+    var now = nowISO();
+    if (approved) {
+      order.status = 'preparing';
+      order.payment_status = 'paid';
+      order.verified_at = now;
+      order.verified_by = actor.name || 'Admin';
+      order.rejection_reason = '';
+      pushOrderHistory(order, {
+        action: 'payment_approved', at: now, by: actor.name || 'Admin', by_role: actor.role || 'admin',
+        transaction_id: order.payment_transaction_id, note: 'تم تأكيد الدفع'
+      });
+      pushTimeline(order, 'preparing', 'تم تأكيد الدفع — جاري التحضير');
+      /* Loyalty points are only earned once the money is really in. */
+      if (order.loyalty_points_earned && DS.loyalty && order.customer_id) {
+        var cu = userById(order.customer_id);
+        if (cu) DS.loyalty.add(cu, order.loyalty_points_earned);
+      }
+      var inv = (DB.invoices || []).filter(function (i) { return i.order_id === order.id; })[0];
+      if (inv) { inv.status = 'paid'; inv.payment_status = 'paid'; inv.paid_at = now; }
+      audit('تأكيد الدفع للطلب ' + order.order_no + ' بواسطة ' + (actor.name || 'الإدارة'),
+        'Approved payment for order ' + order.order_no, 'checkCircle');
+    } else {
+      var why = String(reason == null ? '' : reason).trim();
+      if (!why) return { ok: false, error: 'missing_reason' };
+      order.status = PAY_REJECTED;
+      order.payment_status = 'rejected';
+      order.rejection_reason = why.slice(0, 300);
+      order.rejected_at = now;
+      order.verified_by = actor.name || 'Admin';
+      pushOrderHistory(order, {
+        action: 'payment_rejected', at: now, by: actor.name || 'Admin', by_role: actor.role || 'admin',
+        transaction_id: order.payment_transaction_id, reason: order.rejection_reason
+      });
+      pushTimeline(order, PAY_REJECTED, PAYMENT_LABELS.payment_rejected);
+      var inv2 = (DB.invoices || []).filter(function (i) { return i.order_id === order.id; })[0];
+      if (inv2) { inv2.status = 'unpaid'; inv2.payment_status = 'rejected'; inv2.rejection_reason = order.rejection_reason; }
+      audit('رفض إيصال الدفع للطلب ' + order.order_no + ' — ' + order.rejection_reason,
+        'Rejected payment for order ' + order.order_no, 'alert');
+    }
+    order.updated_at = now;
+    commit();
+    try {
+      window.dispatchEvent(new CustomEvent('ds:order-status', {
+        detail: {
+          order_id: order.id, order_no: order.order_no, status: order.status,
+          previous: PAY_HOLD, label: approved ? PAYMENT_LABELS.pending_verification : PAYMENT_LABELS.payment_rejected,
+          customer_id: order.customer_id,
+          customer_phone: order.customer && order.customer.phone,
+          customer_name: order.customer && order.customer.name,
+          tenant_id: order.tenant_id
+        }
+      }));
+      window.dispatchEvent(new CustomEvent('ds:order-updated', { detail: { id: order.id } }));
+    } catch (e) {}
+    return { ok: true, order: order, approved: !!approved };
+  }
+
+  /* Orders waiting on the verification desk (admin sees all, an owner sees
+     only their own store). The held orders are hidden from the cashier and
+     kitchen queues, so this is the only place they surface. */
+  function pendingVerifications(user) {
+    user = user || DS.session();
+    if (!user) return [];
+    var list = DB.orders.filter(function (o) { return o.status === PAY_HOLD; });
+    if (isAdmin(user)) {
+      if (user.role === 'subadmin' && user.permissions && user.permissions.indexOf('orders') === -1) return [];
+      return list;
+    }
+    if (user.role === 'owner' && user.tenant_id) {
+      return list.filter(function (o) { return orderHasTenant(o, user.tenant_id); });
+    }
+    return [];
+  }
+
+  /* Recently rejected receipts — kept for the audit trail. */
+  function rejectedVerifications(user) {
+    user = user || DS.session();
+    if (!user) return [];
+    var list = DB.orders.filter(function (o) { return o.status === PAY_REJECTED; });
+    if (isAdmin(user)) return list;
+    if (user.role === 'owner' && user.tenant_id) {
+      return list.filter(function (o) { return orderHasTenant(o, user.tenant_id); });
+    }
+    return [];
   }
 
   /* B2B dispatch — the delivery company owner assigns one of the company's
@@ -2577,7 +3083,8 @@
     var map = {
       pending: DS.t('pending'), confirmed: DS.t('preparing'), preparing: DS.t('preparing'),
       handed_to_company: DS.t('handed_to_company'), out_for_delivery: DS.t('out_for_delivery'),
-      delivering: DS.t('out_for_delivery'), delivered: DS.t('delivered'), cancelled: DS.t('cancelled')
+      delivering: DS.t('out_for_delivery'), delivered: DS.t('delivered'), cancelled: DS.t('cancelled'),
+      pending_verification: PAYMENT_LABELS.pending_verification, payment_rejected: PAYMENT_LABELS.payment_rejected
     };
     return map[status] || status;
   }
@@ -2703,6 +3210,20 @@
     nextOrderNo: nextOrderNo,
     createOrder: createOrder,
     updateOrderStatus: updateOrderStatus,
+    /* ── Manual payment verification (Vodafone Cash / InstaPay) ── */
+    PAY_HOLD: PAY_HOLD,
+    PAY_REJECTED: PAY_REJECTED,
+    MAX_PENDING_VERIFICATIONS: MAX_PENDING_VERIFICATIONS,
+    normalizeTransactionId: normalizeTransactionId,
+    validTransactionId: validTransactionId,
+    orderByTransaction: orderByTransaction,
+    transactionIdUsed: transactionIdUsed,
+    paymentAccounts: paymentAccounts,
+    pendingVerificationCount: pendingVerificationCount,
+    submitPaymentProof: submitPaymentProof,
+    verifyPayment: verifyPayment,
+    pendingVerifications: pendingVerifications,
+    rejectedVerifications: rejectedVerifications,
     assignOrder: assignOrder,
     unassignOrder: unassignOrder,
     updateOrder: updateOrder,
@@ -2727,8 +3248,24 @@
     get chatBlocks() { return DB.chat_blocks || []; },
     get chatReports() { return DB.chat_reports || []; },
     manageSubscription: manageSubscription,
+  grantFreeTrial: grantFreeTrial,
     setTenantStatus: setTenantStatus,
     setStoreOffline: setStoreOffline,
+    formatHM: formatHM,
+    storeStatus: storeStatus,
+    peerPresence: peerPresence,
+    getExtra: function (key, fallback) {
+      var bag = DB.dragon || {};
+      return bag[key] != null ? bag[key] : fallback;
+    },
+    setExtra: function (key, value) {
+      DB.dragon = DB.dragon || {};
+      DB.dragon[key] = value;
+      commit();
+      return value;
+    },
+    vatRate: function () { return Number((DB.settings || {}).vat_rate) || 15; },
+    vatAmount: function (base) { var r = (Number((DB.settings || {}).vat_rate) || 15) / 100; return Math.round((Number(base) || 0) * r * 100) / 100; },
     saveSettings: saveSettings,
     subscriptionPayload: subscriptionPayload,
     activeSubscription: activeSubscription,
@@ -2770,5 +3307,7 @@
     }
   });
 
+  window.cleanSlate = function () { if (window.DS && DS.data && DS.data.reset) DS.data.reset(); };
+  if (window.DS) window.DS.cleanSlate = window.cleanSlate;
   console.log('[DS] data ready ·', DB.tenants.length, 'tenants ·', DB.products.length, 'products ·', DB.orders.length, 'orders');
 })();

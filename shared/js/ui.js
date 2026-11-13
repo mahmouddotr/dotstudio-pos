@@ -98,10 +98,37 @@
     '</div>';
   }
 
+  /* Audit trail of the manual payment verification — every action is kept on
+     the order so it can be reviewed later. */
+  function verificationHistory(order) {
+    var rows = (order.history || []).filter(function (h) {
+      return h.action === 'payment_approved' || h.action === 'payment_rejected' || h.action === 'receipt_submitted' || h.action === 'receipt_resubmitted';
+    });
+    if (!rows.length) return '';
+    var EN = DS.lang() === 'en';
+    var map = {
+      receipt_submitted: EN ? 'Receipt submitted' : 'تم إرسال الإيصال',
+      receipt_resubmitted: EN ? 'New receipt submitted' : 'تم إرسال إيصال جديد',
+      payment_approved: EN ? 'Payment approved' : 'تم تأكيد الدفع',
+      payment_rejected: EN ? 'Receipt rejected' : 'تم رفض الإيصال'
+    };
+    return '<ul class="verify-history">' + rows.map(function (h) {
+      var tone = h.action === 'payment_approved' ? 'var(--success)' : (h.action === 'payment_rejected' ? 'var(--danger)' : 'var(--text-tertiary)');
+      return '<li>' +
+        '<span style="color:' + tone + '">' + icon(h.action === 'payment_approved' ? 'checkCircle' : (h.action === 'payment_rejected' ? 'alert' : 'upload')) + '</span>' +
+        '<span><span class="who">' + esc(map[h.action] || h.action) + '</span> — ' +
+          esc(h.by || 'System') + ' · ' + esc(DS.datetime(h.at)) +
+          (h.reason ? '<br><span class="reason">' + esc(h.reason) + '</span>' : '') +
+        '</span></li>';
+    }).join('') + '</ul>';
+  }
+
   function orderBody(order) {
     var user = DS.session() || {};
     var meta = DS.statusMeta(order.status);
     var tenant = DS.data.tenantById(order.tenant_id);
+    var EN = DS.lang() === 'en';
+    var trackUrl = absoluteUrl('customer/tracking.html?order=' + encodeURIComponent(order.id));
     var itemsHtml = (order.items || []).map(function (it) {
       return '<div class="order-item-row"><img src="' + esc(DS.data.img(it.image)) + '" alt="" onerror="this.onerror=null;this.src=\'' + esc(url('assets/product-placeholder.svg')) + '\'">' +
         '<div class="info"><div class="nm">' + esc(DS.lang() === 'en' ? (it.name_en || it.name) : it.name) + '</div>' +
@@ -114,11 +141,37 @@
         '<a class="btn btn-secondary btn-sm" href="' + esc(order.proof.url) + '" target="_blank" rel="noopener">' + icon('eye') + '</a></div>'
       : '<div class="proof-box" style="border-style:dashed"><div class="empty-icon" style="width:40px;height:40px;border-radius:10px;margin:0">' + icon('image') + '</div><div class="info"><b>' + esc(t('noProof')) + '</b><span>' + esc(t('proof')) + '</span></div></div>';
 
+    var payBlock = '';
+    if (order.payment_transaction_id || order.payment_receipt) {
+      payBlock = '<div class="section-title" style="font-size:var(--fs-md);margin:14px 0 8px">' + icon('shield') + esc(DS.lang() === 'en' ? 'Payment verification' : 'مراجعة الدفع') + '</div>' +
+        '<div class="order-details-grid">' +
+          '<div class="order-detail-box"><div class="l">' + esc(DS.lang() === 'en' ? 'Transaction ID' : 'رقم العملية') + '</div>' +
+            '<div class="v" style="font-family:var(--font-mono);direction:ltr;text-align:start">' + esc(order.payment_transaction_id || '—') + '</div></div>' +
+          '<div class="order-detail-box"><div class="l">' + esc(DS.lang() === 'en' ? 'Payment status' : 'حالة الدفع') + '</div>' +
+            '<div class="v">' + esc(order.payment_status || '—') + '</div></div>' +
+        '</div>' +
+        (order.payment_receipt
+          ? '<img src="' + esc(order.payment_receipt) + '" alt="receipt" style="width:100%;max-height:240px;object-fit:contain;border-radius:10px;border:1px solid var(--border);margin-top:10px;cursor:zoom-in" data-receipt-zoom="' + esc(order.id) + '">'
+          : '') +
+        (order.rejection_reason
+          ? '<div class="verify-reason" style="margin-top:10px">' + icon('alert') + ' ' + esc(order.rejection_reason) + '</div>'
+          : '') +
+        verificationHistory(order);
+    }
+
     return '<div class="order-details-grid" style="margin-bottom:14px">' +
         '<div class="order-detail-box"><div class="l">' + esc(t('orderId')) + '</div><div class="v" style="font-family:var(--font-mono);direction:ltr">' + esc(order.order_no) + '</div></div>' +
         '<div class="order-detail-box"><div class="l">' + esc(t('status')) + '</div><div class="v">' + DS.badge(order.status, meta.label) + '</div></div>' +
         '<div class="order-detail-box"><div class="l">' + esc(t('store')) + '</div><div class="v">' + esc(tenant ? tenant.name : '—') + '</div></div>' +
         '<div class="order-detail-box"><div class="l">' + esc(t('date')) + '</div><div class="v">' + esc(DS.datetime(order.created_at)) + '</div></div>' +
+      '</div>' +
+      '<div class="order-qr">' +
+        '<div class="order-qr-box" data-qr-box></div>' +
+        '<div class="order-qr-copy">' +
+          '<b>' + icon('mapPin') + esc(EN ? 'Live tracking QR' : 'QR التتبع اللحظي') + '</b>' +
+          '<span>' + esc(EN ? 'Scan with a phone camera to follow the rider live.' : 'امسح الكود بكاميرا الهاتف لتتبع المندوب لحظياً.') + '</span>' +
+          '<code dir="ltr">' + esc(trackUrl) + '</code>' +
+        '</div>' +
       '</div>' +
       '<div class="two-col even" style="gap:14px"><div>' +
         '<div class="section-title" style="font-size:var(--fs-md);margin-bottom:4px">' + icon('box') + esc(t('items')) + '</div>' +
@@ -146,6 +199,7 @@
           })() : '') +
         '</div></div>' +
         '<div style="margin-top:12px">' + proof + '</div>' +
+        payBlock +
         '<div class="section-title" style="font-size:var(--fs-md);margin:14px 0 8px">' + icon('activity') + esc(t('timeline')) + '</div>' +
         timelineMarkup(order) +
       '</div></div>';
@@ -249,6 +303,19 @@
     });
   }
 
+  /* Lazy-load the local QR library, then draw the tracking code once. */
+  function ensureQRCode(cb) {
+    if (window.QRCode) { try { cb(); } catch (e) {} return; }
+    var existing = document.querySelector('script[data-ds-qr]');
+    if (existing) { existing.addEventListener('load', cb); return; }
+    var s = document.createElement('script');
+    s.src = absoluteUrl('shared/vendor/qrcode.min.js');
+    s.setAttribute('data-ds-qr', '1');
+    s.onload = function () { try { cb(); } catch (e) {} };
+    s.onerror = function () { /* keep the plain tracking URL visible */ };
+    document.head.appendChild(s);
+  }
+
   function openOrder(id) {
     var order = orderById(id);
     if (!order) { DS.toast(t('noData'), 'error'); return; }
@@ -338,6 +405,18 @@
         var img = root.querySelector('[data-proof-img]');
         if (img) img.addEventListener('click', function () {
           DS.modal({ size: 'lg', title: t('proof'), body: '<img src="' + esc(order.proof.url) + '" alt="proof" style="width:100%;border-radius:var(--radius-md)">', actions: [{ label: t('close'), variant: 'btn-secondary' }] });
+        });
+        var qrBox = root.querySelector('[data-qr-box]');
+        if (qrBox) ensureQRCode(function () {
+          if (!window.QRCode || qrBox.firstChild) return;
+          try {
+            new QRCode(qrBox, {
+              text: absoluteUrl('customer/tracking.html?order=' + encodeURIComponent(order.id)),
+              width: 96, height: 96,
+              colorDark: '#111111', colorLight: '#ffffff',
+              correctLevel: QRCode.CorrectLevel.M
+            });
+          } catch (e) {}
         });
       }
     });

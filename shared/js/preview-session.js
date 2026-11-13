@@ -6,12 +6,8 @@
 (function () {
   'use strict';
 
-  /* Kill any stale service worker from older builds. */
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(function (registrations) {
-      registrations.forEach(function (registration) { registration.unregister(); });
-    }).catch(function () {});
-  }
+  /* Service worker lifecycle is owned by pwa.js (registered after core.js).
+     Never unregister here — the old kill-switch disabled offline support. */
 
   var existing = null;
   try { existing = JSON.parse(localStorage.getItem('cz_user') || 'null'); } catch (e) {}

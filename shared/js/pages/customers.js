@@ -56,19 +56,44 @@
       '<div class="search-mini" style="flex:1;min-width:220px">' + icon('search') + '<input data-q placeholder="' + esc(t('search')) + ' ' + esc(t('name')) + ' / ' + esc(t('phone')) + '" value="' + esc(state.q) + '"></div>' +
       '<select class="select" data-sort style="width:auto"><option value="spent"' + (state.sort === 'spent' ? ' selected' : '') + '>' + esc(t('spent')) + '</option><option value="orders"' + (state.sort === 'orders' ? ' selected' : '') + '>' + esc(t('ordersCount')) + '</option><option value="recent"' + (state.sort === 'recent' ? ' selected' : '') + '>' + esc(t('lastOrder')) + '</option></select></div></div>';
 
-    var table = '<div class="card"><div class="table-wrap flush"><table class="table"><thead><tr><th>' + esc(t('customerLabel')) + '</th><th>' + esc(t('city')) + '</th><th>' + esc(t('ordersCount')) + '</th><th>' + esc(t('spent')) + '</th><th>' + esc(t('lastOrder')) + '</th><th></th></tr></thead><tbody>' +
+    var table = '<div class="card"><div class="table-wrap flush"><table class="table"><thead><tr><th>' + esc(t('customerLabel')) + '</th><th>' + esc(t('city')) + '</th><th>' + esc(t('ordersCount')) + '</th><th>' + esc(t('spent')) + '</th><th>' + esc(t('lastOrder')) + '</th>' + (DS.dragon ? '<th>' + esc(EN ? 'Churn risk' : 'خطر المغادرة') + '</th>' : '') + '<th></th></tr></thead><tbody>' +
       (rows.length ? rows.map(function (c) {
+        var churn = DS.dragon ? DS.dragon.churnScore(c) : null;
         return '<tr data-customer="' + esc(c.id) + '" style="cursor:pointer"><td><div class="customer-cell"><span class="avatar sm" style="background:var(--surface-3);color:var(--lime)">' + esc(DS.initials(DS.loc(c, 'name'))) + '</span>' +
-          '<div><div class="cell-title">' + esc(DS.loc(c, 'name')) + (vips[c.id] ? ' <span class="pm-vip-badge">◆ ' + esc(EN ? 'Diamond' : 'عميل ماسي') + '</span>' : '') + '</div><div class="cell-sub" style="direction:ltr;text-align:start">' + esc(c.phone) + '</div></div></div></td>' +
+          '<div><div class="cell-title">' + esc(DS.loc(c, 'name')) + (vips[c.id] ? ' <span class="pm-vip-badge">◆ ' + esc(EN ? 'Diamond' : 'عميل ماسي') + '</span>' : '') + (Number(c.orders) > 10 ? ' <span class="gold-customer-badge" title="' + esc(EN ? 'Gold customer · 10+ orders' : 'عميل ذهبي · أكثر من 10 طلبات') + '">★ ' + esc(EN ? 'Gold customer' : 'عميل ذهبي') + '</span>' : '') + '</div><div class="cell-sub" style="direction:ltr;text-align:start">' + esc(c.phone) + '</div></div></div></td>' +
           '<td><span class="badge neutral">' + esc(DS.loc(c, 'city') || '—') + '</span></td>' +
           '<td>' + c.orders + '</td><td><b>' + money(c.spent) + '</b></td>' +
           '<td style="font-size:11px;color:var(--text-tertiary)">' + esc(DS.timeAgo(c.last_order)) + '</td>' +
+          (churn ? '<td><div class="dr-churn-cell" title="' + esc(churn.action) + '">' +
+            '<span class="badge ' + (churn.level === 'high' ? 'danger' : (churn.level === 'medium' ? 'warning' : 'success')) + '">' + churn.score + '%</span>' +
+            '<i class="dr-churn-mini"><b class="is-' + churn.level + '" style="width:' + churn.score + '%"></b></i></div></td>' : '') +
           '<td style="text-align:end"><button class="btn btn-ghost btn-sm" data-open="' + esc(c.id) + '">' + icon('eye') + '</button></td></tr>';
-      }).join('') : '<tr><td colspan="6">' + DS.empty({ icon: 'users', title: t('emptyCustomers'), text: t('emptyCustomersText') }) + '</td></tr>') +
+      }).join('') : '<tr><td colspan="7">' + DS.empty({ icon: 'users', title: t('emptyCustomers'), text: t('emptyCustomersText') }) + '</td></tr>') +
       '</tbody></table></div><div class="table-foot"><span>' + esc(t('showing')) + ' ' + rows.length + ' ' + esc(t('of')) + ' ' + all.length + '</span></div></div>';
 
-    page.setContent(stats + toolbar + table);
+    var dragonStrip = DS.dragon ? churnStrip(rows) : '';
+
+    page.setContent(stats + dragonStrip + toolbar + table);
     bind();
+  }
+
+  /* ── Dragon · churn prediction strip ─────────────────────────── */
+  function churnStrip(rows) {
+    var ranked = rows.map(function (c) { return { c: c, s: DS.dragon.churnScore(c) }; })
+      .filter(function (x) { return x.s; })
+      .sort(function (a, b) { return b.s.score - a.s.score; })
+      .slice(0, 5);
+    if (!ranked.length) return '';
+    var high = ranked.filter(function (x) { return x.s.level === 'high'; }).length;
+    return '<div class="card dr-strip-card" style="margin-bottom:14px"><div class="card-body">' +
+      '<div class="dr-strip-head"><span class="dr-ico">' + icon('trendingUp') + '</span>' +
+      '<div><b>' + esc(EN ? 'Churn prediction' : 'توقع المغادرة') + '</b>' +
+      '<span>' + esc((EN ? high + ' customer(s) at high risk — act before they leave.' : high + ' عميل بخطر مغادرة عالٍ — تواصل معهم الآن.')) + '</span></div></div>' +
+      '<div class="dr-strip-list">' + ranked.map(function (x) {
+        return '<div class="dr-strip-row"><b>' + esc(DS.loc(x.c, 'name')) + '</b>' +
+          '<span>' + esc(x.s.action) + '</span>' +
+          '<span class="badge ' + (x.s.level === 'high' ? 'danger' : (x.s.level === 'medium' ? 'warning' : 'success')) + '">' + x.s.score + '%</span></div>';
+      }).join('') + '</div></div></div>';
   }
 
   function stat(label, value, ico, tone) {

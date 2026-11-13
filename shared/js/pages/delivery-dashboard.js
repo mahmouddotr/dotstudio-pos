@@ -101,16 +101,31 @@
     return o.driver_name || t('noDriverAssigned');
   }
 
+  /* ── Driver ETA: distance × mock fleet speed ─────────────────── */
+  function etaFor(o) {
+    if (!o) return null;
+    var tn = DS.data.tenantById(o.tenant_id) || {};
+    var cust = o.customer || {};
+    var start = [Number(tn.lat) || 30.0511, Number(tn.lng) || 31.3656];
+    var dest = [Number(cust.lat) || (start[0] + 0.024), Number(cust.lng) || (start[1] + 0.021)];
+    var dist = window.DSTrack && DSTrack.distanceKm ? DSTrack.distanceKm(start, dest) : 5;
+    var minutes = window.DSTrack && DSTrack.etaMinutes ? DSTrack.etaMinutes(dist) : Math.max(1, Math.round(dist * 2));
+    return { km: dist, minutes: minutes, label: DS.lang() === 'en' ? ('ETA ' + minutes + ' min') : ('الوصول خلال ' + minutes + ' دقيقة') };
+  }
+
   function taskCard(o, driverMode) {
     var tn = DS.data.tenantById(o.tenant_id) || {};
     var act = nextAction(o);
     var meta = DS.statusMeta(o.status);
     var canReject = driverMode && o.status === 'handed_to_company' && o.driver_id === user.id;
     var rider = o.driver_id && DS.data.userById ? DS.data.userById(o.driver_id) : null;
+    var eta = etaFor(o);
+    var live = o.status === 'out_for_delivery';
     return '<div class="delivery-task' + (driverMode ? ' driver-task' : '') + '"><div class="num-badge">' + esc(String(o.order_no).replace('ORD-', '')) + '</div>' +
       '<div class="info"><b>' + esc(o.customer ? DS.loc(o.customer, 'name') : t('customerLabel')) + ' · ' + money(o.total) + '</b>' +
         '<span>' + esc(tn.name || '') + ' · ' + esc(o.customer ? DS.loc(o.customer, 'address') : '') + '</span>' +
         '<span style="margin-top:3px">' + esc(DS.timeAgo(o.updated_at || o.created_at)) + ' · ' + esc(o.order_no) +
+          (live && eta ? ' · <b class="dr-eta">' + icon('clock') + ' ' + esc(eta.label) + '</b>' : '') +
           (driverMode ? '' : ' · ' + esc(driverName(o)) + (rider && rider.phone ? ' · ' + esc(rider.phone) : '')) + '</span></div>' +
       '<div class="right">' + DS.badge(o.status, meta.label) +
         assignMarkup(o) +
@@ -182,6 +197,68 @@
     mountGps(task);
   }
 
+  function mountLiveDriverMap() {
+    var host = page.body.querySelector('#liveDriverMap');
+    if (!host) return;
+    if (host._dsLiveTimer) { clearInterval(host._dsLiveTimer); host._dsLiveTimer = null; }
+    host._positions = host._positions || {};
+    function riders() {
+      var list = DS.data.companyDrivers ? DS.data.companyDrivers(user.delivery_company) : [];
+      return list.filter(function (u) { return DS.data.isRider(u) && u.is_active !== false; });
+    }
+    function activeOrderFor(d) {
+      return (DS.data.visibleOrders(user) || []).filter(function (o) { return o.driver_id === d.id && DS.isActiveOrderStatus(o.status); })[0] || null;
+    }
+    function loadLeaflet(cb) {
+      if (window.L) { cb(true); return; }
+      var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = DS.url('shared/vendor/leaflet.css'); document.head.appendChild(css);
+      var js = document.createElement('script'); js.src = DS.url('shared/vendor/leaflet.js');
+      js.onload = function () { cb(true); };
+      js.onerror = function () { cb(false); };
+      document.head.appendChild(js);
+    }
+    function render() {
+      if (!window.L) return;
+      var r = riders();
+      if (!host._map) {
+        host._map = L.map(host, { zoomControl: true, attributionControl: true });
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(host._map);
+        host._layer = L.layerGroup().addTo(host._map);
+        host._map.setView([30.0444, 31.2357], 12);
+      }
+      host._layer.clearLayers();
+      var bounds = [];
+      r.forEach(function (d, i) {
+        if (!host._positions[d.id]) host._positions[d.id] = [30.0444 + (i * 0.01), 31.2357 + (i * 0.01)];
+        var pos = host._positions[d.id];
+        bounds.push(pos);
+        var ao = activeOrderFor(d);
+        var color = ao ? '#F59E0B' : '#82FF1F';
+        var ico = L.divIcon({ className: 'ds-live-driver', html: '<div style="width:34px;height:34px;border-radius:50%;background:' + color + ';border:3px solid #0A0A0B;display:grid;place-items:center;color:#0A0A0B;font-weight:900;font-size:12px">' + (i + 1) + '</div>', iconSize: [34, 34], iconAnchor: [17, 17] });
+        L.marker(pos, { icon: ico }).bindTooltip(DS.loc(d, 'name') + (ao ? ' · ' + ao.order_no : ''), { direction: 'top' }).addTo(host._layer);
+      });
+      if (bounds.length) { try { host._map.fitBounds(L.latLngBounds(bounds), { padding: [40, 40], maxZoom: 14 }); } catch (e) {} }
+      setTimeout(function () { host._map.invalidateSize(); }, 100);
+    }
+    loadLeaflet(function (ok) {
+      if (!ok) { host.innerHTML = '<p style="padding:20px">Map unavailable</p>'; return; }
+      render();
+      host._dsLiveTimer = setInterval(function () {
+        if (!host.isConnected) { clearInterval(host._dsLiveTimer); host._dsLiveTimer = null; return; }
+        riders().forEach(function (d) {
+          var ao = activeOrderFor(d);
+          if (ao && host._positions[d.id]) {
+            var p = host._positions[d.id];
+            p[0] += (Math.random() - 0.5) * 0.0015;
+            p[1] += (Math.random() - 0.5) * 0.0015;
+            host._positions[d.id] = p;
+          }
+        });
+        render();
+      }, 5000);
+    });
+  }
+
   /* ────────────────────────── OWNER VIEW ─────────────────────────── */
   function renderOwner() {
     var all = myOrders();
@@ -216,8 +293,18 @@
       '<a class="btn btn-ghost btn-sm" href="' + url('delivery/orders.html') + '">' + esc(t('viewAll')) + ' ' + icon('arrowRight') + '</a></div><div class="card-body">' +
       (active.length ? active.slice(0, 5).map(function (o) { return taskCard(o, false); }).join('') : DS.empty({ icon: 'orders', title: t('noAssigned'), text: t('noAssignedText') })) + '</div></div>';
 
-    page.setContent('<div class="owner-shell"><div style="display:flex;flex-direction:column;gap:14px">' + welcome + stats + mapBlock + tasks + '</div></div>');
+    /* ── Feature: live map of every active driver ─────────────────── */
+    var liveMapContent = '<div class="card"><div class="card-head"><div class="section-title">' + icon('mapPin') + ' ' +
+      esc(DS.lang() === 'en' ? 'Live fleet map' : 'الخريطة الحية للمندوبين') + '</div>' +
+      '<span class="badge lime">' + icon('wifi') + ' ' + esc(t('live')) + '</span></div>' +
+      '<div class="card-body"><div id="liveDriverMap" style="height:420px;min-height:420px;"></div>' +
+      '<p class="hint" style="margin-top:10px">' + esc(DS.lang() === 'en'
+        ? 'Every rider of your company is plotted live on the map.'
+        : 'كل مندوب في شركتك مرسوم مباشرة على الخريطة.') + '</p></div></div>';
+
+    page.setContent('<div class="owner-shell"><div style="display:flex;flex-direction:column;gap:14px">' + welcome + stats + liveMapContent + mapBlock + tasks + '</div></div>');
     bind(false);
+    mountLiveDriverMap();
     mountGps(task);
   }
 

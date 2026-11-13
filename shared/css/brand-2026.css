@@ -118,9 +118,9 @@ body.saleor-store .sl-logo {
   text-decoration: none;
 }
 body.saleor-store .sl-logo img {
-  height: 40px !important;
+  height: 32px !important;
   width: auto !important;
-  max-height: 40px !important;
+  max-height: 32px !important;
   max-width: 180px;
   object-fit: contain;
   border-radius: 0;
@@ -1149,7 +1149,7 @@ html[dir="ltr"] body.saleor-checkout .co-page { direction: ltr; }
     padding: 0 16px;
   }
   body.saleor-store .sl-logo span { display: none; }
-  body.saleor-store .sl-logo img { height: 36px !important; max-height: 36px !important; }
+  body.saleor-store .sl-logo img { height: 32px !important; max-height: 32px !important; }
   body.saleor-store .sl-icon-btn { display: none; }
   body.saleor-store .sl-cart-btn { padding: 0 14px; }
   body.saleor-store .sl-cart-btn span { display: none; }

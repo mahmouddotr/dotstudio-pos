@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>اربح مع DotStudio | سحب كفر الشيخ</title>
+    <style>
+        body { background: #0a0a0a; color: white; font-family: 'Cairo', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: #141414; padding: 40px; border-radius: 20px; border: 1px solid #333; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .logo { font-size: 24px; font-weight: bold; color: #CCFF00; margin-bottom: 20px; }
+        input { width: 100%; padding: 15px; margin-bottom: 15px; background: #222; border: 1px solid #444; border-radius: 10px; color: white; box-sizing: border-box; }
+        input:focus { border-color: #CCFF00; outline: none; }
+        button { width: 100%; padding: 15px; background: #CCFF00; color: black; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; }
+        button:hover { opacity: 0.8; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .share-box { display: none; margin-top: 20px; padding-top: 20px; border-top: 1px dashed #444; }
+        .wa-btn { background: #25D366; color: white; text-decoration: none; display: block; padding: 15px; border-radius: 10px; font-weight: bold; margin-top: 10px; }
+        .form-error { display: none; margin: -5px 0 15px; padding: 10px 12px; border-radius: 10px; background: rgba(255, 69, 58, 0.12); border: 1px solid rgba(255, 69, 58, 0.45); color: #FF8A80; font-size: 13px; line-height: 1.6; text-align: start; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo">DotStudio</div>
+        <h2>🎁 سحب كفر الشيخ الكبير</h2>
+        <p style="color: #A0A0A0;">سجل بياناتك وادخل السحب على موبايل جديد!</p>
+        
+        <form id="leadForm" novalidate>
+            <input type="text" id="name" placeholder="اسمك بالكامل" autocomplete="name" required>
+            <input type="tel" id="phone" placeholder="رقم الموبايل (01XXXXXXXXX)" inputmode="numeric" maxlength="11" autocomplete="tel" pattern="01[0-9]{9}" required>
+            <div class="form-error" id="formError" role="alert"></div>
+            <button type="submit" id="submitBtn">سجل وادخل السحب 🎯</button>
+        </form>
+
+        <div class="share-box" id="shareBox">
+            <p style="color:#CCFF00;" id="shareTitle">✅ تم تسجيلك!</p>
+            <p style="font-size: 14px;" id="shareNote">شارك اللينك مع 3 أصحاب عشان تزود فرصك:</p>
+            <a href="#" class="wa-btn" id="waShareBtn" target="_blank" rel="noopener">مشاركة على واتساب 🚀</a>
+        </div>
+    </div>
+
+    <script src="../shared/js/leads.js?v=20261113b"></script>
+    <script>
+        (function () {
+            'use strict';
+
+            var form = document.getElementById('leadForm');
+            var nameInput = document.getElementById('name');
+            var phoneInput = document.getElementById('phone');
+            var submitBtn = document.getElementById('submitBtn');
+            var errorBox = document.getElementById('formError');
+            var shareBox = document.getElementById('shareBox');
+
+            var MESSAGES = {
+                'invalid-name': 'اكتب اسمك بالكامل من فضلك (حرفين على الأقل).',
+                'invalid-phone': 'رقم الموبايل لازم يكون 11 رقم ويبدأ بـ 01 — مثال: 01012345678.',
+                'invalid-email': 'البريد الإلكتروني غير صحيح.',
+                storage: 'متصفحك مش سامح بحفظ البيانات. جرّب تقفل الخاص/Incognito وتاني.'
+            };
+
+            function fail(message) {
+                errorBox.textContent = message;
+                errorBox.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'سجل وادخل السحب 🎯';
+            }
+
+            function done(lead, duplicate) {
+                form.style.display = 'none';
+                shareBox.style.display = 'block';
+
+                if (duplicate) {
+                    document.getElementById('shareTitle').textContent = '✅ أنت مسجل معانا بالفعل!';
+                    document.getElementById('shareNote').textContent = 'زدنا فرصك في السحب. شارك اللينك مع 3 أصحاب كمان:';
+                }
+
+                DSLeads.markSubmitted(lead);
+
+                var text = encodeURIComponent('سجل معايا في سحب DotStudio كفر الشيخ واكسب موبايل! ادخل من هنا: ' + window.location.href);
+                document.getElementById('waShareBtn').href = 'https://wa.me/?text=' + text;
+            }
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                errorBox.style.display = 'none';
+
+                var name = nameInput.value;
+                var phone = phoneInput.value;
+
+                if (!DSLeads) return fail(MESSAGES.storage);
+
+                /* Guard against double taps while the write is in flight. */
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'بنحفظ بياناتك…';
+
+                var result = DSLeads.add({ name: name, phone: phone, source: 'win-page' });
+
+                if (!result.ok) {
+                    if (result.reason === 'invalid-phone') {
+                        phoneInput.value = DSLeads.normalizePhone(phone);
+                        phoneInput.focus();
+                    } else if (result.reason === 'invalid-name') {
+                        nameInput.focus();
+                    }
+                    return fail(MESSAGES[result.reason] || MESSAGES.storage);
+                }
+
+                if (result.saved === false) return fail(MESSAGES.storage);
+
+                done(result.lead, result.duplicate);
+            });
+        })();
+    </script>
+</body>
+</html>

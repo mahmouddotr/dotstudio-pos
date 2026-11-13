@@ -77,18 +77,30 @@
 
     var rows = list.length ? list.map(function (d) {
       var online = d.online !== false && d.is_active !== false;
+      var active = (DS.data.visibleOrders(user) || []).filter(function (o) { return o.driver_id === d.id && DS.isActiveOrderStatus(o.status); });
+      var late = active.some(function (o) {
+        if (o.status !== 'out_for_delivery' && o.status !== 'delivering') return false;
+        var mins = (Date.now() - new Date(o.updated_at || o.created_at).getTime()) / 60000;
+        return mins > 30;
+      });
+      var dStatus = !active.length
+        ? { color: 'var(--success)', label: (EN ? 'Available' : 'نشط') }
+        : late
+          ? { color: 'var(--danger)', label: (EN ? 'Late' : 'متأخر') }
+          : { color: 'var(--warning, #f59e0b)', label: (EN ? 'Busy' : 'مشغول بطلب') };
       return '<tr>' +
         '<td><div class="customer-cell"><img class="avatar sm" src="' + esc(DS.avatarUrl(d)) + '" alt="">' +
           '<div><div class="cell-title">' + esc(DS.loc(d, 'name')) + '</div>' +
           '<div class="cell-sub" style="direction:ltr;text-align:start">@' + esc(d.username) + (d.phone ? ' · ' + esc(d.phone) : '') + '</div></div></div></td>' +
         '<td><span class="badge ' + (running[d.id] ? 'lime' : 'neutral') + '">' + (running[d.id] || 0) + '</span></td>' +
+        '<td><span style="display:inline-flex;align-items:center;gap:6px;font-weight:600"><i style="width:9px;height:9px;border-radius:50%;background:' + dStatus.color + ';display:inline-block"></i>' + esc(dStatus.label) + '</span></td>' +
         '<td style="font-weight:600;color:var(--lime)">' + money(earned[d.id] || 0) + '</td>' +
         '<td><span class="badge ' + (online ? 'success' : 'neutral') + '"><i class="driver-dot' + (online ? ' on' : '') + '"></i>' + esc(online ? t('online') : t('offline')) + '</span></td>' +
         '<td style="text-align:end">' +
           '<button class="btn btn-ghost btn-sm" data-toggle="' + esc(d.id) + '" title="' + esc(online ? t('offline') : t('online')) + '">' + icon(online ? 'pause' : 'play') + '</button>' +
           '<button class="btn btn-ghost btn-sm" style="color:var(--danger)" data-del="' + esc(d.id) + '">' + icon('trash') + '</button>' +
         '</td></tr>';
-    }).join('') : '<tr><td colspan="5">' + DS.empty({
+    }).join('') : '<tr><td colspan="6">' + DS.empty({
       icon: 'users',
       title: EN ? 'No riders yet' : 'لا يوجد مناديب بعد',
       text: EN ? 'Add your first rider — he will see only the tasks assigned to him.' : 'أضف أول مندوب — سيرى فقط المهام المُسندة إليه.'
@@ -98,7 +110,7 @@
       ' <span class="badge lime">' + list.length + '</span></div>' +
       '<span class="badge neutral">' + esc(DS.loc(company, 'name') || t('delivery')) + '</span></div>' +
       '<div class="table-wrap flush"><table class="table"><thead><tr><th>' + esc(EN ? 'Driver name' : 'اسم المندوب') +
-      '</th><th>' + esc(EN ? 'Active orders' : 'طلبات جارية') + '</th><th>' + esc(EN ? 'Total earnings today' : 'أرباح اليوم') +
+      '</th><th>' + esc(EN ? 'Active orders' : 'طلبات جارية') + '</th><th>' + esc(EN ? 'Delivery status' : 'حالة التوصيل') + '</th><th>' + esc(EN ? 'Total earnings today' : 'أرباح اليوم') +
       '</th><th>' + esc(t('status')) + '</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
 
     var pending = pendingOrders();

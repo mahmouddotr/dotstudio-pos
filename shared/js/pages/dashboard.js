@@ -406,7 +406,11 @@
       (sub && sub.daysLeft <= 15 ? '<div class="notice warning" style="display:flex;align-items:center;gap:10px">' + icon('alert') +
         '<div style="flex:1"><b>' + esc(t('expiringSoon')) + '</b> · ' + esc(t('daysRemaining')) + ': ' + Math.max(0, sub.daysLeft) + '</div>' +
         '<a class="btn btn-primary btn-sm" href="' + url('owner/subscriptions.html') + '">' + icon('whatsapp') + esc(t('renew')) + '</a></div>' : '') +
-
+      (tn && tn.free_trial_until && new Date(tn.free_trial_until).getTime() > Date.now()
+        ? '<div class="notice success" style="display:flex;align-items:center;gap:10px;background:var(--success-soft);border-color:var(--success)">' + icon('sparkles') +
+          '<div style="flex:1"><b>' + esc(DS.lang() === 'en' ? 'Free trial active' : 'الفترة التجريبية نشطة') + '</b> · ' +
+          esc(DS.lang() === 'en' ? 'Expires ' + DS.date(tn.free_trial_until) : 'تنتهي ' + DS.date(tn.free_trial_until)) + '</div></div>'
+        : '') +
       aiInsightsMarkup() +
 
       inventoryAlertMarkup() +

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
+<meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>المتجر · DotStudio® POS</title>
   <meta name="description" content="DotStudio® POS — منصة إدارة المتاجر والمبيعات والتوصيل.">
@@ -10,9 +10,10 @@
   <link rel="stylesheet" href="../assets/css/fonts.css">
   <link rel="stylesheet" href="../shared/css/design-system.css?v=20261107a">
   <link rel="stylesheet" href="../shared/css/components.css?v=20261106f">
-  <link rel="stylesheet" href="../shared/css/app.css?v=20261109nav">
-  <link rel="stylesheet" href="../shared/css/storefront.css?v=20261106g">
-  <link rel="stylesheet" href="../shared/css/chat.css?v=20261107b">
+  <link rel="stylesheet" href="../shared/css/app.css?v=20261112final">
+  <link rel="stylesheet" href="../shared/css/dragon.css?v=ed8cb6">
+  <link rel="stylesheet" href="../shared/css/storefront.css?v=20261112final">
+  <link rel="stylesheet" href="../shared/css/chat.css?v=55ad20">
   <script>
     /* Apply the saved customer theme before paint (no white flash). */
     (function () {
@@ -36,6 +37,16 @@
       padding-bottom: 40px;
     }
 
+    /* ───────────────────── HEADER LOGO · SLIM 32px ───────────────────── */
+    html body.saleor-store .sl-logo img {
+      height: 32px !important;
+      max-height: 32px !important;
+      width: auto !important;
+      max-width: 160px !important;
+      object-fit: contain;
+    }
+    html body.saleor-store .sl-logo { min-height: 40px; }
+
     /* ───────────────────────── HERO: FULL BLEED ───────────────────────── */
     .sf-page .sf-hero {
       width: calc(100% + (var(--sf-bleed, 28px) * 2));
@@ -49,14 +60,45 @@
     }
     .sf-page .sf-preview-note + .sf-hero { margin-top: 0; }
 
-    .sf-page .sf-hero-bg img {
+    .sf-page .sf-hero-bg > img {
       opacity: 1;
       transform: scale(1.02);
       filter: saturate(1.02) contrast(1.02);
     }
-    .sf-page .sf-hero-bg::after,
+    /* Slider frames own their opacity/transform so they can cross-fade. */
+    .sf-page .sf-hero-bg .sf-hero-slide {
+      opacity: 0;
+      transform: scale(1.06);
+      filter: saturate(1.02) contrast(1.02);
+      transition: opacity 1200ms var(--ease-out), transform 7000ms var(--ease-out);
+    }
+    .sf-page .sf-hero-bg .sf-hero-slide.is-active {
+      opacity: 1;
+      transform: scale(1.0);
+    }
+    .sf-page .sf-hero.is-offline .sf-hero-bg .sf-hero-slide {
+      filter: grayscale(0.55) brightness(0.8);
+    }
+    .sf-page .sf-hero-dots { bottom: 22px; }
+    .sf-page .sf-hero-dot {
+      width: 7px;
+      height: 7px;
+      min-width: 7px;
+      min-height: 7px;
+      background: rgba(255, 255, 255, 0.38);
+    }
+    .sf-page .sf-hero-dot.is-active { width: 24px; background: #fff; }
+
+    /* Dark gradient keeps the white hero copy readable over any frame. */
+    .sf-page .sf-hero-bg::after {
+      background:
+        linear-gradient(to right, rgba(0, 0, 0, 0.8), transparent),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.34) 0%, rgba(0, 0, 0, 0.12) 34%, rgba(0, 0, 0, 0.70) 76%, rgba(0, 0, 0, 0.94) 100%),
+        linear-gradient(0deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0) 45%);
+    }
     html[dir="rtl"] .sf-page .sf-hero-bg::after {
       background:
+        linear-gradient(to left, rgba(0, 0, 0, 0.8), transparent),
         linear-gradient(180deg, rgba(0, 0, 0, 0.34) 0%, rgba(0, 0, 0, 0.12) 34%, rgba(0, 0, 0, 0.70) 76%, rgba(0, 0, 0, 0.94) 100%),
         linear-gradient(0deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0) 45%);
     }
@@ -66,34 +108,46 @@
       align-items: end;
       gap: clamp(26px, 4vw, 64px);
       min-height: inherit;
-      padding: clamp(28px, 5vw, 84px);
     }
-    .sf-page .sf-hero-copy { max-width: min(760px, 100%); }
+    /* Breathing room around the hero text container (40px and up). */
+    html body.saleor-store .sf-page .sf-hero-inner {
+      padding: clamp(40px, 5vw, 88px);
+    }
+    .sf-page .sf-hero-copy {
+      position: relative;
+      z-index: 2;
+      max-width: min(760px, 100%);
+      padding: 0 8px;
+    }
 
-    /* Floating glass product cards (right rail on desktop, swipe row on mobile). */
+    /* Floating glass product cards (left rail on desktop, swipe row on mobile). */
     .sf-page .sf-hero-cards {
       display: flex;
       align-self: center;
+      position: relative;
+      z-index: 2;
       width: 100%;
+      max-width: 100%;
       gap: 10px;
     }
     .sf-page .sf-float-card,
     .sf-page .sf-float-card:nth-child(n) {
       width: 100%;
+      max-width: 100%;
       transform: none;
       padding: 10px 14px 10px 10px;
       border-radius: 18px;
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.1);
       border: 1px solid rgba(255, 255, 255, 0.18);
-      -webkit-backdrop-filter: blur(26px) saturate(150%);
-      backdrop-filter: blur(26px) saturate(150%);
+      -webkit-backdrop-filter: blur(10px) saturate(150%);
+      backdrop-filter: blur(10px) saturate(150%);
       box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
     }
     html[dir="rtl"] .sf-page .sf-float-card { padding: 10px 10px 10px 14px; }
     .sf-page .sf-float-card:hover,
     .sf-page .sf-float-card:nth-child(n):hover {
       transform: translateY(-3px);
-      background: rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.16);
       border-color: rgba(255, 255, 255, 0.32);
     }
     .sf-page .sf-float-card img { width: 50px; height: 50px; border-radius: 12px; }
@@ -435,7 +489,11 @@
     @media (max-width: 640px) {
       .sf-page { gap: 26px; }
       .sf-page .sf-hero { min-height: auto; }
-      .sf-page .sf-hero-inner { padding: 30px 20px 28px; }
+      html body.saleor-store .sf-page .sf-hero-inner {
+        padding: 34px 20px 30px !important;
+      }
+      .sf-page .sf-hero-copy { padding: 0; }
+      .sf-page .sf-hero-dots { bottom: 12px; }
       .sf-page .sf-title { font-size: clamp(34px, 11vw, 46px); }
       html[lang="ar"] .sf-page .sf-title { font-size: clamp(30px, 9vw, 40px); }
       .sf-page .sf-sub { font-size: 14px; }
@@ -444,6 +502,114 @@
       .sf-page .sf-card-body { padding: 14px 14px 16px; }
       .sf-page .sf-toolbar-head { align-items: flex-start; }
       .sf-page .sf-search { width: 100%; }
+    }
+    /* ────────────────── GIVEAWAY LEAD-MAGNET BANNER ───────────────────
+       Links the storefront to customer/win.html. Tokens only, so it follows
+       both the dark and the light customer theme, and both text directions. */
+    .sf-giveaway {
+      position: fixed;
+      bottom: 16px;
+      inset-inline-start: 16px;
+      z-index: 998;
+      display: flex;
+      align-items: center;
+      max-width: min(430px, calc(100vw - 32px));
+      padding: 10px;
+      border-radius: 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 280ms var(--ease-out, ease), transform 280ms var(--ease-out, ease);
+    }
+    .sf-giveaway[hidden] { display: none; }
+    .sf-giveaway.is-in { opacity: 1; transform: translateY(0); }
+    .sf-giveaway-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      color: inherit;
+      text-decoration: none;
+    }
+    .sf-giveaway-ico {
+      flex: 0 0 42px;
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      background: var(--lime-soft);
+      font-size: 20px;
+      line-height: 1;
+    }
+    .sf-giveaway-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .sf-giveaway-copy b {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.35;
+    }
+    .sf-giveaway-copy i {
+      font-size: 11px;
+      font-style: normal;
+      color: var(--text-tertiary);
+      line-height: 1.4;
+    }
+    .sf-giveaway-cta {
+      flex: 0 0 auto;
+      margin-inline-start: 4px;
+      padding: 9px 14px;
+      border-radius: var(--radius-full, 999px);
+      background: var(--lime);
+      color: var(--on-lime, #111);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      transition: opacity 200ms;
+    }
+    .sf-giveaway-link:hover .sf-giveaway-cta { opacity: 0.85; }
+    .sf-giveaway-close {
+      position: absolute;
+      top: -9px;
+      inset-inline-end: -9px;
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-tertiary);
+      font-size: 11px;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .sf-giveaway-close:hover { color: var(--text-primary); }
+    @media (max-width: 1180px) {
+      /* Sit above the fixed customer tab bar. */
+      body.ds-has-bottom-nav .sf-giveaway {
+        bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+      }
+    }
+    @media (max-width: 640px) {
+      .sf-giveaway {
+        inset-inline-start: 12px;
+        inset-inline-end: auto;
+        bottom: 12px;
+        max-width: calc(100vw - 96px);
+        padding: 8px;
+        gap: 8px;
+      }
+      body.ds-has-bottom-nav .sf-giveaway { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+      .sf-giveaway-ico { flex-basis: 36px; width: 36px; height: 36px; font-size: 17px; }
+      .sf-giveaway-copy b { font-size: 12.5px; }
+      .sf-giveaway-copy i { display: none; }
+      .sf-giveaway-cta { padding: 8px 11px; font-size: 11px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sf-giveaway { transition: none; transform: none; }
     }
   </style>
 
@@ -467,27 +633,104 @@
   </script>
 
 
-  <link rel="stylesheet" href="../shared/css/saleor.css?v=20261106h">
-  <link rel="stylesheet" href="../shared/css/brand-2026.css?v=20261107a">
-  <link rel="stylesheet" href="../shared/css/customer-theme.css?v=20261108d">
-    <link rel="stylesheet" href="../shared/css/pro-max.css?v=20261111">
-    </head>
+  <link rel="stylesheet" href="../shared/css/saleor.css?v=20261112final">
+  <link rel="stylesheet" href="../shared/css/brand-2026.css?v=20261112final">
+  <link rel="stylesheet" href="../shared/css/customer-theme.css?v=20261112final">
+    <link rel="stylesheet" href="../shared/css/pro-max.css?v=20261112final">
+    <link rel="stylesheet" href="../shared/css/polish-2026.css?v=20261112final">
+    <link rel="stylesheet" href="../shared/css/storefront-fonts.css?v=20261111">
+    <link rel="stylesheet" href="../shared/css/hero-premium.css?v=20261212c">
+    <link rel="manifest" href="../manifest.json">
+</head>
     
 
 <body>
   <div id="app"></div>
+
+  <!-- Giveaway lead magnet → customer/win.html -->
+  <div class="sf-giveaway" id="sfGiveaway" hidden>
+    <a class="sf-giveaway-link" id="sfGiveawayLink" href="win.html">
+      <span class="sf-giveaway-ico" aria-hidden="true">🎁</span>
+      <span class="sf-giveaway-copy">
+        <b id="sfGiveawayTitle">سجل في السحب واكسب موبايل!</b>
+        <i id="sfGiveawaySub">سحب كفر الشيخ الكبير — التسجيل مجاني</i>
+      </span>
+      <span class="sf-giveaway-cta" id="sfGiveawayCta">سجل الآن</span>
+    </a>
+    <button type="button" class="sf-giveaway-close" id="sfGiveawayClose" aria-label="إغلاق البانر" title="إغلاق">✕</button>
+  </div>
+
   <script src="../shared/js/preview-session.js?v=20261106e"></script>
-  <script src="../shared/js/core.js?v=20261108a"></script>
+  <script src="../shared/js/core.js?v=a632df"></script>
   <script src="../shared/js/security.js?v=20261106e"></script>
-<script src="../shared/js/data.js?v=20261111"></script>
+<script src="../shared/js/data.js?v=262326"></script>
 
   <script src="../shared/js/auth.js?v=20261106e"></script>
-  <script src="../shared/js/shell.js?v=20261111"></script>
-  <script src="../shared/js/ui.js?v=20261111"></script>
+  <script src="../shared/js/shell.js?v=20261112final"></script>
+  <script src="../shared/js/ui.js?v=20261112final"></script>
   <script src="../shared/js/scanner.js?v=20261106e"></script>
-  <script src="../shared/js/chat.js?v=20261107b"></script>
-  <script src="../shared/js/pages/storefront.js?v=20261109nav"></script>
-  <script src="../shared/js/error-handler.js?v=20261106e"></script>
+  <script src="../shared/js/chat.js?v=8cdb4d"></script>
+  <script src="../shared/js/dragon.js?v=cdf364"></script>
+  <script src="../shared/js/cart.js?v=20261114"></script>
+  <script src="../shared/js/pages/storefront.js?v=20261212c"></script>
+  <script src="../shared/js/chatbot.js?v=20261111"></script>
+  <script src="../shared/js/leads.js?v=20261113b"></script>
+<script src="../shared/js/error-handler.js?v=20261106e"></script>
+  <script src="../shared/js/pwa.js?v=20261114"></script>
+
+  <script>
+    /* Giveaway banner: hidden when the visitor dismissed it or already
+       registered through customer/win.html. Dismissal is remembered per
+       browser, so it never nags a customer twice. */
+    (function () {
+      'use strict';
+      var DISMISS_KEY = 'ds_giveaway_banner_dismissed';
+      var box = document.getElementById('sfGiveaway');
+      if (!box) return;
+
+      var dismissed = false;
+      try { dismissed = localStorage.getItem(DISMISS_KEY) === '1'; } catch (e) {}
+      if (dismissed) return;
+
+      var closed = false;
+
+      var leads = window.DSLeads;
+      if (leads && typeof leads.submitted === 'function' && leads.submitted()) return;
+
+      var link = document.getElementById('sfGiveawayLink');
+      try {
+        if (window.DS && DS.url) link.href = DS.url('customer/win.html');
+      } catch (e) {}
+
+      var EN = (document.documentElement.getAttribute('lang') || '').indexOf('en') === 0;
+      if (EN) {
+        document.getElementById('sfGiveawayTitle').textContent = 'Enter the giveaway and win a phone!';
+        document.getElementById('sfGiveawaySub').textContent = 'DotStudio Kafr El-Sheikh draw — free entry';
+        document.getElementById('sfGiveawayCta').textContent = 'Enter now';
+        document.getElementById('sfGiveawayClose').setAttribute('aria-label', 'Close banner');
+      }
+
+      function close() {
+        closed = true;
+        box.hidden = true;
+        try { localStorage.setItem(DISMISS_KEY, '1'); } catch (e) {}
+      }
+      document.getElementById('sfGiveawayClose').addEventListener('click', function (e) {
+        e.preventDefault();
+        close();
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !box.hidden) close();
+      });
+
+      setTimeout(function () {
+        if (closed) return;
+        box.hidden = false;
+        requestAnimationFrame(function () { box.classList.add('is-in'); });
+      }, 1600);
+    })();
+  </script>
 </body>
 
                 

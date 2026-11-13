@@ -24,7 +24,7 @@
     sub: isSellPage
       ? L('بيع سريع بنفس تجربة الكاشير — مع خصم المدير وطباعة الليبل.', 'A cashier-grade sale counter — owner discounts and label printing included.')
       : (EN ? 'Ring up a sale in seconds — products, cart, payment and receipt.' : 'أنشئ بيعة في ثوانٍ — المنتجات، السلة، الدفع والإيصال.'),
-    actions: '',
+    actions: '<button type="button" class="pos-scan-btn" data-pos-scan>' + icon('camera') + '<span>' + L('مسح', 'Scan') + '</span></button>',
     content: DS.skeleton.grid(8)
   });
   if (!page) return;
@@ -79,7 +79,9 @@
     var amount = state.discountType === 'fixed' ? v : sub * v / 100;
     return Math.max(0, Math.min(sub, Math.round(amount * 100) / 100));
   }
-  function total() { return Math.max(0, subtotal() - discountAmount() + deliveryFee()); }
+  function vatBase() { return Math.max(0, subtotal() - discountAmount()); }
+  function vatAmount() { return DS.data.vatAmount ? DS.data.vatAmount(vatBase()) : 0; }
+  function total() { return Math.max(0, subtotal() - discountAmount() + deliveryFee() + vatAmount()); }
   function lineOf(id) { return state.cart.filter(function (l) { return l.id === id; })[0]; }
 
   /* ── Customer lookup by phone → saved Home / Work addresses ────── */
@@ -256,6 +258,7 @@
       '<div class="cart-row"><span>' + esc(L('المجموع', 'Subtotal')) + '</span><span>' + money(subtotal()) + '</span></div>' +
       (deliveryFee() > 0 ? '<div class="cart-row"><span>' + esc(t('delivery')) + '</span><span>' + money(deliveryFee()) + '</span></div>' : '') +
       (canDiscount && discountAmount() > 0 ? '<div class="cart-row discount"><span>' + esc(t('discount')) + '</span><span>− ' + money(discountAmount()) + '</span></div>' : '') +
+      '<div class="cart-row vat"><span>' + esc(L('ضريبة القيمة المضافة', 'VAT')) + ' · ' + (DS.data.vatRate ? DS.data.vatRate() : 15) + '%</span><span>' + money(vatAmount()) + '</span></div>' +
     '</div>' +
 
     '<div class="cart-row total"><span>' + esc(L('الإجمالي', 'Total')) + '</span><span class="lemon-text" id="cartTotal">' + money(total()) + '</span></div>' +
@@ -367,6 +370,7 @@
               icon('search') +
               '<input type="text" class="search-input" id="posSearch" autocomplete="off" placeholder="' + esc(L('ابحث بالاسم أو الباركود...', 'Search by name or barcode…')) + '" value="' + esc(state.q) + '">' +
               '<button type="button" class="search-clear" data-search-clear aria-label="' + esc(L('مسح البحث', 'Clear search')) + '"' + (state.q ? '' : ' hidden') + '>' + icon('x') + '</button>' +
+              (DS.dragon ? '<button type="button" class="pos-voice-btn" data-pos-voice title="' + esc(L('تحكم صوتي', 'Voice control')) + '" aria-label="' + esc(L('تحكم صوتي', 'Voice control')) + '">' + icon('mic') + '</button>' : '') +
             '</div>' +
             '<div class="categories-scroll" id="posCategories" role="tablist" aria-label="' + esc(L('الفئات', 'Categories')) + '">' +
               categoriesMarkup() +
@@ -439,6 +443,54 @@
     /* Header actions */
     var labels = page.root.querySelector('[data-labels]');
     if (labels) labels.addEventListener('click', openLabelsPicker);
+
+    /* ── Dragon · Voice POS ──────────────────────────────────────────
+       «أضف عصير مانجو» · «احذف ميلك شيك» · «كم المجموع» · «ادفع»      */
+    var voiceBtn = page.body.querySelector('[data-pos-voice]');
+    if (voiceBtn && DS.dragon) {
+      var voice = null;
+      voiceBtn.addEventListener('click', function () {
+        function findProduct(q) {
+          var needle = String(q || '').trim().toLowerCase();
+          if (!needle) return null;
+          return products().filter(function (p) {
+            return (p.name + ' ' + (p.name_en || '') + ' ' + (p.category || '') + ' ' + (p.category_en || ''))
+              .toLowerCase().indexOf(needle) > -1;
+          })[0] || null;
+        }
+        if (voice && voice.state.listening) { voice.stop(); return; }
+        voice = DS.dragon.voicePOS({
+          onState: function (on) {
+            voiceBtn.classList.toggle('is-live', on);
+            voiceBtn.title = on ? L('يستمع… انقر للإيقاف', 'Listening… click to stop') : L('تحكم صوتي', 'Voice control');
+          },
+          onHeard: function (parsed, text) {
+            DS.toast(L('سمعت: ', 'Heard: ') + text, 'info');
+          },
+          add: function (parsed) {
+            var p = findProduct(parsed.query);
+            if (!p) { DS.toast(L('لم أجد: ', 'Not found: ') + parsed.query, 'warning'); return; }
+            addToCart(p.id);
+            DS.toast(L('تمت إضافة ', 'Added ') + DS.loc(p, 'name'), 'success');
+          },
+          remove: function (parsed) {
+            var p = findProduct(parsed.query);
+            if (!p) { DS.toast(L('لم أجد: ', 'Not found: ') + parsed.query, 'warning'); return; }
+            var line = lineOf(p.id);
+            if (!line) { DS.toast(L('المنتج غير في السلة', 'Not in the cart'), 'warning'); return; }
+            setQty(p.id, line.qty - 1);
+            DS.toast(L('تم حذف ', 'Removed ') + DS.loc(p, 'name'), 'success');
+          },
+          total: function () {
+            DS.toast(L('الإجمالي: ', 'Total: ') + money(total()), 'info');
+          },
+          pay: function () { completeSale(); },
+          clear: function () { clearCart(); }
+        });
+        if (voice.supported) voice.start();
+        else DS.toast(L('التحكم الصوتي غير مدعوم في هذا المتصفح', 'Voice control is not supported in this browser'), 'warning');
+      });
+    }
 
     var clearBtn = page.body.querySelector('[data-clear-cart]');
     if (clearBtn) clearBtn.addEventListener('click', clearCart);
@@ -562,6 +614,7 @@
           '<div class="cart-summary">' +
             '<div class="cart-row"><span>' + esc(t('subtotal')) + '</span><span>' + money(subtotal()) + '</span></div>' +
             (canDiscount ? '<div class="cart-row" data-ck-disc-row style="' + (discountAmount() ? '' : 'display:none') + ';color:var(--lime)"><span>' + esc(t('discount')) + '</span><span data-ck-discount>− ' + money(discountAmount()) + '</span></div>' : '') +
+            '<div class="cart-row vat"><span>' + esc(L('ضريبة القيمة المضافة', 'VAT')) + '</span><span data-ck-vat>' + money(vatAmount()) + '</span></div>' +
             '<div class="cart-row"><span>' + esc(t('delivery')) + '</span><span>' + money(deliveryFee()) + '</span></div>' +
             '<div class="cart-row total"><span>' + esc(t('total')) + '</span><span class="num" data-ck-total>' + money(total()) + '</span></div>' +
           '</div>' +
@@ -847,4 +900,20 @@
   }
 
   render();
+  document.addEventListener('click', function (e) {
+    var btn = e.target && e.target.closest ? e.target.closest('[data-pos-scan]') : null;
+    if (!btn) return;
+    if (DS.openCameraScanner) {
+      DS.openCameraScanner({
+        onFound: function (p) {
+          if (p && p.id) {
+            /* try to match by barcode/id */
+            var found = (products() || []).filter(function (x) { return x.id === p.id || x.barcode === p.barcode || x.barcode === p.id; })[0];
+            if (found) addToCart(found.id);
+          }
+        }
+      });
+    }
+  });
+
 })();

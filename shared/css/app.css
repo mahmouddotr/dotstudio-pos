@@ -183,7 +183,7 @@ html[dir="rtl"] .status-select{padding:4px 10px 4px 30px}
 .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:14px}
 .product-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;display:flex;flex-direction:column;transition:border-color var(--transition-base),transform var(--transition-base),box-shadow var(--transition-base);position:relative}
 .product-card:hover{border-color:var(--border-strong);transform:translateY(-2px);box-shadow:var(--shadow-md)}
-/* Product image frame — strict 1:1, clean plate (white in light / #141414 in dark),
+/* Product image frame — strict 1:1, clean plate (white in every theme),
    never a grey border or a letterboxed frame. */
 .product-image-container,
 .product-media{
@@ -216,7 +216,7 @@ html[data-theme="dark"] .product-image-container,
 html[data-theme="dark"] .product-media,
 html[data-customer-theme="dark"] .product-image-container,
 html[data-customer-theme="dark"] .product-media{
-  background:#141414;
+  background:#ffffff;
 }
 html[data-theme="dark"] .product-image-container img,
 html[data-theme="dark"] .product-media img,
@@ -2162,4 +2162,254 @@ html[data-customer-theme="dark"] body.saleor-store .sf-page .sf-card-media.produ
   .branch-head { padding: 14px; }
   .branch-head h2 { font-size: 18px; }
   .owner-tab { padding: 8px 12px; font-size: 11.5px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   2026 · PERFORMANCE + UX PACK
+   Voice search · WhatsApp share · instant translation · big toast
+   · PWA banner · gold customers · order QR · Dragon insights
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Storefront: voice search ─────────────────────────────────── */
+.sf-search { position: relative; }
+.sf-search .sf-voice {
+  position: absolute;
+  inset-inline-end: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.sf-search .sf-voice svg { width: 15px; height: 15px; }
+.sf-search .sf-voice:hover { color: var(--text-primary); border-color: var(--text-tertiary); }
+.sf-search .sf-voice.is-listening {
+  color: var(--danger);
+  border-color: var(--danger);
+  animation: ds-voice-pulse 1.1s ease-in-out infinite;
+}
+.sf-search input { padding-inline-end: 46px; }
+@keyframes ds-voice-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 69, 58, .28); }
+  50% { box-shadow: 0 0 0 7px rgba(255, 69, 58, 0); }
+}
+
+/* ── Storefront: WhatsApp share + card actions ────────────────── */
+.sf-card-actions { display: inline-flex; align-items: center; gap: 6px; }
+.sf-share {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--success);
+  cursor: pointer;
+  transition: transform .16s ease, border-color .16s ease, background .16s ease;
+}
+.sf-share svg { width: 14px; height: 14px; }
+.sf-share:hover { transform: translateY(-1px); border-color: var(--success); background: var(--surface-2); }
+.sf-share:active { transform: scale(.94); }
+
+/* ── Storefront: instant AR/EN description toggle ─────────────── */
+.sf-qv-desc { position: relative; margin: 0 0 12px; }
+.sf-qv-desc p { margin: 0; font-size: 12.5px; line-height: 1.75; color: var(--text-secondary); }
+.sf-translate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 7px;
+  padding: 4px 9px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color .16s ease, border-color .16s ease;
+}
+.sf-translate-btn svg { width: 12px; height: 12px; }
+.sf-translate-btn:hover { color: var(--text-primary); border-color: var(--text-tertiary); }
+.sf-translate-btn.is-en { color: var(--accent); border-color: var(--accent); }
+
+/* ── Big attention toast (geofence) ───────────────────────────── */
+.ds-big-toasts {
+  position: fixed;
+  inset-inline: 0;
+  top: 18px;
+  z-index: 4200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+.ds-big-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(92vw, 430px);
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .22);
+  opacity: 0;
+  transform: translateY(-10px) scale(.98);
+  transition: opacity .24s ease, transform .24s ease;
+}
+.ds-big-toast.in { opacity: 1; transform: none; }
+.ds-big-toast.is-lime { border-color: rgba(198, 255, 51, .55); }
+.ds-big-toast.is-danger { border-color: rgba(255, 69, 58, .5); }
+.ds-big-ico {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--accent);
+  color: var(--on-lime, #111);
+}
+.ds-big-ico svg { width: 19px; height: 19px; }
+.ds-big-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ds-big-copy b { font-size: 13px; color: var(--text-primary); }
+.ds-big-copy i { font-style: normal; font-size: 11px; color: var(--text-tertiary); }
+.ds-big-x {
+  margin-inline-start: auto;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+.ds-big-x svg { width: 14px; height: 14px; }
+.ds-big-x:hover { background: var(--surface-2); color: var(--text-primary); }
+
+/* ── PWA install banner ───────────────────────────────────────── */
+.pwa-install-banner {
+  position: fixed;
+  inset-inline: 14px;
+  bottom: 14px;
+  z-index: 4100;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .2);
+  transform: translateY(140%);
+  transition: transform .3s cubic-bezier(.2, .8, .2, 1);
+}
+.pwa-install-banner.in { transform: none; }
+@media (min-width: 720px) { .pwa-install-banner { inset-inline: auto; inset-inline-end: 18px; max-width: 380px; } }
+.pwa-banner-ico { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 10px; background: var(--accent); color: var(--on-lime, #111); }
+.pwa-banner-ico svg { width: 17px; height: 17px; }
+.pwa-banner-copy { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.pwa-banner-copy b { font-size: 12.5px; color: var(--text-primary); }
+.pwa-banner-copy i { font-style: normal; font-size: 10.5px; color: var(--text-tertiary); }
+.pwa-banner-install { flex: 0 0 auto; }
+.pwa-banner-x { width: 26px; height: 26px; flex: 0 0 auto; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--text-tertiary); cursor: pointer; }
+.pwa-banner-x svg { width: 14px; height: 14px; }
+
+/* ── Gold customer badge ──────────────────────────────────────── */
+.gold-customer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .1px;
+  color: #4a3200;
+  background: linear-gradient(135deg, #ffe27a, #f2b705);
+  border: 1px solid rgba(140, 96, 0, .35);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* ── Order QR block ───────────────────────────────────────────── */
+.order-qr {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+.order-qr-box {
+  width: 96px;
+  height: 96px;
+  flex: 0 0 96px;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.order-qr-box img, .order-qr-box canvas { width: 96px !important; height: 96px !important; display: block; }
+.order-qr-copy { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.order-qr-copy b { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--text-primary); }
+.order-qr-copy b svg { width: 14px; height: 14px; color: var(--accent); }
+.order-qr-copy span { font-size: 11px; color: var(--text-tertiary); line-height: 1.6; }
+.order-qr-copy code {
+  font-size: 10px;
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 3px 7px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Dragon: market basket + demand forecast ──────────────────── */
+.dr-basket-list { display: flex; flex-direction: column; gap: 9px; }
+.dr-basket-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) auto;
+  gap: 6px 12px;
+  align-items: center;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+.dr-basket-pair { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; }
+.dr-basket-pair b { font-size: 12px; color: var(--text-primary); }
+.dr-basket-pair i { font-style: normal; color: var(--text-tertiary); font-weight: 700; }
+.dr-basket-meta { display: inline-flex; align-items: center; gap: 7px; }
+.dr-basket-bar {
+  grid-column: 1 / -1;
+  display: block;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+.dr-basket-bar b { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
+@media (max-width: 620px) {
+  .order-qr { flex-direction: column; align-items: flex-start; }
+  .sf-card-actions { gap: 4px; }
 }

@@ -405,8 +405,19 @@ html[dir="rtl"] .chat-back svg { transform: scaleX(-1); }
   align-items: flex-end;
   gap: 7px;
   max-width: min(76%, 560px);
+  /* Physical sides (identical in AR + EN):
+     • incoming → left   • mine → right                       */
+  margin-right: auto;
+  /* The row itself stays LTR so the avatar always sits on the OUTER
+     edge of its bubble; the bubble text keeps the document direction. */
+  direction: ltr;
 }
-.chat-msg.mine { align-self: flex-end; flex-direction: row-reverse; }
+html[dir="rtl"] .chat-msg-body { direction: rtl; }
+.chat-msg.mine {
+  margin-left: auto;
+  margin-right: 0;
+  flex-direction: row-reverse;
+}
 .chat-msg.grouped { margin-top: -4px; }
 .chat-msg-av {
   width: 26px;
@@ -455,8 +466,66 @@ html[dir="rtl"] .chat-name { margin: 0 2px 3px 0; }
   color: var(--text-tertiary);
 }
 .chat-msg.mine .chat-meta { justify-content: flex-end; color: rgba(5, 5, 5, 0.52); }
+html[dir="rtl"] .chat-msg.mine .chat-meta { justify-content: flex-start; }
 .chat-meta .ticks { display: inline-flex; }
 .chat-meta .ticks svg { width: 11px; height: 11px; stroke-width: 2.6; }
+
+/* ─────────────────── presence dot (online / offline) ─────────────────── */
+.chat-presence-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-inline-start: 6px;
+  vertical-align: middle;
+  background: var(--text-tertiary);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+}
+.chat-presence-dot.is-online { background: #22c55e; }
+.chat-presence-dot.is-offline { background: #ef4444; }
+.chat-live-dot.is-online { background: #22c55e; }
+.chat-live-dot.is-offline { background: #ef4444; animation: none; box-shadow: none; }
+
+/* ───────────────────────────── mic button ──────────────────────────── */
+.chat-mic-btn {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface-2, rgba(255, 255, 255, 0.05));
+  color: var(--text-secondary, #a0a0a6);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.chat-mic-btn svg { width: 17px; height: 17px; }
+.chat-mic-btn:hover { border-color: var(--lime, #82ff1f); color: var(--lime, #82ff1f); }
+.dsc-compose .chat-mic-btn { width: 36px; height: 36px; }
+
+/* ─────────────────────────── quick replies ─────────────────────────── */
+.chat-quick-replies {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 8px 14px 4px;
+}
+.chat-quick-pill {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2, rgba(255, 255, 255, 0.05));
+  color: var(--text-secondary, #a0a0a6);
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+  transition: all 0.18s ease;
+}
+.chat-quick-pill:hover {
+  border-color: var(--lime, #82ff1f);
+  color: var(--lime, #82ff1f);
+}
 
 /* ────────────────────────── COMPOSER ─────────────────────────── */
 .chat-compose {

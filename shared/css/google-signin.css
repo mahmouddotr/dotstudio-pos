@@ -1,0 +1,344 @@
+/* ═══════════════════════════════════════════════════════════════
+   DotStudio® POS — GOOGLE SIGN-IN POPUP
+   Standalone stylesheet for the mock Google account picker
+   (extracted from polish-2026.css so the landing page can load
+    it without pulling the whole application theme).
+   ═══════════════════════════════════════════════════════════════ */
+.ds-gsi-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.62);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.ds-gsi-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ds-gsi {
+  width: 100%;
+  max-width: 400px;
+  max-height: 92vh;
+  overflow-y: auto;
+  border-radius: 26px;
+  background: #ffffff;
+  color: #202124;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.5);
+  padding: 26px 24px 18px;
+  transform: translateY(10px) scale(0.98);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: 'Cairo', 'Inter', sans-serif !important;
+  direction: ltr;
+}
+
+.ds-gsi-backdrop.is-open .ds-gsi {
+  transform: translateY(0) scale(1);
+}
+
+.ds-gsi-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #5f6368;
+  cursor: pointer;
+}
+
+.ds-gsi-close:hover {
+  background: #f1f3f4;
+}
+
+.ds-gsi-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.ds-gsi-logo {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0 16px;
+}
+
+.ds-gsi h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: #202124;
+  text-align: center;
+  letter-spacing: -0.01em;
+}
+
+.ds-gsi-sub {
+  margin: 6px 0 18px;
+  font-size: 13px;
+  color: #5f6368;
+  text-align: center;
+}
+
+.ds-gsi-sub b {
+  color: #1a73e8;
+  font-weight: 600;
+}
+
+.ds-gsi-accounts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+
+.ds-gsi-acc {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 10px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  text-align: start;
+  color: #202124;
+}
+
+.ds-gsi-acc:hover {
+  background: #f1f3f4;
+}
+
+.ds-gsi-avatar {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  background: #1a73e8;
+}
+
+.ds-gsi-acc-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.ds-gsi-acc-copy b {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #202124;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ds-gsi-acc-copy span {
+  display: block;
+  font-size: 12px;
+  color: #5f6368;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ds-gsi-radio {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  border-radius: 50%;
+  border: 2px solid #dadce0;
+  display: grid;
+  place-items: center;
+}
+
+.ds-gsi-acc.is-active .ds-gsi-radio {
+  border-color: #1a73e8;
+}
+
+.ds-gsi-acc.is-active .ds-gsi-radio::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1a73e8;
+}
+
+.ds-gsi-divider {
+  height: 1px;
+  background: #e8eaed;
+  margin: 10px 0 12px;
+}
+
+.ds-gsi-manual {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  margin: 4px 0 12px;
+}
+
+.ds-gsi-manual.is-open {
+  display: flex;
+}
+
+.ds-gsi-field {
+  position: relative;
+}
+
+.ds-gsi-field input {
+  width: 100%;
+  height: 48px;
+  padding: 14px 14px 0;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  background: #fff;
+  color: #202124;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ds-gsi-field input:focus {
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.18);
+}
+
+.ds-gsi-field label {
+  position: absolute;
+  inset-inline-start: 14px;
+  top: 15px;
+  font-size: 14px;
+  color: #5f6368;
+  pointer-events: none;
+  transition: all 0.15s ease;
+  background: #fff;
+  padding: 0 3px;
+}
+
+.ds-gsi-field input:focus + label,
+.ds-gsi-field input:not(:placeholder-shown) + label {
+  top: -8px;
+  font-size: 11px;
+  color: #1a73e8;
+}
+
+.ds-gsi-err {
+  min-height: 16px;
+  font-size: 12px;
+  color: #d93025;
+  text-align: start;
+}
+
+.ds-gsi-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.ds-gsi-link {
+  border: 0;
+  background: transparent;
+  color: #1a73e8;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.ds-gsi-link:hover {
+  background: rgba(26, 115, 232, 0.08);
+}
+
+.ds-gsi-continue {
+  height: 44px;
+  padding: 0 26px;
+  border: 0;
+  border-radius: 999px;
+  background: #1a73e8;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.ds-gsi-continue:hover {
+  background: #1765cc;
+}
+
+.ds-gsi-continue[disabled] {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.ds-gsi-foot {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #e8eaed;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+  color: #5f6368;
+  line-height: 1.5;
+}
+
+.ds-gsi-foot a {
+  color: #5f6368;
+  text-decoration: none;
+}
+
+.ds-gsi-foot a:hover {
+  text-decoration: underline;
+}
+
+.ds-gsi-spinner {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #fff;
+  animation: dsGsiSpin 0.8s linear infinite;
+}
+
+@keyframes dsGsiSpin {
+  to { transform: rotate(360deg); }
+}
+
+body.ds-gsi-open {
+  overflow: hidden;
+}
+
+@media (max-width: 420px) {
+  .ds-gsi {
+    border-radius: 20px;
+    padding: 22px 18px 14px;
+  }
+  .ds-gsi h2 {
+    font-size: 19px;
+  }
+}

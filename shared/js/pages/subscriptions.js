@@ -73,7 +73,10 @@
           '<td>' + esc(t(x.plan)) + '</td><td>' + esc(DS.date(x.subscription_end)) + '</td>' +
           '<td><span class="badge ' + (sx.daysLeft <= 15 ? 'warning' : 'success') + '">' + Math.max(0, sx.daysLeft) + '</span></td>' +
           '<td>' + (x.status === 'suspended' ? DS.badge('suspended', t('inactive')) : sx.expired ? DS.badge('expired', t('expired')) : sx.daysLeft <= 15 ? DS.badge('pending', t('expiringSoon')) : DS.badge('active', t('active'))) + '</td>' +
-          '<td style="text-align:end;white-space:nowrap"><button class="btn btn-secondary btn-sm" data-manage="' + esc(x.id) + '">' + icon('settings') + esc(t('manage')) + '</button></td></tr>';
+          '<td style="text-align:end;white-space:nowrap">' +
+            '<button class="btn btn-secondary btn-sm" data-trial="' + esc(x.id) + '" style="margin-inline-end:6px">' + icon('sparkles') + esc(DS.lang() === 'en' ? '7-day trial' : 'تجربة 7 أيام') + '</button>' +
+            '<button class="btn btn-secondary btn-sm" data-manage="' + esc(x.id) + '">' + icon('settings') + esc(t('manage')) + '</button>' +
+          '</td></tr>';
       }).join('') + '</tbody></table></div></div>' : '';
 
     page.setContent(hero + storePicker + plans + expiryTable + paymentTable);
@@ -85,6 +88,15 @@
     if (store) store.addEventListener('change', function () { state.tenantId = store.value; render(); });
     DS.$$('[data-manage]', page.body).forEach(function (b) {
       b.addEventListener('click', function () { manage(b.getAttribute('data-manage')); });
+    });
+    DS.$$('[data-trial]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.getAttribute('data-trial');
+        DS.data.grantFreeTrial(id, 7);
+        DS.toast(DS.lang() === 'en' ? '7-day free trial granted' : 'تم منح تجربة 7 أيام', 'success');
+        state.tenantId = id;
+        render();
+      });
     });
     DS.$$('[data-renew]', page.body).forEach(function (b) {
       b.addEventListener('click', function () {
