@@ -27,8 +27,10 @@
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--border-soft, var(--border));
 }
-.car-nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; color: inherit; }
-.car-nav-logo img { height: 34px !important; width: auto !important; }
+/* One logo only. The artwork already contains the DotStudio wordmark, so the
+   header must never repeat it as text next to the image. */
+.car-nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; color: inherit; flex-shrink: 0; }
+.car-nav-logo img { height: 40px !important; width: auto !important; max-width: 150px; object-fit: contain; }
 .car-nav-logo b { font-size: 14px; letter-spacing: -0.01em; }
 .car-nav-links { display: flex; align-items: center; gap: 22px; margin-inline-start: 26px; }
 .car-nav-links a {
@@ -222,8 +224,8 @@
 .car-job-main { flex: 1; min-width: 0; }
 .car-job-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
 .car-job-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 5px; font-size: 11px; color: var(--text-tertiary); }
-.car-job-meta span { display: inline-flex; align-items: center; gap: 5px; }
-.car-job-meta svg { width: 12px; height: 12px; }
+.car-job-meta span { display: inline-flex; align-items: center; gap: 8px; }
+.car-job-meta svg { width: 12px; height: 12px; flex-shrink: 0; }
 .car-job-side { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 .car-job-salary { font-size: 12px; font-weight: 600; color: var(--lime); }
 .car-job-arrow {

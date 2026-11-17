@@ -270,7 +270,7 @@
     if (!tryJsBarcode()) {
       drawFallbackBarcodeSvg(svg, val);
       var s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js';
+      s.src = (window.DS && DS.url) ? DS.url('shared/vendor/jsbarcode.min.js') : '../shared/vendor/jsbarcode.min.js';
       s.onload = function () { tryJsBarcode(); };
       document.head.appendChild(s);
     }

@@ -7,7 +7,6 @@
    1 · AR Shopping          → DS.dragon.openAR(product)
    2 · Voice POS            → DS.dragon.voicePOS(handlers)
    3 · Dynamic Pricing      → DS.dragon.priceSuggestion(product)
-   4 · Spin-to-Win          → DS.dragon.spinWheel()
    5 · Automated POs        → DS.dragon.purchaseOrders()
    6 · B2B Wholesale        → DS.dragon.wholesaleTiers(product)
    7 · Heatmaps             → DS.dragon.salesHeatmap()
@@ -270,60 +269,6 @@
     if (!p) return null;
     DS.data.updateProduct({ id: p.id, price: Math.max(1, Math.round(Number(price) || p.price)) });
     return p;
-  }
-
-  /* ═══════════════════════════════════════════════════════════════
-     4 · SPIN-TO-WIN — the lucky wheel
-     ═══════════════════════════════════════════════════════════════ */
-  var WHEEL_PRIZES = [
-    { id: 'p5', type: 'percent', value: 5, ar: 'خصم 5%', en: '5% off' },
-    { id: 'p10', type: 'percent', value: 10, ar: 'خصم 10%', en: '10% off' },
-    { id: 'p15', type: 'percent', value: 15, ar: 'خصم 15%', en: '15% off' },
-    { id: 'free', type: 'shipping', value: 0, ar: 'توصيل مجاني', en: 'Free delivery' },
-    { id: 'p25', type: 'percent', value: 25, ar: 'خصم 25%', en: '25% off' },
-    { id: 'try', type: 'none', value: 0, ar: 'حظ أوفر', en: 'Try again' }
-  ];
-  function wheelState() {
-    var saved = DS.data.getExtra('wheel', null);
-    return saved || { spins: 0, last: null, coupons: [] };
-  }
-  function spinWheel() {
-    var st = wheelState();
-    var u = user();
-    if (!u) return null;
-    /* One spin per customer per day. */
-    var today = new Date().toDateString();
-    if (st.last && st.last.day === today) return { already: true, prize: st.last.prize };
-    var seed = (u.id || '') + '|' + today + '|' + st.spins;
-    var prize = pickFrom(WHEEL_PRIZES, seed);
-    st.spins++;
-    st.last = { day: today, prize: prize };
-    if (prize.type !== 'none') {
-      st.coupons = st.coupons || [];
-      st.coupons.push({ code: 'SPIN' + (st.spins) + (prize.value || ''), prize: prize, at: new Date().toISOString() });
-    }
-    DS.data.setExtra('wheel', st);
-    return { already: false, prize: prize, coupons: st.coupons };
-  }
-  function openSpinWheel() {
-    var result = spinWheel();
-    var prize = result && result.prize;
-    var segs = WHEEL_PRIZES.map(function (p) {
-      return '<li class="dr-wheel-seg" style="--seg:' + esc((EN ? p.en : p.ar)) + '"><b>' + esc(EN ? p.en : p.ar) + '</b></li>';
-    }).join('');
-    DS.modal({
-      size: 'sm',
-      title: icon('sparkles') + ' ' + esc(EN ? 'Spin to win' : 'عجلة الحظ'),
-      sub: EN ? 'A little surprise for your next order' : 'مفاجأة صغيرة لطلبك القادم',
-      body: '<div class="dr-wheel"><ul class="dr-wheel-segs">' + segs + '</ul>' +
-        '<div class="dr-wheel-hub">' + icon('gift') + '</div></div>' +
-        '<p class="dr-wheel-result">' + esc(result && result.already
-          ? (EN ? 'You already spun today — come back tomorrow!' : 'لقد لعبت اليوم — عد غداً!')
-          : (prize ? (EN ? 'You won: ' + prize.en : 'ربحت: ' + prize.ar) : (EN ? 'Try again' : 'حظ أوفر'))) + '</p>' +
-        (prize && prize.type === 'percent' ? '<p class="hint">' + esc(EN ? 'Code ' : 'الكود ') + '<b>' + esc((result.coupons || [])[result.coupons.length - 1].code) + '</b></p>' : ''),
-      actions: [{ label: t('close'), variant: 'btn-primary' }]
-    });
-    return result;
   }
 
   /* ═══════════════════════════════════════════════════════════════
@@ -631,7 +576,6 @@
     /* 1 */ openAR: openAR,
     /* 2 */ voicePOS: voicePOS, VOICE_COMMANDS: VOICE_AR,
     /* 3 */ priceSuggestion: priceSuggestion, applySuggestedPrice: applySuggestedPrice,
-    /* 4 */ spinWheel: openSpinWheel, spin: spinWheel, WHEEL_PRIZES: WHEEL_PRIZES,
     /* 5 */ purchaseOrders: purchaseOrders, approvePurchaseOrder: approvePurchaseOrder, refreshPurchaseOrders: refreshPurchaseOrders,
     /* 6 */ wholesaleTiers: wholesaleTiers, wholesalePrice: wholesalePrice, WHOLESALE_TIERS: WHOLESALE_TIERS,
     /* 7 */ salesHeatmap: salesHeatmap, heatmapCellStyle: heatmapCellStyle,

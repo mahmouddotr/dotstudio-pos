@@ -19,10 +19,11 @@
   });
   if (!page) return;
 
-  var state = { tab: 'profile' };
+  var state = { tab: 'profile', brandColor: null };
 
   var TABS = [{ key: 'profile', label: t('profile'), icon: 'user' }];
   if (isSuper || isOwner) TABS.push({ key: 'store', label: isOwner ? t('storeProfile') : (DS.lang() === 'en' ? 'Platform' : 'المنصة'), icon: 'store' });
+  if (isOwner) TABS.push({ key: 'branding', label: DS.lang() === 'en' ? 'Store branding' : 'تخصيص المتجر', icon: 'image' });
   TABS.push({ key: 'preferences', label: t('preferences'), icon: 'palette' });
   TABS.push({ key: 'security', label: t('security'), icon: 'shield' });
 
@@ -34,6 +35,7 @@
     var body = '';
     if (state.tab === 'profile') body = profileSection();
     else if (state.tab === 'store') body = isSuper ? platformSection() : storeSection();
+    else if (state.tab === 'branding') body = brandingSection();
     else if (state.tab === 'preferences') body = prefsSection();
     else body = securitySection();
 
@@ -113,6 +115,40 @@
         '<a class="btn btn-ghost btn-sm" href="' + url('owner/subscriptions.html') + '">' + icon('card') + esc(t('subscriptions')) + '</a>' +
         '<button class="btn btn-primary" data-save-store>' + icon('check') + esc(t('saveChanges')) + '</button></div>' +
       '</div></div>';
+  }
+
+  function brandingSection() {
+    var en = DS.lang() === 'en';
+    var b = DS.branding ? (DS.branding.get() || {}) : {};
+    var logo = b.logo || DS.avatarUrl(DS.data.tenantById(user.tenant_id) || user);
+    var colors = [
+      { key: 'blue', value: '#007AFF', ar: 'أزرق', en: 'Blue' },
+      { key: 'red', value: '#FF453A', ar: 'أحمر', en: 'Red' },
+      { key: 'purple', value: '#BF5AF2', ar: 'بنفسجي', en: 'Purple' },
+      { key: 'lime', value: '#CCFF00', ar: 'ليموني', en: 'Lime' }
+    ];
+    var activeColor = b.color || '#007AFF';
+    return '<div class="card"><div class="card-header"><div class="card-title">' + esc(en ? 'Store branding' : 'تخصيص المتجر') + '</div><span class="badge lime">' + esc(en ? 'White-label' : 'هوية بصرية') + '</span></div><div class="card-body">' +
+      '<p style="font-size:12px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">' + esc(en
+        ? 'Upload your own logo and pick the primary colour. The storefront header and accent update instantly.'
+        : 'ارفع شعار متجرك واختر اللون الأساسي. يتحدث شعار الواجهة واللون فوراً.') + '</p>' +
+      '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px">' +
+        '<img data-brand-preview src="' + esc(logo) + '" alt="" style="width:78px;height:78px;border-radius:18px;object-fit:contain;background:var(--surface-2);border:1px solid var(--border);padding:8px">' +
+        '<div><label class="btn btn-secondary btn-sm" style="cursor:pointer;margin:0">' + icon('image') + esc(en ? 'Upload logo' : 'رفع الشعار') +
+          '<input type="file" data-brand-file accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label>' +
+          '<div style="font-size:11px;color:var(--text-tertiary);margin-top:7px">PNG · JPG · WEBP · ' + esc(en ? 'max 400KB' : 'الحد الأقصى 400 كيلوبايت') + '</div></div>' +
+      '</div>' +
+      '<div class="field"><label>' + esc(en ? 'Primary colour' : 'اللون الأساسي') + '</label>' +
+        '<div data-brand-colors style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">' +
+          colors.map(function (c) {
+            return '<button type="button" class="brand-swatch' + (activeColor.toLowerCase() === c.value.toLowerCase() ? ' is-active' : '') + '" data-brand-color="' + c.value + '" title="' + esc(en ? c.en : c.ar) + '" aria-label="' + esc(en ? c.en : c.ar) + '" style="width:42px;height:42px;border-radius:50%;border:2px solid ' + (activeColor.toLowerCase() === c.value.toLowerCase() ? '#fff' : 'transparent') + ';background:' + c.value + ';cursor:pointer;box-shadow:0 0 0 1px var(--border)"></button>';
+          }).join('') +
+        '</div></div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px">' +
+        '<button type="button" class="btn btn-ghost btn-sm" data-brand-reset>' + icon('refresh') + esc(en ? 'Reset to default' : 'استعادة الافتراضي') + '</button>' +
+        '<button type="button" class="btn btn-primary" data-brand-save>' + icon('check') + esc(t('saveChanges')) + '</button>' +
+      '</div>' +
+    '</div></div>';
   }
 
   function prefsSection() {
@@ -213,6 +249,56 @@
       DS.toast(t('settingsSaved'), 'success');
       render();
     });
+    /* ── Store branding (white-label) ─────────────────────────────── */
+    var brandFile = page.body.querySelector('[data-brand-file]');
+    if (brandFile) brandFile.addEventListener('change', function () {
+      var f = brandFile.files && brandFile.files[0];
+      if (!f) return;
+      if (f.size > 400 * 1024) { DS.toast(DS.lang() === 'en' ? 'Logo must be under 400KB' : 'حجم الشعار يجب أن يكون أقل من 400 كيلوبايت', 'error'); brandFile.value = ''; return; }
+      var r = new FileReader();
+      r.onload = function (ev) {
+        var img = page.body.querySelector('[data-brand-preview]');
+        if (img) img.src = ev.target.result;
+      };
+      r.readAsDataURL(f);
+    });
+    DS.$$('[data-brand-color]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var value = b.getAttribute('data-brand-color');
+        state.brandColor = value;
+        DS.$$('[data-brand-color]', page.body).forEach(function (x) {
+          var on = x === b;
+          x.classList.toggle('is-active', on);
+          x.style.borderColor = on ? '#fff' : 'transparent';
+        });
+        document.documentElement.style.setProperty('--accent', value);
+        document.documentElement.style.setProperty('--accent-lime', value);
+      });
+    });
+    var brandSave = page.body.querySelector('[data-brand-save]');
+    if (brandSave) brandSave.addEventListener('click', function () {
+      var img = page.body.querySelector('[data-brand-preview]');
+      var active = page.body.querySelector('[data-brand-color].is-active');
+      var existing = DS.branding ? (DS.branding.get() || {}) : {};
+      var logo = img && /^data:image\//.test(img.getAttribute('src') || '') ? img.getAttribute('src') : existing.logo;
+      var color = state.brandColor || (active ? active.getAttribute('data-brand-color') : existing.color);
+      if (!logo && !color) { DS.toast(t('required'), 'error'); return; }
+      var payload = { tenant_id: user.tenant_id };
+      if (logo) payload.logo = logo;
+      if (color) payload.color = color;
+      if (DS.branding) DS.branding.save(payload);
+      DS.toast(t('settingsSaved'), 'success');
+      render();
+    });
+    var brandReset = page.body.querySelector('[data-brand-reset]');
+    if (brandReset) brandReset.addEventListener('click', function () {
+      if (DS.branding) DS.branding.clear();
+      document.documentElement.style.removeProperty('--accent');
+      document.documentElement.style.removeProperty('--accent-lime');
+      DS.toast(DS.lang() === 'en' ? 'Branding reset to default' : 'تمت استعادة الهوية الافتراضية', 'success');
+      render();
+    });
+
     var savePrefs = page.body.querySelector('[data-save-prefs]');
     if (savePrefs) savePrefs.addEventListener('click', function () {
       var nextLang = page.body.querySelector('#prefLang').value;

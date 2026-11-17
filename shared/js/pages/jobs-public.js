@@ -42,9 +42,10 @@
   /* ─────────────────────────── SHELL ─────────────────────────── */
   function nav() {
     return '<header class="car-nav">' +
+      /* One logo only — the artwork already carries the DotStudio wordmark,
+         so a text wordmark beside it would render a second, duplicate logo. */
       '<a class="car-nav-logo" href="' + url('marketing/index.html') + '">' +
-        '<img src="' + url('assets/img/LOGO-WHAIT.png') + '" alt="DotStudio®">' +
-        '<b>DotStudio®</b></a>' +
+        '<img src="' + url('assets/img/LOGO-WHAIT.png') + '" alt="DotStudio®"></a>' +
       '<nav class="car-nav-links">' +
         '<a href="' + url('marketing/index.html') + '#features">' + esc(t('features')) + '</a>' +
         '<a href="' + url('marketing/index.html') + '#pricing">' + esc(t('pricing')) + '</a>' +

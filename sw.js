@@ -6,7 +6,7 @@
    ═══════════════════════════════════════════════════════════════ */
 'use strict';
 
-var VERSION = 'dotstudio-pos-v24';
+var VERSION = 'dotstudio-pos-v32';
 var SHELL = [
   './',
   './index.html',
@@ -28,19 +28,26 @@ var SHELL = [
   './shared/css/storefront.css',
   './shared/css/storefront-fonts.css',
   './shared/css/hero-premium.css',
+  './shared/css/interactions.css',
   './shared/css/ai-agency.css',
   './shared/css/saleor.css',
   './shared/css/brand-2026.css',
   './shared/css/customer-theme.css',
   './shared/css/pro-max.css',
   './shared/css/polish-2026.css',
+  './shared/css/careers.css',
   './shared/js/core.js',
   './shared/js/security.js',
   './shared/js/auth.js',
   './shared/js/cart.js',
+  './shared/js/chatbot.js',
+  './shared/js/main.js',
   './shared/js/pwa.js',
   './worker.js',
   './shared/vendor/qrcode.min.js',
+  './shared/vendor/jsbarcode.min.js',
+  './shared/vendor/leaflet.js',
+  './shared/vendor/leaflet.css',
   './shared/js/data.js',
   './shared/js/shell.js',
   './shared/js/ui.js',

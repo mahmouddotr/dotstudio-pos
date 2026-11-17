@@ -16,6 +16,8 @@
      use the rider console — any non-company-owner delivery account is a rider. */
   var isDriver = !isOwner;
 
+  function L(ar, en) { return DS.lang() === 'en' ? en : ar; }
+
   var page = DS.shell.mount({
     roles: ['delivery', 'driver'],
     active: 'dashboard',
@@ -28,7 +30,8 @@
       ? (DS.lang() === 'en' ? 'Your assigned tasks, earnings and proof of delivery — all in one clean console.' : 'مهامك المُسندة، أرباحك وإثبات التسليم — في لوحة واحدة مرتبة.')
       : (DS.lang() === 'en' ? 'Your live fleet, routes and dispatch — all in one console.' : 'أسطولك المباشر، خطوط السير والتوزيع — في لوحة واحدة.'),
     actions: (isOwner
-      ? '<a class="btn btn-secondary" href="' + url('delivery/drivers.html') + '">' + icon('users') + esc(t('manage-drivers')) + '</a>'
+      ? '<button type="button" class="btn btn-primary" data-external-order>' + icon('truck') + esc(L('إنشاء طلب توصيل خارجي', 'Create external delivery')) + '</button>' +
+        '<a class="btn btn-secondary" href="' + url('delivery/drivers.html') + '">' + icon('users') + esc(t('manage-drivers')) + '</a>'
       : '') +
       '<a class="btn btn-secondary" href="' + url('delivery/orders.html') + '">' + icon('orders') + esc(t('orders')) + '</a>' +
       '<a class="btn btn-primary" href="' + url('delivery/tracking.html') + '">' + icon('mapPin') + esc(t('mapTitle')) + '</a>',
@@ -36,7 +39,7 @@
   });
   if (!page) return;
 
-  var state = { gps: null };
+  var state = { gps: null, tab: 'overview' };
 
   function myOrders() {
     return DS.data.visibleOrders(user).slice().sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
@@ -63,11 +66,12 @@
   }
 
   function nextAction(o) {
+    var pickup = o.status === 'handed_to_company' || o.status === 'external_delivery';
     if (isOwner) {
-      if (o.status === 'handed_to_company' && o.driver_id) return { label: t('startDelivery'), next: 'out_for_delivery', variant: 'btn-primary', icon: 'bike' };
+      if (pickup && o.driver_id) return { label: t('startDelivery'), next: 'out_for_delivery', variant: 'btn-primary', icon: 'bike' };
       return null;
     }
-    if (o.status === 'handed_to_company' && o.driver_id === user.id) return { label: t('startDelivery'), next: 'out_for_delivery', variant: 'btn-primary', icon: 'bike' };
+    if (pickup && o.driver_id === user.id) return { label: t('startDelivery'), next: 'out_for_delivery', variant: 'btn-primary', icon: 'bike' };
     if (o.status === 'out_for_delivery' && o.driver_id === user.id) return { label: t('markDelivered'), next: 'delivered', variant: 'btn-success', icon: 'checkCircle' };
     return null;
   }
@@ -78,7 +82,7 @@
   }
 
   function assignMarkup(o) {
-    if (!isOwner || o.status !== 'handed_to_company') return '';
+    if (!isOwner || (o.status !== 'handed_to_company' && o.status !== 'external_delivery')) return '';
     var riders = companyRiders();
     if (!riders.length) return '<span class="assign-empty">' + esc(t('noCompanyDrivers')) + '</span>';
     return '<div class="driver-assign-slot">' +
@@ -117,13 +121,14 @@
     var tn = DS.data.tenantById(o.tenant_id) || {};
     var act = nextAction(o);
     var meta = DS.statusMeta(o.status);
-    var canReject = driverMode && o.status === 'handed_to_company' && o.driver_id === user.id;
+    var storeLabel = tn.name || o.store_name || '';
+    var canReject = driverMode && (o.status === 'handed_to_company' || o.status === 'external_delivery') && o.driver_id === user.id;
     var rider = o.driver_id && DS.data.userById ? DS.data.userById(o.driver_id) : null;
     var eta = etaFor(o);
     var live = o.status === 'out_for_delivery';
     return '<div class="delivery-task' + (driverMode ? ' driver-task' : '') + '"><div class="num-badge">' + esc(String(o.order_no).replace('ORD-', '')) + '</div>' +
       '<div class="info"><b>' + esc(o.customer ? DS.loc(o.customer, 'name') : t('customerLabel')) + ' · ' + money(o.total) + '</b>' +
-        '<span>' + esc(tn.name || '') + ' · ' + esc(o.customer ? DS.loc(o.customer, 'address') : '') + '</span>' +
+        '<span>' + esc(storeLabel) + ' · ' + esc(o.customer ? DS.loc(o.customer, 'address') : '') + '</span>' +
         '<span style="margin-top:3px">' + esc(DS.timeAgo(o.updated_at || o.created_at)) + ' · ' + esc(o.order_no) +
           (live && eta ? ' · <b class="dr-eta">' + icon('clock') + ' ' + esc(eta.label) + '</b>' : '') +
           (driverMode ? '' : ' · ' + esc(driverName(o)) + (rider && rider.phone ? ' · ' + esc(rider.phone) : '')) + '</span></div>' +
@@ -259,6 +264,138 @@
     });
   }
 
+  /* ───────────────────── DRIVER CASH LEDGER ──────────────────────── */
+  var CASH_KEY = 'ds_driver_cash_settled';
+  var CASH_LOG_KEY = 'ds_driver_cash_log';
+
+  function cashBook() {
+    var raw = null;
+    try { raw = localStorage.getItem(CASH_KEY); } catch (e) {}
+    if (!raw) return {};
+    try { return JSON.parse(raw) || {}; } catch (e) { return {}; }
+  }
+  function cashLog() {
+    var raw = null;
+    try { raw = localStorage.getItem(CASH_LOG_KEY); } catch (e) {}
+    if (!raw) return [];
+    try { return JSON.parse(raw) || []; } catch (e) { return []; }
+  }
+  function driverCashTotals(driverId) {
+    var box = cashBook();
+    var collected = myOrders().filter(function (o) {
+      return o.status === 'delivered' && o.driver_id === driverId &&
+        String(o.payment_method || 'cash') === 'cash';
+    }).reduce(function (s, o) { return s + (Number(o.total) || 0); }, 0);
+    var settled = Number(box[driverId]) || 0;
+    return { collected: collected, settled: settled, due: Math.max(0, collected - settled) };
+  }
+  function settleDriver(driverId) {
+    var rider = companyRiders().filter(function (d) { return d.id === driverId; })[0];
+    var totals = driverCashTotals(driverId);
+    if (!totals.due) return;
+    var box = cashBook();
+    box[driverId] = totals.collected;
+    try { localStorage.setItem(CASH_KEY, JSON.stringify(box)); } catch (e) {}
+    var log = cashLog();
+    log.unshift({ driver_id: driverId, driver_name: rider ? DS.loc(rider, 'name') : driverId, amount: totals.due, at: new Date().toISOString() });
+    try { localStorage.setItem(CASH_LOG_KEY, JSON.stringify(log.slice(0, 100))); } catch (e) {}
+    DS.toast(L('تم تسجيل التوريد بنجاح', 'Cash settled successfully'), 'success');
+    render();
+  }
+  function cashLedgerMarkup() {
+    var riders = companyRiders().filter(function (u) { return DS.data.isRider(u); });
+    var rows = riders.map(function (d) {
+      var totals = driverCashTotals(d.id);
+      var done = myOrders().filter(function (o) { return o.status === 'delivered' && o.driver_id === d.id; }).length;
+      return '<tr>' +
+        '<td><div style="display:flex;align-items:center;gap:9px"><span class="avatar" style="width:30px;height:30px;font-size:11px">' + esc(String(DS.loc(d, 'name') || '?').slice(0, 1)) + '</span><b>' + esc(DS.loc(d, 'name')) + '</b></div></td>' +
+        '<td>' + done + '</td>' +
+        '<td><b class="lemon-text">' + money(totals.due) + '</b></td>' +
+        '<td>' + (totals.due > 0
+          ? DS.badge('pending', L('مستحق', 'Due'))
+          : DS.badge('delivered', L('تم التوريد', 'Settled'))) + '</td>' +
+        '<td><button type="button" class="btn btn-success btn-sm" data-settle="' + esc(d.id) + '"' + (totals.due > 0 ? '' : ' disabled') + '>' +
+          icon('checkCircle') + esc(L('تم التوريد', 'Cash settled')) + '</button></td>' +
+      '</tr>';
+    }).join('');
+    var log = cashLog().slice(0, 8);
+    return '<div class="card"><div class="card-head"><div class="section-title">' + icon('wallet') + esc(L('صندوق المناديب', 'Driver cash ledger')) + '</div>' +
+      '<span class="badge lime">' + riders.length + '</span></div><div class="card-body">' +
+      '<p class="hint" style="margin:0 0 12px">' + esc(L('كل مبلغ محصّل من العملاء نقداً يظهر هنا حتى يتم توريده.', 'Every cash amount collected from customers appears here until it is settled.')) + '</p>' +
+      (riders.length
+        ? '<div class="table-wrap" style="overflow:auto"><table class="table" style="width:100%"><thead><tr>' +
+            '<th>' + esc(L('اسم المندوب', 'Driver')) + '</th>' +
+            '<th>' + esc(L('طلبات مكتملة', 'Completed orders')) + '</th>' +
+            '<th>' + esc(L('النقد المحصّل', 'Cash collected')) + '</th>' +
+            '<th>' + esc(L('الحالة', 'Status')) + '</th>' +
+            '<th>' + esc(L('إجراء', 'Action')) + '</th>' +
+          '</tr></thead><tbody>' + rows + '</tbody></table></div>'
+        : DS.empty({ icon: 'users', title: L('لا يوجد مناديب', 'No drivers'), text: L('أضف مندوباً أولاً ليظهر حسابه هنا.', 'Add a driver to see their ledger here.') })) +
+      (log.length ? '<div style="margin-top:18px"><div class="section-title" style="font-size:13px;margin-bottom:8px">' + icon('clock') + ' ' + esc(L('سجل التوريدات', 'Settlement log')) + '</div>' +
+        log.map(function (x) {
+          return '<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">' +
+            '<span>' + esc(x.driver_name) + '</span><span class="lemon-text">' + money(x.amount) + '</span>' +
+            '<span style="color:var(--text-tertiary)">' + esc(new Date(x.at).toLocaleString(DS.lang() === 'en' ? 'en-GB' : 'ar-EG')) + '</span></div>';
+        }).join('') + '</div>' : '') +
+      '</div></div>';
+  }
+
+  /* ─────────────────── EXTERNAL DELIVERY REQUEST ─────────────────── */
+  function openExternalOrder() {
+    var fee = Number(company.fee) || 30;
+    DS.modal({
+      title: L('إنشاء طلب توصيل خارجي', 'Create external delivery'),
+      sub: L('طلب من متجر خارج المنصة — شركتك تستلم وتوصّل.', 'A request from an outside store — your company picks up and delivers.'),
+      body: '<div class="field-grid">' +
+        '<div class="field"><label>' + esc(L('اسم العميل', 'Customer name')) + ' *</label><input class="input" data-ex-name placeholder="' + esc(L('مثال: محمد أحمد', 'e.g. Mohamed Ahmed')) + '"></div>' +
+        '<div class="field"><label>' + esc(L('رقم الهاتف', 'Phone')) + ' *</label><input class="input" data-ex-phone inputmode="tel" dir="ltr" placeholder="01xxxxxxxxx"></div>' +
+        '<div class="field" style="grid-column:1/-1"><label>' + esc(L('العنوان', 'Address')) + ' *</label><input class="input" data-ex-address placeholder="' + esc(L('المدينة، الشارع، رقم المبنى', 'City, street, building')) + '"></div>' +
+        '<div class="field"><label>' + esc(L('اسم المتجر', 'Store name')) + '</label><input class="input" data-ex-store placeholder="' + esc(L('المتجر الذي طلب التوصيل', 'Store requesting delivery')) + '"></div>' +
+        '<div class="field"><label>' + esc(L('قيمة التوصيل', 'Delivery fee')) + ' (EGP)</label><input class="input" data-ex-fee type="number" min="0" value="' + fee + '"></div>' +
+        '<div class="field" style="grid-column:1/-1"><label>' + esc(L('تفاصيل الطلب', 'Order details')) + '</label><textarea class="textarea" data-ex-details rows="3" placeholder="' + esc(L('محتوى الطلب، ملاحظات، وقت الاستلام…', 'Order contents, notes, pickup time…')) + '"></textarea></div>' +
+      '</div>',
+      actions: [
+        { label: t('cancel'), variant: 'btn-secondary' },
+        { label: L('إنشاء الطلب', 'Create request'), variant: 'btn-primary', icon: icon('check'), onClick: function (root) {
+            var name = (root.querySelector('[data-ex-name]').value || '').trim();
+            var phone = (root.querySelector('[data-ex-phone]').value || '').trim();
+            var address = (root.querySelector('[data-ex-address]').value || '').trim();
+            var storeName = (root.querySelector('[data-ex-store]').value || '').trim();
+            var details = (root.querySelector('[data-ex-details]').value || '').trim();
+            var feeValue = Math.max(0, Number((root.querySelector('[data-ex-fee]') || {}).value) || 0);
+            if (!name || !phone || !address) {
+              DS.toast(L('اسم العميل والهاتف والعنوان مطلوبون', 'Customer name, phone and address are required'), 'error');
+              return false;
+            }
+            var now = new Date().toISOString();
+            DS.data.createOrder({
+              status: 'external_delivery',
+              source: 'delivery',
+              tenant_id: null,
+              store_name: storeName || L('متجر خارجي', 'External store'),
+              external: true,
+              customer: { name: name, name_en: name, phone: phone, address: address, address_en: address },
+              items: [],
+              subtotal: 0,
+              discount: 0,
+              delivery_fee: feeValue,
+              total: feeValue,
+              payment_method: 'cash',
+              delivery_company_id: company.id,
+              delivery_company_name: company.name,
+              notes: details,
+              notes_en: details,
+              timeline: [{ status: 'external_delivery', at: now, label: L('طلب توصيل خارجي جديد', 'New external delivery') }]
+            });
+            DS.toast(L('تم إنشاء طلب التوصيل الخارجي', 'External delivery created'), 'success');
+            state.tab = 'overview';
+            setTimeout(render, 120);
+            return true;
+          } }
+      ]
+    });
+  }
+
   /* ────────────────────────── OWNER VIEW ─────────────────────────── */
   function renderOwner() {
     var all = myOrders();
@@ -302,10 +439,21 @@
         ? 'Every rider of your company is plotted live on the map.'
         : 'كل مندوب في شركتك مرسوم مباشرة على الخريطة.') + '</p></div></div>';
 
-    page.setContent('<div class="owner-shell"><div style="display:flex;flex-direction:column;gap:14px">' + welcome + stats + liveMapContent + mapBlock + tasks + '</div></div>');
+    var tabs = '<div class="delivery-tabs" role="tablist" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">' +
+      '<button type="button" class="btn ' + (state.tab === 'overview' ? 'btn-primary' : 'btn-secondary') + ' btn-sm" data-delivery-tab="overview">' + icon('dashboard') + esc(L('نظرة عامة', 'Overview')) + '</button>' +
+      '<button type="button" class="btn ' + (state.tab === 'cash' ? 'btn-primary' : 'btn-secondary') + ' btn-sm" data-delivery-tab="cash">' + icon('wallet') + esc(L('صندوق المناديب', 'Driver cash ledger')) + '</button>' +
+      '</div>';
+
+    page.setContent('<div class="owner-shell">' + tabs +
+      (state.tab === 'cash'
+        ? cashLedgerMarkup()
+        : '<div style="display:flex;flex-direction:column;gap:14px">' + welcome + stats + liveMapContent + mapBlock + tasks + '</div>') +
+      '</div>');
     bind(false);
-    mountLiveDriverMap();
-    mountGps(task);
+    if (state.tab === 'overview') {
+      mountLiveDriverMap();
+      mountGps(task);
+    }
   }
 
   function mountGps(task) {
@@ -325,6 +473,28 @@
 
   /* ─────────────────────────── ACTIONS ───────────────────────────── */
   function bind(driverMode) {
+    DS.$$('[data-delivery-tab]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () {
+        state.tab = b.getAttribute('data-delivery-tab') === 'cash' ? 'cash' : 'overview';
+        render();
+      });
+    });
+    var externalBtn = page.actions ? page.actions.querySelector('[data-external-order]') : null;
+    if (!externalBtn) externalBtn = page.body.querySelector('[data-external-order]');
+    if (externalBtn) externalBtn.addEventListener('click', openExternalOrder);
+    DS.$$('[data-settle]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.getAttribute('data-settle');
+        var totals = driverCashTotals(id);
+        DS.confirm({
+          title: L('تأكيد توريد النقد؟', 'Confirm cash settlement?'),
+          text: L('سيتم تصفير المبلغ المحصّل وقدره ' + money(totals.due) + ' وتسجيله في السجل.',
+                  'This will reset the collected amount of ' + money(totals.due) + ' and log it.'),
+          danger: false
+        }).then(function (ok) { if (ok) settleDriver(id); });
+      });
+    });
+
     DS.$$('[data-details]', page.body).forEach(function (b) { b.addEventListener('click', function () { DS.openOrder(b.getAttribute('data-details')); }); });
 
     DS.$$('[data-assign]', page.body).forEach(function (b) {

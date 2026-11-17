@@ -24,7 +24,7 @@
     sub: isSellPage
       ? L('بيع سريع بنفس تجربة الكاشير — مع خصم المدير وطباعة الليبل.', 'A cashier-grade sale counter — owner discounts and label printing included.')
       : (EN ? 'Ring up a sale in seconds — products, cart, payment and receipt.' : 'أنشئ بيعة في ثوانٍ — المنتجات، السلة، الدفع والإيصال.'),
-    actions: '<button type="button" class="pos-scan-btn" data-pos-scan>' + icon('camera') + '<span>' + L('مسح', 'Scan') + '</span></button>',
+    actions: '<button type="button" class="pos-scan-btn" data-pos-scan>' + icon('camera') + '<span>' + L('مسح الباركود', 'Scan Barcode') + '</span></button>',
     content: DS.skeleton.grid(8)
   });
   if (!page) return;

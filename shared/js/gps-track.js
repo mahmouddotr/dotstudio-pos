@@ -263,13 +263,7 @@
     var js = document.createElement('script'); js.src = localJs;
     function finish(ok) { leafletLoading = false; leafletCallbacks.splice(0).forEach(function (fn) { try { fn(ok); } catch (e) {} }); }
     js.onload = function () { finish(true); };
-    js.onerror = function () {
-      var cdn = document.createElement('script');
-      cdn.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-      cdn.onload = function () { finish(true); };
-      cdn.onerror = function () { finish(false); };
-      document.head.appendChild(cdn);
-    };
+    js.onerror = function () { finish(false); };
     document.head.appendChild(js);
   }
   function distanceKm(a, b) {

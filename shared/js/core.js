@@ -215,9 +215,57 @@
       return true;
     },
     earnedFor: function (total) {
-      return Math.max(0, Math.floor((Number(total) || 0) / 10));
+      return Math.max(0, Math.floor((Number(total) || 0) / 50));
     }
   };
+
+  /* ───────────────────────── WHITE-LABEL BRANDING ────────────────────
+     One localStorage record shared by every screen:
+       { logo: 'data:image/...', color: '#007AFF', tenant_id: 't-...' }
+     The owner writes it from Settings → Store branding; `applyBranding`
+     paints the accent + header logo on the storefront and dashboards. */
+  var BRAND_KEY = 'ds_branding';
+
+  DS.branding = {
+    KEY: BRAND_KEY,
+    get: function () {
+      var raw = null;
+      try { raw = localStorage.getItem(BRAND_KEY); } catch (e) {}
+      if (!raw) return null;
+      try { return JSON.parse(raw); } catch (e) { return null; }
+    },
+    save: function (patch) {
+      var next = Object.assign({}, DS.branding.get() || {}, patch || {});
+      try { localStorage.setItem(BRAND_KEY, JSON.stringify(next)); } catch (e) {}
+      DS.applyBranding();
+      return next;
+    },
+    clear: function () {
+      try { localStorage.removeItem(BRAND_KEY); } catch (e) {}
+    }
+  };
+
+  DS.applyBranding = function () {
+    var b = DS.branding.get();
+    if (!b) return;
+    if (b.color) {
+      var root = document.documentElement;
+      root.style.setProperty('--accent', b.color);
+      root.style.setProperty('--accent-lime', b.color);
+    }
+    if (b.logo) {
+      var imgs = document.querySelectorAll('.sl-logo img, .sf-footer-brand img, .mkt-nav .ds-brand img');
+      for (var i = 0; i < imgs.length; i++) {
+        if (imgs[i].getAttribute('src') !== b.logo) imgs[i].setAttribute('src', b.logo);
+      }
+    }
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () { DS.applyBranding(); });
+  } else {
+    setTimeout(DS.applyBranding, 0);
+  }
 
   /* ─────────────────────────────── I18N ────────────────────────────── */
   var I18N = {
@@ -231,7 +279,7 @@
       audit: 'سجل النشاط', settings: 'الإعدادات', pos: 'نقطة البيع', sell: 'الكاشير', storefront: 'المتجر', checkout: 'إتمام الطلب',
       tracking: 'تتبع الطلب', 'my-orders': 'طلباتي', 'sub-admins': 'المشرفون', marketing: 'الرئيسية',
       /* giveaway leads (customer/win.html) */
-      leads: 'سجل السحب', leadsSub: 'كل من سجل في سحب كفر الشيخ — أرقام الموبايل والإيميلات اللي جمعناها بموافقتهم.',
+      leads: 'سجل السحب', leadsSub: 'كل من سجل في السحب — أرقام الموبايل والإيميلات اللي جمعناها بموافقتهم.',
       leadsTotal: 'إجمالي المسجلين', leadsToday: 'مسجلون اليوم', leadsWeek: 'آخر 7 أيام', leadsRepeat: 'سجلوا أكثر من مرة',
       leadsLast: 'أحدث تسجيل', leadsSource: 'المصدر', leadsAttempts: 'مرات الدخول', leadsExport: 'تصدير CSV',
       leadsEmptyTitle: 'لا يوجد مسجلون بعد', leadsEmptyText: 'شارك لينك السحب customer/win.html مع عملائك وابدأ التجميع.',
@@ -259,7 +307,7 @@
       viewAll: 'عرض الكل', quickActions: 'إجراءات سريعة', recentOrders: 'أحدث الطلبات', topProducts: 'الأكثر مبيعاً',
       lowStock: 'مخزون منخفض', salesOverview: 'نظرة على المبيعات', last7: 'آخر 7 أيام', last30: 'آخر 30 يوم',
       vsLast: 'مقارنة بالفترة السابقة', pending: 'قيد الانتظار', confirmed: 'مؤكد', preparing: 'قيد التحضير',
-      handed_to_company: 'تم التسليم لشركة التوصيل', out_for_delivery: 'في الطريق',
+      handed_to_company: 'تم التسليم لشركة التوصيل', external_delivery: 'توصيل خارجي', out_for_delivery: 'في الطريق',
       delivering: 'في الطريق', delivered: 'تم التسليم', cancelled: 'ملغي', orderId: 'رقم الطلب',
       paymentMethod: 'طريقة الدفع', cash: 'نقدي', card: 'بطاقة', wallet: 'محفظة', vodafone: 'فودافون كاش',
       deliveryCompany: 'شركة التوصيل', driver: 'المندوب', timeline: 'مراحل الطلب', proof: 'إثبات التسليم',
@@ -473,7 +521,7 @@
       viewAll: 'View all', quickActions: 'Quick actions', recentOrders: 'Recent orders', topProducts: 'Top products',
       lowStock: 'Low stock', salesOverview: 'Sales overview', last7: 'Last 7 days', last30: 'Last 30 days',
       vsLast: 'vs. previous period', pending: 'Pending', confirmed: 'Confirmed', preparing: 'Preparing',
-      handed_to_company: 'Handed to delivery company', out_for_delivery: 'Out for delivery',
+      handed_to_company: 'Handed to delivery company', external_delivery: 'External delivery', out_for_delivery: 'Out for delivery',
       delivering: 'On the way', delivered: 'Delivered', cancelled: 'Cancelled', orderId: 'Order ID',
       paymentMethod: 'Payment method', cash: 'Cash', card: 'Card', wallet: 'Wallet', vodafone: 'Vodafone Cash',
       deliveryCompany: 'Delivery company', driver: 'Driver', timeline: 'Order timeline', proof: 'Delivery proof',
@@ -735,7 +783,7 @@
   DS.toggleLang = function () { setLang(lang() === 'ar' ? 'en' : 'ar'); };
 
   /* ───────────────────────────── THEME ─────────────────────────────── */
-  function theme() { try { return localStorage.getItem(LS_THEME) === 'light' ? 'light' : 'dark'; } catch (e) { return 'dark'; } }
+  function theme() { try { var v = localStorage.getItem(LS_THEME); if (v === 'light' || v === 'dark') return v; } catch (e) {} try { return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light'; } catch (e) { return 'dark'; } }
   function applyTheme() { document.documentElement.setAttribute('data-theme', theme()); }
   DS.theme = theme;
   DS.applyTheme = applyTheme;
@@ -753,8 +801,8 @@
      choice in localStorage switches it back. */
   var LS_CUSTOMER_THEME = 'ds_customer_theme';
   function customerTheme() {
-    try { return localStorage.getItem(LS_CUSTOMER_THEME) === 'light' ? 'light' : 'dark'; }
-    catch (e) { return 'dark'; }
+    try { var v = localStorage.getItem(LS_CUSTOMER_THEME); if (v === 'light' || v === 'dark') return v; } catch (e) {}
+    try { return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light'; } catch (e) { return 'dark'; }
   }
   function syncThemeColor() {
     var meta = document.querySelector('meta[name="theme-color"]');
@@ -772,6 +820,22 @@
     applyCustomerTheme();
     document.dispatchEvent(new CustomEvent('ds:customer-theme', { detail: { theme: next } }));
   };
+
+  /* Auto-sync with the device's preferred color scheme when the user has
+     not made an explicit choice. */
+  try {
+    var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    if (mq) {
+      var sync = function () {
+        try {
+          if (!localStorage.getItem(LS_THEME)) applyTheme();
+          if (!localStorage.getItem(LS_CUSTOMER_THEME)) applyCustomerTheme();
+        } catch (e) {}
+      };
+      if (mq.addEventListener) mq.addEventListener('change', sync);
+      else if (mq.addListener) mq.addListener(sync);
+    }
+  } catch (e) {}
 
   /* ───────────────────────────── SESSION ───────────────────────────── */
   /* "Remember me" support: persistent sessions live in localStorage, while
@@ -1434,7 +1498,7 @@ mic: '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M
 
   DS.badge = function (status, label) {
     var map = {
-      pending: 'warning', confirmed: 'info', preparing: 'orange', handed_to_company: 'purple', out_for_delivery: 'lime', delivering: 'lime', delivered: 'success', cancelled: 'danger',
+      pending: 'warning', confirmed: 'info', preparing: 'orange', handed_to_company: 'purple', external_delivery: 'info', out_for_delivery: 'lime', delivering: 'lime', delivered: 'success', cancelled: 'danger',
       pending_verification: 'warning', payment_rejected: 'danger',
       active: 'success', inactive: 'neutral', suspended: 'danger', expired: 'danger', paid: 'success', unpaid: 'warning',
       owner: 'lime', cashier: 'info', delivery: 'purple', customer: 'neutral', superadmin: 'lime', subadmin: 'purple'
@@ -1448,6 +1512,7 @@ mic: '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M
       confirmed: { label: t('preparing'), badge: 'orange', icon: 'package', step: 1, pct: 25 },
       preparing: { label: t('preparing'), badge: 'orange', icon: 'package', step: 1, pct: 30 },
       handed_to_company: { label: t('handed_to_company'), badge: 'purple', icon: 'truck', step: 2, pct: 55 },
+      external_delivery: { label: t('external_delivery'), badge: 'info', icon: 'truck', step: 0, pct: 20 },
       out_for_delivery: { label: t('out_for_delivery'), badge: 'lime', icon: 'bike', step: 3, pct: 80 },
       delivering: { label: t('delivering'), badge: 'lime', icon: 'bike', step: 3, pct: 80 },
       delivered: { label: t('delivered'), badge: 'success', icon: 'checkCircle', step: 4, pct: 100 },
@@ -1462,7 +1527,7 @@ mic: '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M
 
   DS.statusFlow = ['pending', 'preparing', 'handed_to_company', 'out_for_delivery', 'delivered'];
   /* Statuses that still occupy a rider/company queue. */
-  DS.activeStatuses = ['pending', 'preparing', 'handed_to_company', 'out_for_delivery'];
+  DS.activeStatuses = ['pending', 'preparing', 'handed_to_company', 'external_delivery', 'out_for_delivery'];
   DS.isActiveOrderStatus = function (status) { return DS.activeStatuses.indexOf(status) > -1; };
   /* Orders held by the payment-verification desk (customer side only). */
   DS.holdStatuses = ['pending_verification', 'payment_rejected'];

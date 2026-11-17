@@ -23,47 +23,62 @@
   var MARKET_HERO = 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1800&q=80';
 
   /* ── Premium hero slider ──────────────────────────────────────────
-     Five curated editorial frames (Tech · Home · Beauty · Fashion ·
-     Bestsellers). Every frame owns its own caption on the left 38% of
-     the canvas; the whole frame cross-fades every 5 seconds.
+     The images cross-fade every 5 seconds and each frame carries its
+     own headline, subtitle and CTA label — the copy changes with the
+     picture instead of staying static.
      ───────────────────────────────────────────────────────────────── */
-  var HERO_SLIDES = [
-    {
-      src: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?q=80&w=1920&auto=format&fit=crop',
-      label: 'التقنية', labelEn: 'Tech',
-      title: 'أحدث التقنية', titleEn: 'Next-gen tech',
-      sub: 'أجهزة وإلكترونيات مختارة بعناية — بأفضل الأسعار وتوصيل سريع لباب البيت.',
-      subEn: 'Hand-picked devices and electronics — best prices, delivered to your door.'
-    },
-    {
-      src: 'https://images.unsplash.com/photo-1558002038-1055907df827?q=80&w=1920&auto=format&fit=crop',
-      label: 'المنزل الذكي', labelEn: 'Smart home',
-      title: 'بيت أذكى', titleEn: 'A smarter home',
-      sub: 'كل ما يجعل منزلك أسهل وأجمل — من الإضاءة الذكية إلى أدوات المطبخ.',
-      subEn: 'Everything that makes home easier and nicer — smart lighting to kitchen gear.'
-    },
-    {
-      src: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?q=80&w=1920&auto=format&fit=crop',
-      label: 'الجمال', labelEn: 'Beauty',
-      title: 'جمالك أولاً', titleEn: 'Beauty, first',
-      sub: 'روتين عناية وعطور أصلية من أفضل الماركات — لأنك تستحقين الأفضل.',
-      subEn: 'Authentic skincare and fragrance from top brands — because you deserve it.'
-    },
-    {
-      src: 'https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=1920&auto=format&fit=crop',
-      label: 'الموضة', labelEn: 'Fashion',
-      title: 'الموضة الجديدة', titleEn: 'New-season fashion',
-      sub: 'إطلالات هذا الموسم بقطع محدودة — اختَر ستايلك قبل أن ينفد.',
-      subEn: 'This season’s looks in limited pieces — pick your style before it sells out.'
-    },
-    {
-      src: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=1920&auto=format&fit=crop',
-      label: 'الأكثر مبيعاً', labelEn: 'Bestsellers',
-      title: 'الأكثر مبيعاً', titleEn: 'Bestsellers',
-      sub: 'المنتجات التي اخترتموها أكثر من غيرها — جاهزة للشحن الآن.',
-      subEn: 'The products everyone keeps coming back for — ready to ship right now.'
-    }
+  var sliderData = [
+    { title: 'تكنولوجيا تسبق عصرها', subtitle: 'أحدث الأجهزة والإلكترونيات بأفضل الأسعار.', btn: 'اكتشف الآن',
+      titleEn: 'Technology ahead of its time', subtitleEn: 'The newest devices and electronics at the best prices.', btnEn: 'Discover now' },
+    { title: 'بيتك.. جنتك', subtitle: 'كل مستلزمات المنزل العصرية في مكان واحد.', btn: 'تسوق للمنزل',
+      titleEn: 'Your home, your haven', subtitleEn: 'Every modern home essential in one place.', btnEn: 'Shop for home' },
+    { title: 'جمالك يبدأ من هنا', subtitle: 'مستحضرات عناية أصلية لبشرة نضرة.', btn: 'اكتشفي المزيد',
+      titleEn: 'Your beauty starts here', subtitleEn: 'Authentic care products for radiant skin.', btnEn: 'Discover more' },
+    { title: 'أناقتك عنوانك', subtitle: 'أحدث صيحات الموضة تنتظرك.', btn: 'تسوق الآن',
+      titleEn: 'Style speaks for you', subtitleEn: 'The latest fashion trends are waiting for you.', btnEn: 'Shop now' },
+    { title: 'الأكثر مبيعاً', subtitle: 'اكتشف ما يفضله الجميع الآن.', btn: 'عرض الأكثر مبيعاً',
+      titleEn: 'Bestsellers', subtitleEn: 'Discover what everyone is loving right now.', btnEn: 'Shop bestsellers' },
+    { title: 'وقتك يهمنا', subtitle: 'ساعات أنيقة تجمع بين الكلاسيكية والحداثة.', btn: 'تسوق الساعات',
+      titleEn: 'Your time matters', subtitleEn: 'Elegant watches that blend classic and modern.', btnEn: 'Shop watches' },
+    { title: 'انطلق بلا حدود', subtitle: 'أحذية رياضية مريحة وعصرية لكل يوم.', btn: 'اكتشف الأحذية',
+      titleEn: 'Move without limits', subtitleEn: 'Comfortable, modern sneakers for every day.', btnEn: 'Shop sneakers' },
+    { title: 'شمسك.. بأناقة', subtitle: 'نظارات شمسية تحمي عينيك وتبرز ملامحك.', btn: 'تسوق النظارات',
+      titleEn: 'Sunshine, in style', subtitleEn: 'Sunglasses that protect your eyes and frame your face.', btnEn: 'Shop eyewear' },
+    { title: 'عزلة عن الضوضاء', subtitle: 'سماعات عالية الجودة لعالمك الخاص.', btn: 'استمع الآن',
+      titleEn: 'Shut out the noise', subtitleEn: 'High-quality headphones for your own world.', btnEn: 'Listen now' },
+    { title: 'لمسة فخامة', subtitle: 'إكسسوارات تكمل إطلالتك بذوق رفيع.', btn: 'تسوق الإكسسوارات',
+      titleEn: 'A touch of luxury', subtitleEn: 'Accessories that finish your look with fine taste.', btnEn: 'Shop accessories' }
   ];
+
+  var HERO_SLIDES = [
+    { src: '/assets/images/hero/slide-01.jpg', label: 'التقنية', labelEn: 'Tech' },
+    { src: '/assets/images/hero/slide-02.jpg', label: 'المنزل الذكي', labelEn: 'Smart home' },
+    { src: '/assets/images/hero/slide-03.jpg', label: 'الجمال', labelEn: 'Beauty' },
+    { src: '/assets/images/hero/slide-04.jpg', label: 'الموضة', labelEn: 'Fashion' },
+    { src: '/assets/images/hero/slide-05.jpg', label: 'الأكثر مبيعاً', labelEn: 'Bestsellers' },
+    { src: '/assets/images/hero/slide-06.jpg', label: 'الساعات', labelEn: 'Watches' },
+    { src: '/assets/images/hero/slide-07.jpg', label: 'الأحذية', labelEn: 'Sneakers' },
+    { src: '/assets/images/hero/slide-08.jpg', label: 'النظارات', labelEn: 'Eyewear' },
+    { src: '/assets/images/hero/slide-09.jpg', label: 'السماعات', labelEn: 'Audio' },
+    { src: '/assets/images/hero/slide-10.jpg', label: 'الإكسسوارات', labelEn: 'Accessories' }
+  ];
+  /* Weld each frame to its own copy — index i of the image list always
+     speaks with index i of sliderData (same order, same story). */
+  HERO_SLIDES.forEach(function (s, i) {
+    var d = sliderData[i] || sliderData[0];
+    s.title = d.title; s.titleEn = d.titleEn;
+    s.subtitle = d.subtitle; s.subtitleEn = d.subtitleEn;
+    s.btn = d.btn; s.btnEn = d.btnEn;
+  });
+  function slideCopy(i) {
+    var s = HERO_SLIDES_ACTIVE[i] || {};
+    var base = sliderData[i % sliderData.length] || sliderData[0];
+    return {
+      title: EN ? (s.titleEn || base.titleEn) : (s.title || base.title),
+      subtitle: EN ? (s.subtitleEn || s.subEn || base.subtitleEn) : (s.subtitle || s.sub || base.subtitle),
+      btn: EN ? (s.btnEn || base.btnEn) : (s.btn || base.btn)
+    };
+  }
   var HERO_SLIDE_MS = 5000;
   var heroTimer = null;
 
@@ -94,7 +109,7 @@
     }
     return v;
   })();
-  var HERO_SLIDES_ACTIVE = heroVariant === 'b' ? HERO_SLIDES_B : HERO_SLIDES;
+  var HERO_SLIDES_ACTIVE = HERO_SLIDES;
 
   document.body.classList.add('saleor-store');
 
@@ -120,6 +135,9 @@
     return (DS.data.tenants || []).filter(function (tn) { return tn.status !== 'suspended'; });
   }
   function allProducts() {
+    /* DS.data.products is the live view of `ds_db_v1.products` — the same
+       collection the owner writes to. A product added by an owner is here
+       the instant it is saved, with no extra filter in between. */
     return (DS.data.products || []).filter(function (p) { return p.is_active !== false; });
   }
   function storeOf(p) { return DS.data.tenantById(p && p.tenant_id); }
@@ -192,6 +210,31 @@
     return { value: Number(p.rating) || 4.8, count: Number(p.review_count) || 0 };
   }
   function ratingOf(p) { return ratingMarkup(ratingInfo(p).value, ratingInfo(p).count || null); }
+
+  function trackView(id) {
+    try {
+      var arr = JSON.parse(localStorage.getItem('ds_viewed_products') || '[]');
+      arr = [id].concat(arr.filter(function (x) { return x !== id; })).slice(0, 3);
+      localStorage.setItem('ds_viewed_products', JSON.stringify(arr));
+    } catch (e) {}
+  }
+  function recommendationsMarkup() {
+    var viewed = [];
+    try { viewed = JSON.parse(localStorage.getItem('ds_viewed_products') || '[]'); } catch (e) {}
+    if (!viewed.length) return '';
+    var viewedProds = viewed.map(function (id) { return allProducts().filter(function (x) { return x.id === id; })[0]; }).filter(Boolean);
+    if (!viewedProds.length) return '';
+    var cats = viewedProds.map(function (p) { return pcat(p); });
+    var pool = allProducts().filter(function (p) {
+      return viewed.indexOf(p.id) === -1 && cats.indexOf(pcat(p)) !== -1;
+    }).slice(0, 8);
+    if (!pool.length) return '';
+    return '<section class="sf-rail" id="sfRec">' +
+      '<div class="sf-rail-head"><div><span class="sf-eyebrow">' + esc(EN ? 'For you' : 'مقترح لك') + '</span>' +
+      '<h2>' + esc(EN ? 'Recommended for you' : 'مقترح لك') + '</h2></div></div>' +
+      '<div class="sf-rail-track">' + pool.map(railCard).join('') + '</div>' +
+    '</section>';
+  }
   function stockBadge(p) {
     var out = (Number(p.stock) || 0) <= 0;
     var low = !out && (Number(p.stock) || 0) <= (Number(p.min_stock) || 0);
@@ -585,7 +628,6 @@
         '<div class="sf-card-foot">' +
           priceMarkup(p) +
           '<span class="sf-card-actions">' +
-            '<button type="button" class="sf-share" data-share="' + esc(p.id) + '" aria-label="' + esc(EN ? 'Share on WhatsApp' : 'مشاركة على واتساب') + '" title="' + esc(EN ? 'Share on WhatsApp' : 'مشاركة على واتساب') + '">' + icon('whatsapp') + '</button>' +
             '<button type="button" class="sf-add' + (inBag ? ' in-bag' : '') + '" data-add="' + esc(p.id) + '"' + (disabled ? ' disabled' : '') +
               ' aria-label="' + esc(t('addToBag')) + '" title="' + esc(offline ? (EN ? 'Store is offline' : 'المتجر أوفلاين الآن') : t('addToBag')) + '">' +
               (inBag ? '<b>' + inBag.qty + '</b>' : icon('plus')) +
@@ -614,6 +656,10 @@
   }
 
   /* ───────────────────────────── RENDER ─────────────────────────── */
+  /* The product list keeps the order of the database: a product added by an
+     owner is stored first (newest first) and shows up at the very top of the
+     grid, while the seeded catalogue keeps its curated store-by-store order.
+     Nothing is filtered out here — only inactive products are hidden. */
   function catalogProducts() {
     var list = allProducts();
     if (state.store) list = list.filter(function (p) { return p.tenant_id === state.store; });
@@ -655,21 +701,18 @@
       }).join('') +
     '</div>';
   }
-  /* Per-frame caption — always anchored to the left 38% of the hero. */
-  function heroPanelsMarkup(slides, offline, offlineText) {
-    return '<div class="sf-hero-panels" data-hero-panels>' +
-      slides.map(function (s, i) {
-        return '<div class="sf-hero-panel' + (i === 0 ? ' is-active' : '') + '" data-hero-panel="' + i + '"' +
-            (i === 0 ? '' : ' aria-hidden="true"') + '>' +
-          '<span class="sf-hero-panel-kicker">' + icon('sparkles') + esc(EN ? s.labelEn : s.label) + '</span>' +
-          '<h2 class="sf-hero-panel-title">' + esc(EN ? s.titleEn : s.title) + '</h2>' +
-          '<p class="sf-hero-panel-sub">' + esc(EN ? s.subEn : s.sub) + '</p>' +
-          (offline ? '<div class="sf-offline-note">' + icon('alert') + '<span>' + esc(offlineText) + '</span></div>' : '') +
-          '<button type="button" class="sf-hero-shop" data-scroll-products' + (offline ? ' aria-disabled="true"' : '') + '>' +
-            icon('bag') + '<span>' + esc(t('shopNow')) + '</span>' + icon(EN ? 'arrowRight' : 'arrowLeft') +
-          '</button>' +
-        '</div>';
-      }).join('') +
+  /* One glass card — its title, subtitle and CTA label are rewritten on
+     every frame change (see initHeroSlider), never duplicated per slide. */
+  function heroPanelsMarkup(offline) {
+    var copy = slideCopy(0);
+    return '<div class="sf-hero-panels">' +
+      '<div class="sf-hero-glass">' +
+        '<h1 class="sf-hero-panel-title" data-hero-title>' + esc(copy.title) + '</h1>' +
+        '<p class="sf-hero-panel-sub" data-hero-sub>' + esc(copy.subtitle) + '</p>' +
+        '<button type="button" class="sf-hero-shop" data-scroll-products' + (offline ? ' aria-disabled="true"' : '') + '>' +
+          icon('bag') + '<span data-hero-btn>' + esc(copy.btn) + '</span>' + icon(EN ? 'arrowRight' : 'arrowLeft') +
+        '</button>' +
+      '</div>' +
     '</div>';
   }
   /* Warm the cache so every cross-fade is instant. */
@@ -683,20 +726,40 @@
     var slides = DS.$$('.sf-hero-slide', root);
     if (slides.length < 2) return;
     var dots = DS.$$('[data-hero-dot]');
-    var panels = DS.$$('[data-hero-panel]');
+    var glass = document.querySelector('.sf-hero-glass');
+    var titleEl = document.querySelector('[data-hero-title]');
+    var subEl = document.querySelector('[data-hero-sub]');
+    var btnEl = document.querySelector('[data-hero-btn]');
     var idx = 0;
+    var swapTimer = null;
+    function paintCopy(n) {
+      var copy = slideCopy(n);
+      if (titleEl) titleEl.textContent = copy.title;
+      if (subEl) subEl.textContent = copy.subtitle;
+      if (btnEl) btnEl.textContent = copy.btn;
+    }
     function go(n) {
       idx = (n + slides.length) % slides.length;
       slides.forEach(function (s, k) { s.classList.toggle('is-active', k === idx); });
-      panels.forEach(function (p, k) {
-        p.classList.toggle('is-active', k === idx);
-        if (k === idx) p.removeAttribute('aria-hidden');
-        else p.setAttribute('aria-hidden', 'true');
-      });
       dots.forEach(function (d, k) {
         d.classList.toggle('is-active', k === idx);
         d.setAttribute('aria-selected', k === idx ? 'true' : 'false');
       });
+      /* Soft copy swap: fade the glass card out, rewrite the words, fade in.
+         No keyframes, no layout change — a plain opacity transition. */
+      if (swapTimer) { clearTimeout(swapTimer); swapTimer = null; }
+      var first = !glass || !glass.classList.contains('has-copy');
+      if (!glass || first) {
+        if (glass) glass.classList.add('has-copy');
+        paintCopy(idx);
+        return;
+      }
+      glass.classList.add('is-swapping');
+      swapTimer = setTimeout(function () {
+        paintCopy(idx);
+        glass.classList.remove('is-swapping');
+        swapTimer = null;
+      }, 200);
     }
     function restart() {
       if (heroTimer) clearInterval(heroTimer);
@@ -718,6 +781,7 @@
       });
       hero.addEventListener('mouseleave', restart);
     }
+    go(0);
     restart();
   }
 
@@ -773,12 +837,12 @@
     var subStyle = light ? ' style="color:#515154"' : '';
     var kickerStyle = light ? ' style="background:rgba(0,0,0,0.06);border-color:rgba(0,0,0,0.12);color:#1d1d1f"' : '';
 
-    /* ── Premium marketplace hero: five editorial frames, each with its
-       own caption on the left 38% of the canvas. ─────────────────── */
+    /* ── Premium marketplace hero: cross-fading frames behind one
+       unified glass headline. ─────────────────────────────────────── */
     if (!light) {
       return '<section class="sf-hero sf-hero-mega sf-hero-premium' + (offline ? ' is-offline' : '') + '">' +
         heroSliderMarkup(HERO_SLIDES_ACTIVE, fallback) +
-        heroPanelsMarkup(HERO_SLIDES_ACTIVE, offline, offlineText) +
+        heroPanelsMarkup(offline) +
         heroDotsMarkup(HERO_SLIDES_ACTIVE) +
       '</section>';
     }
@@ -956,20 +1020,12 @@
     document.body.appendChild(a);
   }
 
-  /* ── Dragon: spin-to-win + WhatsApp storefront ───────────────── */
+  /* ── Dragon: WhatsApp storefront share ───────────────────────── */
   function mountDragonFabs() {
     if (!DS.dragon || document.querySelector('[data-dragon-fab]')) return;
     var wrap = document.createElement('div');
     wrap.className = 'sf-dragon-fabs';
     wrap.setAttribute('data-dragon-fab', '');
-
-    var spin = document.createElement('button');
-    spin.type = 'button';
-    spin.className = 'sf-dragon-fab is-spin';
-    spin.title = EN ? 'Spin to win' : 'عجلة الحظ';
-    spin.setAttribute('aria-label', spin.title);
-    spin.innerHTML = icon('sparkles') + '<span>' + esc(EN ? 'Spin' : 'الحظ') + '</span>';
-    spin.addEventListener('click', function () { DS.dragon.spinWheel(); });
 
     var wa = document.createElement('a');
     wa.className = 'sf-dragon-fab is-wa';
@@ -980,7 +1036,6 @@
     wa.setAttribute('aria-label', wa.title);
     wa.innerHTML = icon('whatsapp') + '<span>' + esc(EN ? 'Share' : 'مشاركة') + '</span>';
 
-    wrap.appendChild(spin);
     wrap.appendChild(wa);
     document.body.appendChild(wrap);
   }
@@ -994,8 +1049,9 @@
       '<a class="btn btn-secondary btn-sm" href="' + url('admin/stores.html') + '">' + icon('arrowLeft') + esc(t('back')) + '</a>' +
     '</div>' : '';
 
-    page.setContent(headerMarkup() + '<div class="sf-page">' + note + closedBannerMarkup() + heroMarkup() + railsMarkup() + storeDirectoryMarkup() +
+    page.setContent(headerMarkup() + '<div class="sf-page">' + note + closedBannerMarkup() + heroMarkup() + railsMarkup() + recommendationsMarkup() + storeDirectoryMarkup() +
       trustMarkup() + toolbarMarkup() + footerMarkup() + '</div>');
+    if (DS.applyBranding) DS.applyBranding();
 
     /* Live SEO — the title + meta description follow the active store/category. */
     if (DS.seo) {
@@ -1408,6 +1464,7 @@
   }
 
   function quickView(id) {
+    trackView(id);
     var p = allProducts().filter(function (x) { return x.id === id; })[0];
     if (!p) return;
     var tn = storeOf(p);
@@ -1513,10 +1570,41 @@
   }
 
   mountFloatingCart();
-  mountSupportFab();
-  mountWaFab();
-  mountDragonFabs();
   render();
+
+  /* ── Abandoned cart reminder ─────────────────────────────────────
+     If the visitor left products in `ds_cart` on a previous visit,
+     gently nudge them back to checkout after three seconds. */
+  setTimeout(function () {
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem('ds_cart') || 'null'); } catch (e) {}
+    if (saved && Array.isArray(saved.items) && saved.items.length) {
+      DS.toast(EN ? '🛒 You left products in your bag — complete your order now!' : '🛒 لقد تركت منتجات في سلتك، أكمل طلبك الآن!', 'info');
+    }
+  }, 3000);
+
+  /* ─────────────────────── LIVE PRODUCT SYNC ───────────────────────
+     The owner adds a product in another tab (or in another window) and the
+     customer storefront must show it straight away — without a manual
+     reload and without a stale in-memory catalogue. `ds:data` fires with
+     `detail.external` when another tab wrote to the shared database. */
+  var syncTimer = null;
+  function scheduleSync() {
+    if (syncTimer) clearTimeout(syncTimer);
+    syncTimer = setTimeout(function () {
+      syncTimer = null;
+      /* Never pull the page out from under an open modal. */
+      if (document.querySelector('.modal')) return;
+      render();
+    }, 140);
+  }
+  window.addEventListener('ds:data', function (e) {
+    if (e && e.detail && e.detail.external) scheduleSync();
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) scheduleSync();
+  });
+  window.addEventListener('focus', scheduleSync);
 
   /* Bottom-nav / header bag links land here with ?cart=1. */
   if (params.get('cart') === '1') setTimeout(openBagModal, 220);

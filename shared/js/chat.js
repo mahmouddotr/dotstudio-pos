@@ -1193,4 +1193,49 @@
   };
 
   console.log('%cDotStudio® POS · chat ready (1-on-1)', 'color:#82FF1F;font-weight:bold');
+  /* ── Voice notes (MediaRecorder) ─────────────────────────────── */
+  function recordVoiceNote(onDone) {
+    onDone = onDone || function () {};
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      onDone(null);
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+      var chunks = [];
+      var mr;
+      try { mr = new MediaRecorder(stream); }
+      catch (e) { stream.getTracks().forEach(function (tr) { tr.stop(); }); onDone(null); return; }
+      mr.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+      mr.onstop = function () {
+        stream.getTracks().forEach(function (tr) { tr.stop(); });
+        var blob = new Blob(chunks, { type: mr.mimeType || 'audio/webm' });
+        var url = '';
+        try { url = URL.createObjectURL(blob); } catch (e) { url = ''; }
+        onDone(url);
+      };
+      mr.start();
+      setTimeout(function () { if (mr.state !== 'inactive') mr.stop(); }, 4000);
+    }).catch(function () { onDone(null); });
+  }
+
+  document.addEventListener('click', function (e) {
+    var mic = e.target && e.target.closest ? e.target.closest('.chat-mic-btn') : null;
+    if (!mic) return;
+    e.preventDefault();
+    if (mic.getAttribute('data-recording') === '1') return;
+    mic.setAttribute('data-recording', '1');
+    mic.classList.add('is-recording');
+    var compose = mic.parentElement;
+    var ta = compose ? compose.querySelector('textarea') : null;
+    var sendBtn = compose ? compose.querySelector('.chat-send') : null;
+    recordVoiceNote(function (url) {
+      mic.removeAttribute('data-recording');
+      mic.classList.remove('is-recording');
+      if (!ta) return;
+      ta.value = url ? ('🎤 Voice note: ' + url) : '🎤 Voice note';
+      ta.dispatchEvent(new Event('input', { bubbles: true }));
+      if (sendBtn) sendBtn.click();
+    });
+  });
+
 })();

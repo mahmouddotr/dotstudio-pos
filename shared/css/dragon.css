@@ -202,44 +202,6 @@
 .dr-price-nums strong.is-up { color: var(--success, #22c55e); }
 .dr-price-nums strong.is-down { color: var(--warning, #f59e0b); }
 
-/* ───────────────────── 4 · Spin to win ──────────────────────── */
-.dr-wheel-preview { display: flex; flex-wrap: wrap; gap: 6px; }
-.dr-wheel-chip {
-  font-size: 11px;
-  padding: 5px 11px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--surface-2, rgba(255,255,255,.04));
-  color: var(--text-secondary);
-}
-.dr-wheel {
-  position: relative;
-  width: 220px; height: 220px;
-  margin: 0 auto 12px;
-  border-radius: 50%;
-  background: conic-gradient(#82FF1F 0 60deg, #60A5FA 60deg 120deg, #F59E0B 120deg 180deg,
-                             #F472B6 180deg 240deg, #22D3EE 240deg 300deg, #A78BFA 300deg 360deg);
-  display: grid; place-items: center;
-  box-shadow: 0 20px 46px rgba(0,0,0,.35);
-}
-.dr-wheel::after {
-  content: "";
-  position: absolute; inset: 18px;
-  border-radius: 50%;
-  background: var(--surface, #101012);
-}
-.dr-wheel-hub {
-  position: relative; z-index: 2;
-  width: 54px; height: 54px;
-  border-radius: 50%;
-  background: var(--lime, #82FF1F);
-  color: #0A0A0B;
-  display: grid; place-items: center;
-}
-.dr-wheel-hub svg { width: 24px; height: 24px; }
-.dr-wheel-segs { display: none; }
-.dr-wheel-result { text-align: center; font-size: 14px; font-weight: 700; color: var(--lime, #82FF1F); margin: 6px 0 0; }
-
 /* ─────────────── 5 · Automated purchase orders ───────────────── */
 .dr-tier-list { display: flex; flex-direction: column; gap: 10px; }
 .dr-tier-row { display: flex; flex-direction: column; gap: 8px; padding: 11px 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface-2, rgba(255,255,255,.03)); }

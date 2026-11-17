@@ -800,7 +800,7 @@
     var p = DB.products.filter(function (x) { return x.id === productId; })[0];
     var base = p ? (Number(p.rating) || 4.8) : 4.8;
     var rs = reviewsFor(productId);
-    if (!rs.length) return { rating: base, count: Number(p && p.review_count) || 0, reviews: rs };
+    if (!rs.length) return { rating: base, count: Number(p && p.review_count) || Math.max(8, Math.round(((p && p.sold) || 40) / 12)), reviews: rs };
     var sum = base * 10, n = 10;
     rs.forEach(function (r) { sum += Math.max(1, Math.min(5, Number(r.rating) || 5)); n++; });
     return { rating: Math.round((sum / n) * 10) / 10, count: rs.length, reviews: rs };
@@ -2020,13 +2020,33 @@
     return tn;
   }
 
+  /* Every product belongs to exactly one store. A product saved without a
+     tenant can never be listed by its owner, its cashier or the customer
+     storefront — it would simply vanish from the platform. */
+  function resolveProductTenant(data) {
+    var session = DS.session() || {};
+    var tid = (data && data.tenant_id) || session.tenant_id || currentStoreId(session);
+    if (!tid || !tenantById(tid)) tid = (DB.tenants[0] || {}).id;
+    return tid;
+  }
+
   function addProduct(data) {
+    data = data || {};
+    var now = nowISO();
     var product = Object.assign({
       id: DS.uid('p'),
       barcode: data.barcode || ('628' + String(Date.now()).slice(-9)),
-      is_active: true, rating: 4.8, sold: 0, created_at: nowISO(), updated_at: nowISO(), min_stock: 5
-    }, data);
-    DB.products.push(product);
+      is_active: true, rating: 4.8, sold: 0, created_at: now, updated_at: now, min_stock: 5
+    }, data, {
+      /* Tenant isolation is non-negotiable — never trust the caller blindly. */
+      tenant_id: resolveProductTenant(data),
+      created_at: data.created_at || now,
+      updated_at: now
+    });
+    /* Newest first. A product an owner just added must be the FIRST card of
+       the storefront grid (and of the cashier POS), never the last card of
+       the last page. */
+    DB.products.unshift(product);
     audit('أضاف منتج «' + product.name + '»', 'Added product “' + (product.name_en || product.name) + '”', 'box');
     commit();
     return product;
@@ -2095,9 +2115,9 @@
      A manually paid order waits on the verification desk first:
      pending_verification → preparing (admin only) and
      payment_rejected → pending_verification (customer re-uploads). */
-  var NEXT_STATUS = { pending: 'preparing', confirmed: 'preparing', preparing: 'handed_to_company', handed_to_company: 'out_for_delivery', out_for_delivery: 'delivered', pending_verification: 'preparing', payment_rejected: 'pending_verification' };
+  var NEXT_STATUS = { pending: 'preparing', confirmed: 'preparing', preparing: 'handed_to_company', handed_to_company: 'out_for_delivery', external_delivery: 'out_for_delivery', out_for_delivery: 'delivered', pending_verification: 'preparing', payment_rejected: 'pending_verification' };
   function canTransition(from, to) {
-    if (to === 'cancelled') return ['pending', 'preparing', 'handed_to_company', 'pending_verification'].indexOf(from) > -1;
+    if (to === 'cancelled') return ['pending', 'preparing', 'handed_to_company', 'external_delivery', 'pending_verification'].indexOf(from) > -1;
     return NEXT_STATUS[from] === to;
   }
 
@@ -2193,7 +2213,7 @@
         p.updated_at = nowISO();
       });
     }
-    var labels = { pending: 'تم إنشاء الطلب', confirmed: 'تم تأكيد الطلب', preparing: 'جاري تجهيز الطلب', handed_to_company: 'تم التسليم لشركة التوصيل', out_for_delivery: 'المندوب في الطريق', delivering: 'المندوب في الطريق', delivered: 'تم تسليم الطلب', cancelled: 'تم إلغاء الطلب' };
+    var labels = { pending: 'تم إنشاء الطلب', confirmed: 'تم تأكيد الطلب', preparing: 'جاري تجهيز الطلب', handed_to_company: 'تم التسليم لشركة التوصيل', external_delivery: 'طلب توصيل خارجي جديد', out_for_delivery: 'المندوب في الطريق', delivering: 'المندوب في الطريق', delivered: 'تم تسليم الطلب', cancelled: 'تم إلغاء الطلب' };
     if (!order.timeline) order.timeline = [];
     var last = order.timeline[order.timeline.length - 1];
     if (!last || last.status !== status) order.timeline.push({ status: status, at: nowISO(), label: labels[status] || status });
@@ -2496,7 +2516,7 @@
         || (isCompanyOwner(actor) && actor.delivery_company === driver.delivery_company)
         || (isRider(actor) && order.driver_id === actor.id);
       if (!allowed) return null;
-      if (!isAdmin(actor) && ['handed_to_company', 'out_for_delivery'].indexOf(order.status) === -1) return null;
+      if (!isAdmin(actor) && ['handed_to_company', 'external_delivery', 'out_for_delivery'].indexOf(order.status) === -1) return null;
     }
     order.driver_id = driver.id;
     order.driver_name = driver.name;

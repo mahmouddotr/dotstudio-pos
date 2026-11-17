@@ -105,23 +105,6 @@
       }).join('') + '</div>';
   }
 
-  /* ── 4 · Spin-to-Win ─────────────────────────────────────────── */
-  function wheelBody() {
-    var st = DS.data.getExtra('wheel', null);
-    var spins = st && st.spins ? st.spins : 0;
-    var coupons = (st && st.coupons) || [];
-    return '<p class="dr-hint">' + esc(L(
-      'عجلة الحظ تمنح العميل خصماً حقيقياً يُطبّق على الطلب.',
-      'The lucky wheel hands the customer a real discount applied to the order.')) + '</p>' +
-      '<div class="dr-wheel-preview">' + DS.dragon.WHEEL_PRIZES.map(function (p) {
-        return '<span class="dr-wheel-chip">' + esc(EN ? p.en : p.ar) + '</span>';
-      }).join('') + '</div>' +
-      '<div class="dr-row-actions">' +
-        '<button type="button" class="btn btn-primary" data-spin>' + icon('sparkles') + esc(L('دور العجلة', 'Spin the wheel')) + '</button>' +
-        '<span class="dr-muted">' + esc(L('عدد الأدوار', 'Spins')) + ': <b>' + spins + '</b> · ' + esc(L('كوبونات', 'Coupons')) + ': <b>' + coupons.length + '</b></span>' +
-      '</div>';
-  }
-
   /* ── 5 · Automated purchase orders ────────────────────────────── */
   function poBody() {
     var list = DS.dragon.purchaseOrders();
@@ -308,7 +291,6 @@
       { id: 'ar', icon: 'sparkles', title: L('التسوق بالواقع المعزز', 'AR shopping'), sub: L('جرّب المنتج بالكاميرا', 'Try the product with your camera'), body: arBody() },
       { id: 'voice', icon: 'mic', title: L('نقطة البيع الصوتية', 'Voice POS'), sub: L('أوامر صوتية لنقطة البيع', 'Voice commands for the till'), body: voiceBody() },
       { id: 'pricing', icon: 'tag', title: L('التسعير الديناميكي', 'Dynamic pricing'), sub: L('سعر يتبع الطلب والمخزون', 'A price that follows demand'), body: pricingBody() },
-      { id: 'wheel', icon: 'gift', title: L('عجلة الحظ', 'Spin to win'), sub: L('خصومات حقيقية للعملاء', 'Real discounts for customers'), body: wheelBody() },
       { id: 'po', icon: 'box', title: L('أوامر الشراء الآلية', 'Automated purchase orders'), sub: L('لا تنفد مخزونك أبداً', 'Never run out of stock'), body: poBody() },
       { id: 'b2b', icon: 'users', title: L('الجملة B2B', 'B2B wholesale'), sub: L('أسعار حسب الكمية', 'Volume pricing tiers'), body: wholesaleBody() },
       { id: 'heat', icon: 'chart', title: L('الخرائط الحرارية', 'Heatmaps'), sub: L('متى يبيع متجرك فعلاً', 'When your store really sells'), body: heatmapBody() },
@@ -391,9 +373,6 @@
         render();
       });
     });
-
-    var spin = page.body.querySelector('[data-spin]');
-    if (spin) spin.addEventListener('click', function () { DS.dragon.spinWheel(); render(); });
 
     DS.$$('[data-po-approve]', page.body).forEach(function (b) {
       b.addEventListener('click', function () {

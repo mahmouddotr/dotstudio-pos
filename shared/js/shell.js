@@ -809,6 +809,7 @@
       '<main class="ds-content" id="dsContent"></main></div></div>' +
       '<div class="drawer-scrim" data-scrim></div>' +
       '<button type="button" class="ds-help-fab help-btn" id="helpBtn" data-help-btn style="display:grid !important" aria-label="' + esc(DS.lang() === 'en' ? 'Help & guides' : 'المساعدة والأدلة') + '" title="' + esc(DS.lang() === 'en' ? 'Help & guides' : 'المساعدة والأدلة') + '">?</button>';
+    if (DS.applyBranding) DS.applyBranding();
 
     /* Customer surface: the storefront owns the viewport, so the only
        navigation on small screens is the fixed bottom bar. */

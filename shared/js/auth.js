@@ -227,13 +227,6 @@
   }
   DS.googleIcon = googleIcon;
 
-  var GOOGLE_ACCOUNTS = [
-    { name: 'ياسمين محمد', name_en: 'Yasmin Mohamed', email: 'yasmin@gmail.com', color: '#1a73e8', initial: 'ي' },
-    { name: 'محمود علي', name_en: 'Mahmoud Ali', email: 'mahmoud@gmail.com', color: '#34a853', initial: 'م' },
-    { name: 'سارة سميزي', name_en: 'Sara Smozy', email: 'sara@gmail.com', color: '#fbbc05', initial: 'س' },
-    { name: 'أحمد كازنوفا', name_en: 'Ahmed Caznova', email: 'ahmed@gmail.com', color: '#ea4335', initial: 'أ' }
-  ];
-
   function googleLoginAccount(account, opts) {
     opts = opts || {};
     var name = (account && (account.name || account.name_en)) || 'عميل جوجل';
@@ -283,94 +276,124 @@
 
     var backdrop = document.createElement('div');
     backdrop.className = 'ds-gsi-backdrop';
-    backdrop.innerHTML =
-      '<div class="ds-gsi" role="dialog" aria-modal="true" aria-labelledby="dsGsiTitle">' +
-        '<button type="button" class="ds-gsi-close" data-gsi-close aria-label="Close">' +
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>' +
-        '</button>' +
-        '<div class="ds-gsi-logo">' + googleIcon() + '</div>' +
-        '<h2 id="dsGsiTitle">' + esc(DS.lang() === 'en' ? 'Choose an account' : 'اختر حساباً') + '</h2>' +
-        '<p class="ds-gsi-sub">' + esc(DS.lang() === 'en' ? 'to continue to ' : 'للمتابعة إلى ') + '<b>DotStudio®</b></p>' +
-        '<div class="ds-gsi-accounts" data-gsi-accounts>' +
-          GOOGLE_ACCOUNTS.map(function (a, i) {
-            return '<button type="button" class="ds-gsi-acc' + (i === 0 ? ' is-active' : '') + '" data-gsi-acc="' + i + '">' +
-              '<span class="ds-gsi-avatar" style="background:' + esc(a.color) + '">' + esc(a.initial) + '</span>' +
-              '<span class="ds-gsi-acc-copy"><b>' + esc(DS.lang() === 'en' ? (a.name_en || a.name) : a.name) + '</b><span>' + esc(a.email) + '</span></span>' +
-              '<span class="ds-gsi-radio"></span>' +
-            '</button>';
-          }).join('') +
-        '</div>' +
-        '<div class="ds-gsi-divider"></div>' +
-        '<button type="button" class="ds-gsi-link" data-gsi-toggle-manual>' + esc(DS.lang() === 'en' ? 'Use another account' : 'استخدام حساب آخر') + '</button>' +
-        '<div class="ds-gsi-manual" data-gsi-manual>' +
-          '<div class="ds-gsi-field"><input type="email" data-gsi-email placeholder=" " dir="ltr"><label>' + esc(DS.lang() === 'en' ? 'Email or phone' : 'البريد الإلكتروني أو الهاتف') + '</label></div>' +
-          '<div class="ds-gsi-err" data-gsi-err></div>' +
-        '</div>' +
-        '<div class="ds-gsi-actions">' +
-          '<button type="button" class="ds-gsi-link" data-gsi-cancel>' + esc(DS.lang() === 'en' ? 'Cancel' : 'إلغاء') + '</button>' +
-          '<button type="button" class="ds-gsi-continue" data-gsi-continue>' + esc(DS.lang() === 'en' ? 'Continue' : 'متابعة') + '</button>' +
-        '</div>' +
-        '<div class="ds-gsi-foot"><span>' + esc(DS.lang() === 'en' ? 'Not shared with DotStudio®' : 'لن تتم مشاركته مع DotStudio®') + '</span><a href="#" data-gsi-help>' + esc(DS.lang() === 'en' ? 'Learn more' : 'المزيد') + '</a></div>' +
-      '</div>';
 
+    var isEN = DS.lang() === 'en';
+    var L = function (ar, en) { return isEN ? en : ar; };
+
+    function emailStepHtml() {
+      return '' +
+        '<div class="ds-gsi" role="dialog" aria-modal="true" aria-labelledby="dsGsiTitle">' +
+          '<button type="button" class="ds-gsi-close" data-gsi-close aria-label="Close">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>' +
+          '</button>' +
+          '<div class="ds-gsi-logo">' + googleIcon() + '</div>' +
+          '<h2 id="dsGsiTitle">' + esc(L('تسجيل الدخول', 'Sign in')) + '</h2>' +
+          '<p class="ds-gsi-sub">' + esc(L('للمتابعة إلى ', 'to continue to ')) + '<b>DotStudio®</b></p>' +
+          '<div class="ds-gsi-field"><input type="email" data-gsi-email placeholder=" " dir="ltr" autocomplete="username"><label>' + esc(L('البريد الإلكتروني أو الهاتف', 'Email or phone')) + '</label></div>' +
+          '<div class="ds-gsi-err" data-gsi-err></div>' +
+          '<div class="ds-gsi-actions">' +
+            '<button type="button" class="ds-gsi-link" data-gsi-create>' + esc(L('إنشاء حساب', 'Create account')) + '</button>' +
+            '<button type="button" class="ds-gsi-continue" data-gsi-next>' + esc(L('التالي', 'Next')) + '</button>' +
+          '</div>' +
+          '<div class="ds-gsi-foot"><span>' + esc(L('لن تتم مشاركته مع DotStudio®', 'Not shared with DotStudio®')) + '</span><a href="#" data-gsi-help>' + esc(L('المزيد', 'Learn more')) + '</a></div>' +
+        '</div>';
+    }
+
+    function passwordStepHtml(email) {
+      var initial = (email || '?').charAt(0).toUpperCase();
+      return '' +
+        '<div class="ds-gsi" role="dialog" aria-modal="true" aria-labelledby="dsGsiTitle">' +
+          '<button type="button" class="ds-gsi-close" data-gsi-close aria-label="Close">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>' +
+          '</button>' +
+          '<div class="ds-gsi-logo">' + googleIcon() + '</div>' +
+          '<div style="display:flex;align-items:center;gap:10px;justify-content:center;margin:0 0 12px;">' +
+            '<span style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#1a73e8;color:#fff;font-weight:600;">' + esc(initial) + '</span>' +
+            '<span style="font-size:13px;color:#5f6368;direction:ltr;">' + esc(email) + '</span>' +
+          '</div>' +
+          '<h2 id="dsGsiTitle">' + esc(L('أهلاً', 'Welcome')) + '</h2>' +
+          '<div class="ds-gsi-field" style="margin-top:12px;"><input type="password" data-gsi-pass placeholder=" " dir="ltr" autocomplete="current-password"><label>' + esc(L('أدخل كلمة المرور', 'Enter your password')) + '</label></div>' +
+          '<div class="ds-gsi-err" data-gsi-err></div>' +
+          '<div class="ds-gsi-actions">' +
+            '<button type="button" class="ds-gsi-link" data-gsi-back>' + esc(L('رجوع', 'Back')) + '</button>' +
+            '<button type="button" class="ds-gsi-continue" data-gsi-next>' + esc(L('التالي', 'Next')) + '</button>' +
+          '</div>' +
+          '<div class="ds-gsi-foot"><a href="#" data-gsi-forgot>' + esc(L('هل نسيت كلمة المرور؟', 'Forgot password?')) + '</a></div>' +
+        '</div>';
+    }
+
+    backdrop.innerHTML = emailStepHtml();
     document.body.appendChild(backdrop);
     document.body.classList.add('ds-gsi-open');
 
-    var selected = 0;
+    var email = '';
+
     function close() {
       document.body.classList.remove('ds-gsi-open');
       if (backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
     }
 
-    function updateActive() {
-      backdrop.querySelectorAll('[data-gsi-acc]').forEach(function (b, i) {
-        b.classList.toggle('is-active', i === selected);
+    function bindEmail() {
+      var nextBtn = backdrop.querySelector('[data-gsi-next]');
+      var err = backdrop.querySelector('[data-gsi-err]');
+      var input = backdrop.querySelector('[data-gsi-email]');
+      backdrop.querySelector('[data-gsi-close]').addEventListener('click', close);
+      var cancel = backdrop.querySelector('[data-gsi-cancel]');
+      if (cancel) cancel.addEventListener('click', close);
+      var create = backdrop.querySelector('[data-gsi-create]');
+      if (create) create.addEventListener('click', function () {
+        if (input) { input.value = ''; input.focus(); }
       });
+      backdrop.addEventListener('click', function (e) { if (e.target === backdrop) close(); });
+      function goNext() {
+        email = (input && input.value || '').trim();
+        if (!email || email.indexOf('@') < 1) {
+          if (err) err.textContent = isEN ? 'Enter a valid email' : 'أدخل بريداً إلكترونياً صالحاً';
+          return;
+        }
+        backdrop.innerHTML = passwordStepHtml(email);
+        bindPassword();
+      }
+      nextBtn.addEventListener('click', goNext);
+      if (input) input.addEventListener('keydown', function (e) { if (e.key === 'Enter') goNext(); });
+      requestAnimationFrame(function () { backdrop.classList.add('is-open'); if (input) input.focus(); });
     }
 
-    backdrop.addEventListener('click', function (e) {
-      if (e.target === backdrop) close();
-    });
-    backdrop.querySelector('[data-gsi-close]').addEventListener('click', close);
-    backdrop.querySelector('[data-gsi-cancel]').addEventListener('click', close);
-
-    backdrop.querySelectorAll('[data-gsi-acc]').forEach(function (b, i) {
-      b.addEventListener('click', function () { selected = i; updateActive(); });
-    });
-
-    var manual = backdrop.querySelector('[data-gsi-manual]');
-    backdrop.querySelector('[data-gsi-toggle-manual]').addEventListener('click', function () {
-      manual.classList.toggle('is-open');
-    });
-
-    var continueBtn = backdrop.querySelector('[data-gsi-continue]');
-    continueBtn.addEventListener('click', function () {
-      var emailInput = backdrop.querySelector('[data-gsi-email]');
-      var email = (emailInput && emailInput.value || '').trim();
-      var account = null;
-      if (manual.classList.contains('is-open') && email) {
-        account = { name: email.split('@')[0] || 'Google User', name_en: email.split('@')[0] || 'Google User', email: email };
-      } else {
-        account = GOOGLE_ACCOUNTS[selected];
+    function bindPassword() {
+      var nextBtn = backdrop.querySelector('[data-gsi-next]');
+      var err = backdrop.querySelector('[data-gsi-err]');
+      var input = backdrop.querySelector('[data-gsi-pass]');
+      backdrop.querySelector('[data-gsi-close]').addEventListener('click', close);
+      backdrop.addEventListener('click', function (e) { if (e.target === backdrop) close(); });
+      var backBtn = backdrop.querySelector('[data-gsi-back]');
+      if (backBtn) backBtn.addEventListener('click', function () {
+        backdrop.innerHTML = emailStepHtml();
+        bindEmail();
+      });
+      function goNext() {
+        var pass = (input && input.value || '');
+        if (!pass) {
+          if (err) err.textContent = isEN ? 'Enter your password' : 'أدخل كلمة المرور';
+          return;
+        }
+        nextBtn.disabled = true;
+        nextBtn.innerHTML = '<span class="ds-gsi-spinner"></span>';
+        setTimeout(function () {
+          var account = { name: email.split('@')[0] || 'Google User', name_en: email.split('@')[0] || 'Google User', email: email };
+          var res = googleLoginAccount(account, opts);
+          close();
+          window.location.href = DS.url(res.redirect || 'customer/storefront.html');
+        }, 420);
       }
-      if (!account || !account.email) {
-        var err = backdrop.querySelector('[data-gsi-err]');
-        if (err) err.textContent = DS.lang() === 'en' ? 'Enter a valid email' : 'أدخل بريداً إلكترونياً صالحاً';
-        return;
-      }
-      continueBtn.disabled = true;
-      continueBtn.innerHTML = '<span class="ds-gsi-spinner"></span>';
-      setTimeout(function () {
-        var res = googleLoginAccount(account, opts);
-        close();
-        window.location.href = DS.url(res.redirect || 'customer/storefront.html');
-      }, 420);
-    });
+      nextBtn.addEventListener('click', goNext);
+      if (input) input.addEventListener('keydown', function (e) { if (e.key === 'Enter') goNext(); });
+      requestAnimationFrame(function () { backdrop.classList.add('is-open'); if (input) input.focus(); });
+    }
 
-    /* Open animation. */
-    requestAnimationFrame(function () { backdrop.classList.add('is-open'); });
+    bindEmail();
   }
   DS.openGoogleSignIn = openGoogleSignIn;
+
 
   /* Reusable Google button markup (used by the login page + checkout). */
   DS.googleButton = function (label) {

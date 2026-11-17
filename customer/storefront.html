@@ -10,9 +10,9 @@
   <link rel="stylesheet" href="../assets/css/fonts.css">
   <link rel="stylesheet" href="../shared/css/design-system.css?v=20261107a">
   <link rel="stylesheet" href="../shared/css/components.css?v=20261106f">
-  <link rel="stylesheet" href="../shared/css/app.css?v=20261112final">
+  <link rel="stylesheet" href="../shared/css/app.css?v=20261114c">
   <link rel="stylesheet" href="../shared/css/dragon.css?v=ed8cb6">
-  <link rel="stylesheet" href="../shared/css/storefront.css?v=20261112final">
+  <link rel="stylesheet" href="../shared/css/storefront.css?v=20261116e">
   <link rel="stylesheet" href="../shared/css/chat.css?v=55ad20">
   <script>
     /* Apply the saved customer theme before paint (no white flash). */
@@ -89,18 +89,13 @@
     }
     .sf-page .sf-hero-dot.is-active { width: 24px; background: #fff; }
 
-    /* Dark gradient keeps the white hero copy readable over any frame. */
+    /* Dark gradient keeps the white hero copy readable over any frame.
+       The premium hero layer owns the final gradient (hero-premium.css). */
     .sf-page .sf-hero-bg::after {
-      background:
-        linear-gradient(to right, rgba(0, 0, 0, 0.8), transparent),
-        linear-gradient(180deg, rgba(0, 0, 0, 0.34) 0%, rgba(0, 0, 0, 0.12) 34%, rgba(0, 0, 0, 0.70) 76%, rgba(0, 0, 0, 0.94) 100%),
-        linear-gradient(0deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0) 45%);
+      background: linear-gradient(to right, rgba(0, 0, 0, 0.8), transparent 60%);
     }
     html[dir="rtl"] .sf-page .sf-hero-bg::after {
-      background:
-        linear-gradient(to left, rgba(0, 0, 0, 0.8), transparent),
-        linear-gradient(180deg, rgba(0, 0, 0, 0.34) 0%, rgba(0, 0, 0, 0.12) 34%, rgba(0, 0, 0, 0.70) 76%, rgba(0, 0, 0, 0.94) 100%),
-        linear-gradient(0deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0) 45%);
+      background: linear-gradient(to left, rgba(0, 0, 0, 0.8), transparent 60%);
     }
 
     .sf-page .sf-hero-inner {
@@ -341,7 +336,6 @@
       transition: transform 260ms var(--ease-out), border-color 260ms var(--ease-out), box-shadow 260ms var(--ease-out);
     }
     .sf-page .sf-card:hover {
-      transform: translateY(-5px);
       border-color: var(--text-tertiary);
       box-shadow: 0 22px 48px rgba(0, 0, 0, 0.22);
     }
@@ -608,6 +602,28 @@
       .sf-giveaway-copy i { display: none; }
       .sf-giveaway-cta { padding: 8px 11px; font-size: 11px; }
     }
+    /* ── MOBILE BOTTOM STACK ─────────────────────────────────────────
+       On a phone the whole bottom edge is crowded: the tab bar, the bag
+       pill, the lead-magnet banner, the chat bubble, the subscribe pill
+       and the help button all want the same strip. Each of them now owns
+       its own band, so no text ever lands on another control.
+         0–64    tab bar
+        84–146   bag pill
+       154–208   help button (inline-start) / lead magnet (inline-end)
+       216–268   chat bubble (inline-end) / subscribe pill (inline-start)
+       276–696   chat panel (only while it is open)
+       ──────────────────────────────────────────────────────────── */
+    @media (max-width: 960px) {
+      body.ds-has-bottom-nav .sf-giveaway {
+        bottom: calc(154px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+      .pm-notify-fab {
+        inset-block-end: calc(216px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+      body.ds-has-bottom-nav #helpBtn {
+        bottom: calc(154px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+    }
     @media (prefers-reduced-motion: reduce) {
       .sf-giveaway { transition: none; transform: none; }
     }
@@ -639,7 +655,7 @@
     <link rel="stylesheet" href="../shared/css/pro-max.css?v=20261112final">
     <link rel="stylesheet" href="../shared/css/polish-2026.css?v=20261112final">
     <link rel="stylesheet" href="../shared/css/storefront-fonts.css?v=20261111">
-    <link rel="stylesheet" href="../shared/css/hero-premium.css?v=20261212c">
+    <link rel="stylesheet" href="../shared/css/hero-premium.css?v=20261116e">
     <link rel="manifest" href="../manifest.json">
 </head>
     
@@ -653,7 +669,7 @@
       <span class="sf-giveaway-ico" aria-hidden="true">🎁</span>
       <span class="sf-giveaway-copy">
         <b id="sfGiveawayTitle">سجل في السحب واكسب موبايل!</b>
-        <i id="sfGiveawaySub">سحب كفر الشيخ الكبير — التسجيل مجاني</i>
+        <i id="sfGiveawaySub">سحب كبير — التسجيل مجاني</i>
       </span>
       <span class="sf-giveaway-cta" id="sfGiveawayCta">سجل الآن</span>
     </a>
@@ -661,19 +677,19 @@
   </div>
 
   <script src="../shared/js/preview-session.js?v=20261106e"></script>
-  <script src="../shared/js/core.js?v=a632df"></script>
+  <script src="../shared/js/core.js?v=20261117b"></script>
   <script src="../shared/js/security.js?v=20261106e"></script>
-<script src="../shared/js/data.js?v=262326"></script>
+<script src="../shared/js/data.js?v=20261114a"></script>
 
   <script src="../shared/js/auth.js?v=20261106e"></script>
-  <script src="../shared/js/shell.js?v=20261112final"></script>
+  <script src="../shared/js/shell.js?v=20261117b"></script>
   <script src="../shared/js/ui.js?v=20261112final"></script>
   <script src="../shared/js/scanner.js?v=20261106e"></script>
   <script src="../shared/js/chat.js?v=8cdb4d"></script>
-  <script src="../shared/js/dragon.js?v=cdf364"></script>
+  <script src="../shared/js/dragon.js?v=20261117b"></script>
   <script src="../shared/js/cart.js?v=20261114"></script>
-  <script src="../shared/js/pages/storefront.js?v=20261212c"></script>
-  <script src="../shared/js/chatbot.js?v=20261111"></script>
+  <script src="../shared/js/pages/storefront.js?v=20261117b"></script>
+  <script src="../shared/js/chatbot.js?v=20261117b"></script>
   <script src="../shared/js/leads.js?v=20261113b"></script>
 <script src="../shared/js/error-handler.js?v=20261106e"></script>
   <script src="../shared/js/pwa.js?v=20261114"></script>
