@@ -73,7 +73,7 @@ html[dir="rtl"] .sf-hero-bg::after {
 /* ── HERO SLIDER ─────────────────────────────────────────────────
    The copy never moves: only the background frames cross-fade.
    ─────────────────────────────────────────────────────────────── */
-.sf-hero-slider { overflow: hidden; }
+.sf-hero-slider { width: 100%; margin: 0; padding: 0; border-radius: 0; overflow: hidden; }
 .sf-hero-bg .sf-hero-slide {
   position: absolute;
   inset: 0;

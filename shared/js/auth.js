@@ -270,6 +270,23 @@
 
   function openGoogleSignIn(opts) {
     opts = opts || {};
+    /* Real Firebase Google sign-in when configured. */
+    if (DS.firebase && DS.firebase.configured) {
+      try {
+        DS.firebase.google().then(function (res) {
+          if (!res || !res.ok) {
+            DS.toast && DS.toast((DS.lang && DS.lang() === 'en') ? 'Google sign-in failed' : 'فشل الدخول عبر Google', 'error');
+            return;
+          }
+          var account = { name: res.name || (res.email || 'Google User').split('@')[0], name_en: res.name || (res.email || 'Google User').split('@')[0], email: res.email };
+          var r = googleLoginAccount(account, opts);
+          window.location.href = DS.url((r && r.redirect) || 'customer/storefront.html');
+        }).catch(function (e) {
+          console.warn('[auth] firebase google failed', e);
+        });
+        return;
+      } catch (e) { console.warn('[auth] firebase google failed', e); }
+    }
     /* Remove any existing popup. */
     var old = document.querySelector('.ds-gsi-backdrop');
     if (old && old.parentNode) old.parentNode.removeChild(old);
@@ -394,6 +411,126 @@
   }
   DS.openGoogleSignIn = openGoogleSignIn;
 
+  /* ───────────────────────── PHONE AUTH (SMS OTP) ─────────────────────────
+     Firebase phone authentication. Requires the invisible recaptcha container
+     (#recaptcha-container) to exist on the page (see index.html). */
+  function setupRecaptcha() {
+    if (window.recaptchaVerifier) return window.recaptchaVerifier;
+    if (!window.RecaptchaVerifier || !window.firebaseAuth) return null;
+    var container = document.getElementById('recaptcha-container');
+    if (!container) return null;
+    try {
+      window.recaptchaVerifier = new window.RecaptchaVerifier(window.firebaseAuth, 'recaptcha-container', {
+        'size': 'invisible',
+        'callback': function (response) { console.log('Recaptcha verified'); }
+      });
+      return window.recaptchaVerifier;
+    } catch (e) {
+      console.warn('[auth] recaptcha setup failed', e);
+      return null;
+    }
+  }
+
+  async function sendOTP(phoneNumber) {
+    phoneNumber = String(phoneNumber || '').trim();
+    try {
+      if (DS.firebase && typeof DS.firebase.ensure === 'function') await DS.firebase.ensure();
+    } catch (e) {}
+    var verifier = setupRecaptcha();
+    if (!verifier) {
+      var msg = (DS.lang && DS.lang() === 'en') ? 'Phone auth is not available right now.' : 'المصادقة عبر الهاتف غير متاحة حالياً.';
+      if (DS.toast) DS.toast(msg, 'error'); else alert(msg);
+      return { ok: false, error: 'no_recaptcha' };
+    }
+    try {
+      var confirmationResult = await window.signInWithPhoneNumber(window.firebaseAuth, phoneNumber, verifier);
+      window.confirmationResult = confirmationResult;
+      var okMsg = (DS.lang && DS.lang() === 'en') ? 'Verification code sent!' : 'تم إرسال كود التحقق!';
+      if (DS.toast) DS.toast(okMsg, 'success'); else alert(okMsg);
+      var sec = document.getElementById('phoneOtpSection');
+      if (sec) { sec.style.display = 'flex'; }
+      return { ok: true };
+    } catch (error) {
+      console.warn('[auth] sendOTP failed', error);
+      var errMsg = (DS.lang && DS.lang() === 'en') ? 'Error sending code: ' : 'خطأ في إرسال الكود: ';
+      if (DS.toast) DS.toast(errMsg + ((error && error.message) || error), 'error');
+      else alert(errMsg + ((error && error.message) || error));
+      return { ok: false, error: error };
+    }
+  }
+
+  async function verifyOTP(otpCode) {
+    otpCode = String(otpCode || '').trim();
+    if (!window.confirmationResult) {
+      var m = (DS.lang && DS.lang() === 'en') ? 'Please request a code first.' : 'يرجى طلب كود التحقق أولاً.';
+      if (DS.toast) DS.toast(m, 'error'); else alert(m);
+      return { ok: false, error: 'no_confirmation' };
+    }
+    try {
+      var result = await window.confirmationResult.confirm(otpCode);
+      var user = result.user;
+      try { localStorage.setItem('ds_user', JSON.stringify({ phone: user.phoneNumber, role: 'customer' })); } catch (e) {}
+
+      /* Mirror the Firebase phone user into the local customer profile so the
+         rest of the app (session, tenant isolation, role routing) keeps working. */
+      var phone = DS.normalizePhone ? DS.normalizePhone(user.phoneNumber) : String(user.phoneNumber || '');
+      var existing = (users() || []).filter(function (u) {
+        return (DS.normalizePhone ? DS.normalizePhone(u.phone) : String(u.phone || '')) === phone;
+      })[0] || null;
+      if (!existing) {
+        var store = null;
+        try { store = localStorage.getItem('ds_customer_store'); } catch (e) {}
+        var name = (user.displayName) || ('عميل ' + String(user.phoneNumber || ''));
+        var nu = {
+          id: DS.uid('u'),
+          username: slugUsername(name, user.phoneNumber),
+          name: name,
+          name_en: name,
+          email: user.email || '',
+          phone: user.phoneNumber || '',
+          role: 'customer',
+          tenant_id: store || 't-caznova',
+          avatar_id: 'av5',
+          provider: 'phone',
+          is_active: true,
+          created_at: new Date().toISOString()
+        };
+        try { (db().users = db().users || []).push(nu); } catch (e) {}
+        try { localStorage.setItem('ds_db_v1', JSON.stringify(db())); } catch (e) {}
+        existing = nu;
+      }
+      try { DS.setSession(existing, true); } catch (e) {}
+
+      window.location.href = '/customer/storefront.html';
+      return { ok: true, user: user };
+    } catch (error) {
+      console.warn('[auth] verifyOTP failed', error);
+      var bad = (DS.lang && DS.lang() === 'en') ? 'Invalid verification code.' : 'كود التحقق غير صحيح.';
+      if (DS.toast) DS.toast(bad, 'error'); else alert(bad);
+      return { ok: false, error: error };
+    }
+  }
+
+  function sendPhoneOTP() {
+    var cc = document.getElementById('phoneCountryCode');
+    var num = document.getElementById('phoneNumber');
+    var code = cc ? String(cc.value || '+20') : '+20';
+    var digits = num ? String(num.value || '').trim().replace(/\\s+/g, '') : '';
+    digits = digits.replace(/^0+/, '');
+    var phone = code + digits;
+    if (phone.charAt(0) !== '+') phone = '+' + phone;
+    return sendOTP(phone);
+  }
+
+  function verifyPhoneOTP() {
+    var otp = document.getElementById('otpCode');
+    return verifyOTP(otp ? otp.value : '');
+  }
+
+  /* Expose convenience entry points used by the login page buttons. */
+  window.dsSendPhoneOTP = function () { sendPhoneOTP(); };
+  window.dsVerifyPhoneOTP = function () { verifyPhoneOTP(); };
+
 
   /* Reusable Google button markup (used by the login page + checkout). */
   DS.googleButton = function (label) {
@@ -418,7 +555,11 @@
     googleSignIn: googleSignIn,
     googleButton: DS.googleButton,
     setSession: setSession,
-    loginWithAlias: login
+    loginWithAlias: login,
+    sendOTP: sendOTP,
+    verifyOTP: verifyOTP,
+    sendPhoneOTP: sendPhoneOTP,
+    verifyPhoneOTP: verifyPhoneOTP
   };
 
   console.log('%cDotStudio® · auth ready', 'color:#82FF1F');
