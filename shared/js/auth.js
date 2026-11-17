@@ -275,14 +275,19 @@
       try {
         DS.firebase.google().then(function (res) {
           if (!res || !res.ok) {
-            DS.toast && DS.toast((DS.lang && DS.lang() === 'en') ? 'Google sign-in failed' : 'فشل الدخول عبر Google', 'error');
+            var code = (res && res.error) ? String(res.error) : '';
+            if (code.indexOf('popup-closed-by-user') === -1) {
+              DS.toast && DS.toast((DS.lang && DS.lang() === 'en') ? 'Google sign-in failed' : 'فشل الدخول عبر Google', 'error');
+            }
             return;
           }
-          var account = { name: res.name || (res.email || 'Google User').split('@')[0], name_en: res.name || (res.email || 'Google User').split('@')[0], email: res.email };
-          var r = googleLoginAccount(account, opts);
-          window.location.href = DS.url((r && r.redirect) || 'customer/storefront.html');
+          /* Let onAuthStateChanged handle session save + redirect. */
         }).catch(function (e) {
-          console.warn('[auth] firebase google failed', e);
+          var code = (e && e.code) ? String(e.code) : '';
+          if (code.indexOf('popup-closed-by-user') === -1) {
+            console.warn('[auth] firebase google failed', e);
+            DS.toast && DS.toast((DS.lang && DS.lang() === 'en') ? 'Google sign-in failed' : 'فشل الدخول عبر Google', 'error');
+          }
         });
         return;
       } catch (e) { console.warn('[auth] firebase google failed', e); }
@@ -561,6 +566,91 @@
     sendPhoneOTP: sendPhoneOTP,
     verifyPhoneOTP: verifyPhoneOTP
   };
+
+  /* ───────────────── CENTRALIZED FIREBASE AUTH STATE ─────────────────
+     Listens for ANY successful Firebase login (Email, Google, Phone).
+     Saves the user to LocalStorage and redirects to the storefront. */
+  function __isLoginPage() {
+    try {
+      var p = String(location.pathname || '').toLowerCase();
+      return p === '/' || p.endsWith('/') || p.endsWith('index.html');
+    } catch (e) { return false; }
+  }
+  function __firebaseUserToProfile(user) {
+    if (!user) return null;
+    var db = (DS.data && typeof DS.data.db !== 'undefined') ? DS.data.db : (function(){ try { return JSON.parse(localStorage.getItem('ds_db_v1') || 'null'); } catch(e){ return null; } })();
+    var users = (db && Array.isArray(db.users)) ? db.users : [];
+    var email = String(user.email || '').trim().toLowerCase();
+    var phone = String(user.phoneNumber || '').trim();
+    var existing = null;
+    if (email) {
+      existing = users.filter(function (u) { return String(u.email || '').trim().toLowerCase() === email; })[0] || null;
+    }
+    if (!existing && phone) {
+      var norm = DS.normalizePhone ? DS.normalizePhone(phone) : phone;
+      existing = users.filter(function (u) {
+        return (DS.normalizePhone ? DS.normalizePhone(u.phone) : String(u.phone || '')) === norm;
+      })[0] || null;
+    }
+    if (existing) return existing;
+    var name = user.displayName || (email ? email.split('@')[0] : ('عميل ' + phone));
+    var store = null;
+    try { store = localStorage.getItem('ds_customer_store'); } catch (e) {}
+    var uname = (email || phone || 'user').split('@')[0].toLowerCase().replace(/[^a-z0-9._-]/g, '');
+    if (!uname || uname.length < 3) uname = 'user' + String(Date.now()).slice(-5);
+    var nu = {
+      id: DS.uid('u'),
+      username: uname,
+      name: name,
+      name_en: name,
+      email: email,
+      phone: phone || '',
+      role: 'customer',
+      tenant_id: store || 't-caznova',
+      avatar_id: 'av5',
+      provider: (user.providerData && user.providerData[0] && user.providerData[0].providerId) || 'firebase',
+      is_active: true,
+      created_at: new Date().toISOString()
+    };
+    try {
+      if (db) {
+        db.users = db.users || [];
+        db.users.push(nu);
+        localStorage.setItem('ds_db_v1', JSON.stringify(db));
+        if (DS.data) DS.data.db = db;
+      }
+    } catch (e) {}
+    return nu;
+  }
+  function __saveFirebaseSession(user) {
+    try {
+      var profile = __firebaseUserToProfile(user);
+      if (profile && typeof DS.setSession === 'function') DS.setSession(profile, true);
+    } catch (e) { console.warn('[auth] saveFirebaseSession failed', e); }
+  }
+
+  function __initFirebaseAuthState() {
+    try {
+      if (!DS.firebase) return;
+      var ensurePromise = (typeof DS.firebase.ensure === 'function') ? DS.firebase.ensure() : Promise.resolve(false);
+      Promise.resolve(ensurePromise).then(function (ok) {
+        if (!ok) return;
+        var auth = window.firebaseAuth;
+        var onState = window.onAuthStateChanged;
+        if (!auth || typeof onState !== 'function') return;
+        try {
+          onState(auth, function (user) {
+            if (!user) return;
+            __saveFirebaseSession(user);
+            if (__isLoginPage()) {
+              try { window.location.href = '/customer/storefront.html'; } catch (e) {}
+            }
+          });
+        } catch (e) { console.warn('[auth] onAuthStateChanged failed', e); }
+      }).catch(function () {});
+    } catch (e) { console.warn('[auth] initFirebaseAuthState failed', e); }
+  }
+  __initFirebaseAuthState();
 
   console.log('%cDotStudio® · auth ready', 'color:#82FF1F');
 })();

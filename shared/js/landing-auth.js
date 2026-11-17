@@ -187,7 +187,11 @@
       '<div class="landing-auth-divider"><span id="dsLandingOr"></span></div>' +
       '<button type="button" class="landing-google-btn" id="dsLandingGoogle" ' +
         'onclick="window.dsOpenGoogle ? window.dsOpenGoogle(event) : null">' + googleSvg() +
-        '<span id="dsLandingGoogleLabel"></span></button>';
+        '<span id="dsLandingGoogleLabel"></span></button>' +
+      '<div class="landing-signup-link" style="text-align:center;margin-top:14px;font-size:13px;color:var(--text-2)">' +
+        '<span id="dsLandingNoAccount"></span> ' +
+        '<a href="#" id="dsLandingSignupLink" onclick="openSignup();return false;" style="color:#d4ff3a;font-weight:600">سجل الآن</a>' +
+      '</div>';
     btn.parentNode.insertBefore(wrap, btn.nextSibling);
     var gBtn = wrap.querySelector('#dsLandingGoogle');
     if (gBtn) {
@@ -218,7 +222,10 @@
               '</div>' +
               '<div class="su-field">' +
                 '<label class="su-label" for="dsSuPhone" id="dsSuPhoneLabel"></label>' +
-                '<input class="su-input" id="dsSuPhone" name="phone" type="tel" dir="ltr" maxlength="20" autocomplete="tel">' +
+                '<div style="display:flex;gap:8px;align-items:center;">' +
+                  '<span style="padding:13px 12px;background:#0a0a0a;border:1.5px solid #2a2a2a;border-radius:10px;color:#d4ff3a;font-weight:700;white-space:nowrap;">🇪🇬 +20</span>' +
+                  '<input class="su-input" id="dsSuPhone" name="phone" type="tel" dir="ltr" maxlength="20" autocomplete="tel" style="flex:1;">' +
+                '</div>' +
               '</div>' +
             '</div>' +
             '<div class="su-row">' +
@@ -309,7 +316,11 @@
     var errEl = overlay.querySelector('#dsSuErr');
     var name = overlay.querySelector('#dsSuName').value;
     var email = overlay.querySelector('#dsSuEmail').value;
-    var phone = overlay.querySelector('#dsSuPhone').value;
+    var rawPhone = overlay.querySelector('#dsSuPhone').value;
+    var phone = String(rawPhone || '').trim();
+    if (phone && !/^\\+/.test(phone)) {
+      phone = '+20' + phone.replace(/^0+/, '');
+    }
     var pass = overlay.querySelector('#dsSuPass').value;
     var confirm = overlay.querySelector('#dsSuConfirm').value;
     var terms = overlay.querySelector('#dsSuTerms');
@@ -371,6 +382,7 @@
     var ar = !isEn();
     setText('dsLandingOr', ar ? 'أو' : 'or');
     setText('dsLandingGoogleLabel', ar ? 'المتابعة باستخدام Google' : 'Continue with Google');
+    setText('dsLandingNoAccount', ar ? 'ليس لديك حساب؟' : "Don't have an account?");
 
     setText('dsSignupTitle', ar ? 'إنشاء حساب جديد' : 'Create your account');
     setText('dsSignupSub', ar ? 'دقائق وتكون جاهزاً للشراء من كل المتاجر.' : 'A minute and you can shop every store.');

@@ -1358,7 +1358,6 @@ html[lang="ar"] .hero-title{line-height:1.22!important}html[lang="ar"] .hero-des
       <div class="form-options">
         <label class="check-wrap"><input type="checkbox" id="rememberMe" checked><span id="labelRemember">Remember me</span></label>
         <a href="#" class="forgot-link" id="labelForgot">Forgot password?</a>
-        <a href="#" class="forgot-link" onclick="openSignup();return false;" id="labelSignup" style="margin-right:16px;color:#d4ff3a">سجّل الآن</a>
       </div>
 
       <button class="btn-submit" id="loginBtn" onclick="doLogin()">
@@ -1367,44 +1366,7 @@ html[lang="ar"] .hero-title{line-height:1.22!important}html[lang="ar"] .hero-des
       </button>
       <div class="err-msg" id="loginErr"></div>
 
-      <!-- Phone (SMS OTP) login -->
-      <div class="landing-auth-divider" style="margin:18px 0 12px;display:flex;align-items:center;gap:10px;color:var(--text-3);font-size:12px;">
-        <span style="flex:1;height:1px;background:var(--border)"></span>
-        <span id="phoneLoginDivider">تسجيل الدخول برقم الهاتف</span>
-        <span style="flex:1;height:1px;background:var(--border)"></span>
-      </div>
-      <div class="phone-login" style="display:flex;flex-direction:column;gap:10px;">
-        <div style="display:flex;gap:8px;">
-          <select id="phoneCountryCode" style="padding:14px 10px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--r-m);color:#fff;font-size:14px;min-width:92px;">
-            <option value="+20" selected>🇪🇬 +20</option>
-            <option value="+966">🇸🇦 +966</option>
-            <option value="+971">🇦🇪 +971</option>
-            <option value="+965">🇰🇼 +965</option>
-            <option value="+973">🇧🇭 +973</option>
-            <option value="+974">🇶🇦 +974</option>
-            <option value="+968">🇴🇲 +968</option>
-            <option value="+962">🇯🇴 +962</option>
-            <option value="+961">🇱🇧 +961</option>
-            <option value="+1">🇺🇸 +1</option>
-            <option value="+44">🇬🇧 +44</option>
-          </select>
-          <input type="tel" id="phoneNumber" placeholder="01xxxxxxxxx" dir="ltr" autocomplete="tel"
-            style="flex:1;padding:14px 16px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--r-m);color:#fff;font-size:14px;">
-        </div>
-        <button type="button" id="sendOtpBtn" onclick="window.dsSendPhoneOTP ? window.dsSendPhoneOTP() : (window.DS && DS.auth && DS.auth.sendPhoneOTP && DS.auth.sendPhoneOTP())"
-          style="width:100%;padding:14px;background:var(--lime);color:#000;border-radius:var(--r-m);font-size:15px;font-weight:700;">
-          <span id="sendOtpLabel">إرسال كود التحقق</span>
-        </button>
-        <div id="phoneOtpSection" style="display:none;flex-direction:column;gap:10px;">
-          <input type="text" id="otpCode" placeholder="••••••" maxlength="6" inputmode="numeric" dir="ltr" autocomplete="one-time-code"
-            style="width:100%;padding:14px 16px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--r-m);color:#fff;font-size:18px;letter-spacing:6px;text-align:center;">
-          <button type="button" id="verifyOtpBtn" onclick="window.dsVerifyPhoneOTP ? window.dsVerifyPhoneOTP() : (window.DS && DS.auth && DS.auth.verifyPhoneOTP && DS.auth.verifyPhoneOTP())"
-            style="width:100%;padding:14px;background:var(--lime);color:#000;border-radius:var(--r-m);font-size:15px;font-weight:700;">
-            <span id="verifyOtpLabel">تأكيد</span>
-          </button>
-        </div>
-        <div id="recaptcha-container" style="display:none;"></div>
-      </div>
+      <!-- (phone auth moved to registration modal) -->
 
       <div class="form-footer">
         <div class="lang-toggle">
@@ -2146,6 +2108,7 @@ window.addEventListener('DOMContentLoaded', () => {
   window.signInWithPhoneNumber = signInWithPhoneNumber;
   window.firebaseConfig = firebaseConfig;
 </script>
+<div id="recaptcha-container" style="display:none;"></div>
 </body>
 
 </html>
