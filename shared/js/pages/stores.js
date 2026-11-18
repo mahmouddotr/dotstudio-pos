@@ -39,6 +39,11 @@
           '<span class="badge ' + (tn.plan === 'yearly' ? 'lime' : tn.plan === 'sixmonths' ? 'info' : 'neutral') + '">' + esc(t(tn.plan)) + ' · ' + money(sub ? sub.plan.price : 0) + '</span>' +
           '<span style="font-size:10px;color:' + (sub && sub.daysLeft <= 15 ? 'var(--warning)' : 'var(--text-tertiary)') + '">' + esc(t('daysRemaining')) + ': ' + Math.max(0, sub ? sub.daysLeft : 0) + '</span>' +
         '</div>' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-top:10px">' +
+          '<button class="btn btn-secondary btn-sm" data-hours="' + esc(tn.id) + '">' + icon('clock') + ' ' +
+            esc(DS.lang() === 'en' ? 'Opening hours' : 'موعد الفتح والإغلاق') + ' · ' +
+            esc((DS.data.storeStatus ? DS.data.storeStatus(tn).hoursLabel : (tn.openTime + ' – ' + tn.closeTime))) + '</button>' +
+        '</div>' +
         '<div style="display:flex;gap:6px;margin-top:12px">' +
           '<a class="btn btn-secondary btn-sm" style="flex:1" href="' + url('admin/products.html?store=' + tn.id) + '">' + icon('box') + esc(t('products')) + '</a>' +
           '<a class="btn btn-secondary btn-sm" style="flex:1" href="' + url('admin/orders.html?store=' + tn.id) + '">' + icon('orders') + esc(t('orders')) + '</a>' +
@@ -54,6 +59,14 @@
 
     page.setContent(summary + '<div class="delivery-grid">' + cards + '</div>');
     DS.$$('[data-edit]', page.body).forEach(function (b) { b.addEventListener('click', function () { edit(b.getAttribute('data-edit')); }); });
+    DS.$$('[data-hours]', page.body).forEach(function (b) { b.addEventListener('click', function () {
+      var tn = DS.data.tenantById(b.getAttribute('data-hours'));
+      if (!tn) return;
+      var allDay = !(tn.openTime === '00:00' && (tn.closeTime === '24:00' || tn.closeTime === '00:00'));
+      DS.data.saveTenant({ id: tn.id, openTime: allDay ? '00:00' : '10:00', closeTime: allDay ? '24:00' : '22:00' });
+      DS.toast(DS.lang() === 'en' ? 'Opening hours updated' : 'تم تحديث ساعات العمل', 'success');
+      render();
+    }); });
   }
 
   function stat(label, value, ico, tone) {
@@ -100,7 +113,8 @@
             plan: root.querySelector('#sPlan').value, subscription_start: now, subscription_end: end,
             status: root.querySelector('#sStatus').value, avatar_id: 'av' + (Math.floor(Math.random() * 9) + 1),
             color: '#CCFF00', rating: 4.8, delivery_fee: Number(root.querySelector('#sFee').value) || 30,
-            lat: 30.0444, lng: 31.2357, description: root.querySelector('#sDesc').value.trim(), created_at: now
+            lat: 30.0444, lng: 31.2357, description: root.querySelector('#sDesc').value.trim(), created_at: now,
+            openTime: '00:00', closeTime: '24:00', offline: false
           });
           DS.data.addUser({ username: username, password: root.querySelector('#sPass').value || 'owner2026', role: 'owner', name: ownerName, name_en: ownerName, tenant_id: tid, avatar_id: 'av1' });
           DS.data.addUser({ username: username.slice(0, 2) + '_cashier', password: username.slice(0, 2) + '_cashier2026', role: 'cashier', name: 'كاشير ' + name, name_en: name + ' Cashier', tenant_id: tid, avatar_id: 'av5' });

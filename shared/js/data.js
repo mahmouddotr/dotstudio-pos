@@ -42,7 +42,7 @@
       industry: 'أزياء وإكسسوارات', industry_en: 'Fashion & accessories',
       plan: 'yearly', subscription_start: daysAgo(120), subscription_end: daysAhead(245),
       status: 'active', avatar_id: 'av1', color: '#CCFF00', rating: 4.9, delivery_fee: 35,
-      openTime: '10:00', closeTime: '22:00', offline: false,
+      openTime: '00:00', closeTime: '24:00', offline: false,
       lat: 30.0511, lng: 31.3656,
       description: 'ساعات، خواتم، عطور وإكسسوارات مختارة بعناية.', description_en: 'Curated watches, rings, perfumes and accessories.',
       created_at: daysAgo(420)
@@ -55,7 +55,7 @@
       industry: 'عصائر طازجة', industry_en: 'Fresh juices',
       plan: 'monthly', subscription_start: daysAgo(20), subscription_end: daysAhead(10),
       status: 'active', avatar_id: 'av2', color: '#FF6B9D', rating: 4.8, delivery_fee: 25,
-      openTime: '10:00', closeTime: '22:00', offline: false,
+      openTime: '00:00', closeTime: '24:00', offline: false,
       lat: 29.9602, lng: 31.2569,
       description: 'عصائر وسموذي وميلك شيك طازج يومياً.', description_en: 'Fresh juices, smoothies and milkshakes every day.',
       created_at: daysAgo(300)
@@ -68,7 +68,7 @@
       industry: 'قهوة مختصة', industry_en: 'Specialty coffee',
       plan: 'sixmonths', subscription_start: daysAgo(80), subscription_end: daysAhead(100),
       status: 'active', avatar_id: 'av3', color: '#F59E0B', rating: 4.9, delivery_fee: 30,
-      openTime: '10:00', closeTime: '22:00', offline: false,
+      openTime: '00:00', closeTime: '24:00', offline: false,
       lat: 30.0912, lng: 31.3275,
       description: 'قهوة مختصة محمصة طازجة وحبوب مختارة.', description_en: 'Specialty coffee, freshly roasted beans.',
       created_at: daysAgo(260)
@@ -81,7 +81,7 @@
       industry: 'ملابس وإكسسوارات', industry_en: 'Apparel & accessories',
       plan: 'monthly', subscription_start: daysAgo(12), subscription_end: daysAhead(18),
       status: 'active', avatar_id: 'av4', color: '#60A5FA', rating: 4.7, delivery_fee: 40,
-      openTime: '10:00', closeTime: '22:00', offline: false,
+      openTime: '00:00', closeTime: '24:00', offline: false,
       lat: 29.9285, lng: 30.9188,
       description: 'ملابس عصرية بجودة عالية لكل المناسبات.', description_en: 'Modern quality apparel for every occasion.',
       created_at: daysAgo(210)
@@ -1082,6 +1082,16 @@
       db.migrations.businessHours = true;
       changed = true;
     }
+    /* Migration — 2026.11b: every store trades around the clock.
+       Owners can still narrow the window later from Settings → Store. */
+    if (!db.migrations.alwaysOpen247) {
+      (db.tenants || []).forEach(function (tn) {
+        tn.openTime = '00:00';
+        tn.closeTime = '24:00';
+      });
+      db.migrations.alwaysOpen247 = true;
+      changed = true;
+    }
     /* Migration — 2026.11: the demo rider «ahmed» signs in with the short
        password 123 and always stays attached to the «طلقة / talqa» company. */
     if (!db.migrations.ahmedDriver) {
@@ -1503,15 +1513,17 @@
   function storeStatus(tn, when) {
     var hours = storeHours(tn);
     var open = isStoreOpen(tn, when);
+    var allDay = (hours.open === '00:00' && (hours.close === '24:00' || hours.close === '00:00'));
     return {
       open: open,
       offline: !!(tn && tn.offline === true),
       suspended: !!(tn && tn.status === 'suspended'),
+      allDay: allDay,
       openTime: hours.open,
       closeTime: hours.close,
-      openLabel: formatHM(hours.open),
-      closeLabel: formatHM(hours.close),
-      hoursLabel: formatHM(hours.open) + ' – ' + formatHM(hours.close),
+      openLabel: allDay ? (DS.lang() === 'en' ? '24 hours' : '24 ساعة') : formatHM(hours.open),
+      closeLabel: allDay ? (DS.lang() === 'en' ? '24 hours' : '24 ساعة') : formatHM(hours.close),
+      hoursLabel: allDay ? (DS.lang() === 'en' ? 'Open 24 hours' : 'مفتوح 24 ساعة') : (formatHM(hours.open) + ' – ' + formatHM(hours.close)),
       nextOpen: hours.open
     };
   }

@@ -94,9 +94,14 @@
         '<div class="field"><label>' + esc(t('storeAddress')) + '</label><input class="input" id="stAddr" value="' + esc(tn.address) + '"></div>' +
         '<div class="field"><label>' + esc(t('delivery')) + ' (EGP)</label><input class="input" id="stFee" type="number" value="' + esc(tn.delivery_fee) + '"></div>' +
         '<div class="field"><label>' + esc(t('storeHours')) + ' · ' + esc(en ? 'Opening time' : 'وقت الفتح') + '</label>' +
-          '<input class="input" id="stOpenTime" type="time" value="' + esc(tn.openTime || '10:00') + '" style="direction:ltr"></div>' +
+          '<input class="input" id="stOpenTime" type="time" value="' + esc(tn.openTime || '00:00') + '" style="direction:ltr"></div>' +
         '<div class="field"><label>' + esc(t('storeHours')) + ' · ' + esc(en ? 'Closing time' : 'وقت الإغلاق') + '</label>' +
-          '<input class="input" id="stCloseTime" type="time" value="' + esc(tn.closeTime || '22:00') + '" style="direction:ltr"></div>' +
+          '<input class="input" id="stCloseTime" type="time" value="' + esc(tn.closeTime || '24:00') + '" style="direction:ltr"></div>' +
+        '<div class="field" style="grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center">' +
+          '<button type="button" class="btn btn-secondary btn-sm" id="stAllDay">' + icon('clock') + ' ' + (en ? 'Open 24 hours' : 'تعيين 24 ساعة') + '</button>' +
+          '<button type="button" class="btn btn-secondary btn-sm" id="stDayTime">' + (en ? '10:00 – 22:00' : '10 ص – 10 م') + '</button>' +
+          '<span style="font-size:11px;opacity:.7">' + (en ? 'Quick hours — saves instantly' : 'سريع — يُحفظ فوراً') + '</span>' +
+        '</div>' +
         '<div class="field" style="grid-column:1/-1"><label>' + esc(t('storeDesc')) + '</label><textarea class="textarea" id="stDesc" rows="2">' + esc(tn.description || '') + '</textarea></div>' +
       '</div>' +
       '<div class="store-hours-status ' + (st.open ? 'is-open' : 'is-closed') + '" style="margin-top:12px;display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px solid var(--border);border-radius:var(--radius-md);font-size:12px">' +
@@ -209,6 +214,19 @@
       DS.shell.refreshUser();
       render();
     });
+    var quickHours = function (openTime, closeTime) {
+      var tn = DS.data.tenantById(user.tenant_id);
+      if (!tn) return;
+      DS.data.saveTenant({
+        id: tn.id, openTime: openTime, closeTime: closeTime
+      });
+      DS.toast(en ? 'Opening hours updated' : 'تم تحديث ساعات العمل', 'success');
+      render();
+    };
+    var allDayBtn = page.body.querySelector('#stAllDay');
+    if (allDayBtn) allDayBtn.addEventListener('click', function () { quickHours('00:00', '24:00'); });
+    var dayBtn = page.body.querySelector('#stDayTime');
+    if (dayBtn) dayBtn.addEventListener('click', function () { quickHours('10:00', '22:00'); });
     var saveStore = page.body.querySelector('[data-save-store]');
     if (saveStore) saveStore.addEventListener('click', function () {
       var tn = DS.data.tenantById(user.tenant_id);

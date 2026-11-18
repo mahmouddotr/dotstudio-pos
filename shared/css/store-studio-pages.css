@@ -1,0 +1,65 @@
+/* ═══════════════════════════════════════════════════════════════════
+   STORE STUDIO — cart & checkout cleanup
+   Loaded LAST on customer/cart.html and customer/checkout.html.
+   Removes the admin shell chrome so the customer pages own the viewport.
+   ═══════════════════════════════════════════════════════════════════ */
+body.saleor-store, body.saleor-checkout {
+  background: #f7f7f5 !important;
+  color: #0a0a0a !important;
+}
+html[data-theme="light"] body.saleor-store,
+html[data-theme="light"] body.saleor-checkout { background: #f7f7f5 !important; }
+
+/* Hide the admin shell — these are customer checkout surfaces. */
+body.saleor-store .ds-sidebar,
+body.saleor-store .ds-topbar,
+body.saleor-store .ds-bottom-nav,
+body.saleor-store .drawer-scrim,
+body.saleor-store .help-btn,
+body.saleor-store .pm-notify-fab,
+body.saleor-checkout .ds-sidebar,
+body.saleor-checkout .ds-topbar,
+body.saleor-checkout .ds-bottom-nav,
+body.saleor-checkout .drawer-scrim,
+body.saleor-checkout .help-btn,
+body.saleor-checkout .pm-notify-fab { display: none !important; }
+
+body.saleor-store .ds-main,
+body.saleor-checkout .ds-main { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+body.saleor-store .ds-content,
+body.saleor-checkout .ds-content {
+  max-width: 1180px !important; margin: 0 auto !important;
+  padding: 26px clamp(18px, 4vw, 48px) 80px !important;
+}
+
+/* A clean, minimal page header. */
+body.saleor-store .page-head,
+body.saleor-checkout .page-head { border: 0 !important; background: transparent !important; padding: 12px 0 28px !important; }
+body.saleor-store .page-eyebrow,
+body.saleor-checkout .page-eyebrow { color: #6b8f00 !important; font-size: 11px !important; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+body.saleor-store .page-title,
+body.saleor-checkout .page-title { font-size: clamp(30px, 4vw, 46px) !important; letter-spacing: -.04em !important; font-weight: 800 !important; margin-top: 8px !important; }
+body.saleor-store .page-sub,
+body.saleor-checkout .page-sub { color: #6b6b6b !important; font-size: 13px !important; }
+body.saleor-store .page-body,
+body.saleor-checkout .page-body { background: transparent !important; border: 0 !important; padding: 0 !important; }
+
+/* Primary actions are lime, like the storefront. */
+body.saleor-store .page-actions .btn-primary,
+body.saleor-checkout .page-actions .btn-primary { background: #ccff00 !important; color: #0a0a0a !important; border-color: #ccff00 !important; }
+
+/* Cards get generous, even breathing room. */
+body.saleor-store .page-body .card,
+body.saleor-checkout .page-body .card { border-radius: 18px !important; box-shadow: 0 12px 40px rgba(0, 0, 0, .05) !important; }
+
+/* Brand bar at the very top of the customer pages. */
+body.saleor-store #app::before,
+body.saleor-checkout #app::before {
+  content: ''; display: block; height: 4px;
+  background: linear-gradient(90deg, #0a0a0a 0%, #0a0a0a 60%, #ccff00 60%, #ccff00 100%);
+}
+
+@media (max-width: 760px) {
+  body.saleor-store .ds-content,
+  body.saleor-checkout .ds-content { padding-bottom: 40px !important; }
+}

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>إتمام الطلب · DotStudio® POS</title>
   <meta name="description" content="DotStudio® POS — منصة إدارة المتاجر والمبيعات والتوصيل.">
-  <meta name="theme-color" content="#0A0A0A">
+  <meta name="theme-color" content="#ffffff">
   <link rel="icon" type="image/png" href="../assets/img/LOGO-ICON-DONE.png">
   <link rel="stylesheet" href="../assets/css/fonts.css">
   <link rel="stylesheet" href="../shared/css/design-system.css?v=20261107a">
@@ -22,12 +22,12 @@
     (function () {
       try {
         var t = localStorage.getItem('ds_customer_theme');
-        var theme = (t === 'light' || t === 'dark') ? t : 'dark';
+        var theme = (t === 'light' || t === 'dark') ? t : 'light';
         document.documentElement.setAttribute('data-customer-theme', theme);
         var meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute('content', theme === 'dark' ? '#0A0A0A' : '#F9F9F9');
+        if (meta) meta.setAttribute('content', theme === 'dark' ? '#0A0A0A' : '#ffffff');
       } catch (e) {
-        document.documentElement.setAttribute('data-customer-theme', 'dark');
+        document.documentElement.setAttribute('data-customer-theme', 'light');
       }
     })();
   </script>
@@ -37,6 +37,7 @@
 <link rel="stylesheet" href="../shared/css/payments.css?v=20261112final">
 <link rel="stylesheet" href="../shared/css/premium-2026.css?v=20261118">
 <link rel="stylesheet" href="../shared/css/storefront-2026.css?v=20261118">
+<link rel="stylesheet" href="../shared/css/store-studio-pages.css?v=st2026a">
 </head>
 <body>
   <div id="app"></div>
