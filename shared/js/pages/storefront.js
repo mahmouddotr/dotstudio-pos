@@ -127,18 +127,32 @@
   if (!page) return;
 
   var params = new URLSearchParams(location.search);
-  var state = { store: params.get('store') || '', cat: '', q: '', page: 1 };
+  var state = { store: params.get('store') || '', cat: params.get('cat') || '', q: '', page: 1 };
   var cart = loadCart();
+  var apiProducts = null;
+  function loadApiProducts() {
+    try {
+      if (DS.api && typeof DS.api.getProducts === 'function') {
+        DS.api.getProducts().then(function (list) {
+          if (Array.isArray(list) && list.length) {
+            apiProducts = list;
+            try { render(); } catch (e) {}
+          }
+        }).catch(function () {});
+      }
+    } catch (e) {}
+  }
+  loadApiProducts();
 
   /* ───────────────────────────── DATA ───────────────────────────── */
   function catalog() {
     return (DS.data.tenants || []).filter(function (tn) { return tn.status !== 'suspended'; });
   }
   function allProducts() {
-    /* DS.data.products is the live view of `ds_db_v1.products` — the same
-       collection the owner writes to. A product added by an owner is here
-       the instant it is saved, with no extra filter in between. */
-    return (DS.data.products || []).filter(function (p) { return p.is_active !== false; });
+    /* Prefer the real backend (Cloudflare Worker) catalogue when available;
+       fall back to the offline demo DB otherwise. */
+    var src = (apiProducts && apiProducts.length) ? apiProducts : (DS.data.products || []);
+    return src.filter(function (p) { return p.is_active !== false; });
   }
   function storeOf(p) { return DS.data.tenantById(p && p.tenant_id); }
   function storeOpen(tn) { return DS.data.isStoreOpen ? DS.data.isStoreOpen(tn) : true; }
@@ -213,14 +227,23 @@
 
   function trackView(id) {
     try {
-      var arr = JSON.parse(localStorage.getItem('ds_viewed_products') || '[]');
-      arr = [id].concat(arr.filter(function (x) { return x !== id; })).slice(0, 3);
-      localStorage.setItem('ds_viewed_products', JSON.stringify(arr));
+      if (DS.api && typeof DS.api.getViewedProducts === 'function') {
+        DS.api.getViewedProducts().then(function (arr) {
+          arr = [id].concat((arr || []).filter(function (x) { return x !== id; })).slice(0, 3);
+          if (DS.api && typeof DS.api.setViewedProducts === 'function') DS.api.setViewedProducts(arr);
+        });
+      } else {
+        var arr = JSON.parse(localStorage.getItem('ds_viewed_products') || '[]');
+        arr = [id].concat(arr.filter(function (x) { return x !== id; })).slice(0, 3);
+        localStorage.setItem('ds_viewed_products', JSON.stringify(arr));
+      }
     } catch (e) {}
   }
   function recommendationsMarkup() {
     var viewed = [];
-    try { viewed = JSON.parse(localStorage.getItem('ds_viewed_products') || '[]'); } catch (e) {}
+    try {
+      viewed = DS.store ? DS.store.get('ds_viewed_products', []) : [];
+    } catch (e) {}
     if (!viewed.length) return '';
     var viewedProds = viewed.map(function (id) { return allProducts().filter(function (x) { return x.id === id; })[0]; }).filter(Boolean);
     if (!viewedProds.length) return '';
@@ -257,6 +280,72 @@
   function saveCart() {
     if (DS.cart) { DS.cart.persist(cart); return; }
     DS.store.set('ds_cart', cart);
+  }
+
+  /* ── Wishlist (device-local, never touches tenant data) ─────────── */
+  var WISH_KEY = 'ds_wishlist';
+  function wishIds() {
+    var list = DS.store.get(WISH_KEY, []);
+    return Array.isArray(list) ? list.filter(function (id) { return !!id; }) : [];
+  }
+  function wishHas(id) { return wishIds().indexOf(id) > -1; }
+  function updateWishUI() {
+    var ids = wishIds();
+    DS.$$('[data-wishlist-count]').forEach(function (el) {
+      el.textContent = ids.length;
+      el.setAttribute('data-empty', ids.length ? '0' : '1');
+    });
+    DS.$$('[data-fav]').forEach(function (b) {
+      b.classList.toggle('is-on', ids.indexOf(b.getAttribute('data-fav')) > -1);
+      b.setAttribute('aria-pressed', b.classList.contains('is-on') ? 'true' : 'false');
+    });
+  }
+  function toggleWish(id) {
+    var ids = wishIds();
+    var at = ids.indexOf(id);
+    if (at > -1) ids.splice(at, 1); else ids.push(id);
+    DS.store.set(WISH_KEY, ids);
+    updateWishUI();
+    DS.toast(at > -1
+      ? (EN ? 'Removed from wishlist' : 'تم الحذف من المفضلة')
+      : (EN ? 'Saved to wishlist' : 'تم الحفظ في المفضلة'), 'success');
+  }
+  function openWishlist() {
+    var ids = wishIds();
+    var items = allProducts().filter(function (p) { return ids.indexOf(p.id) > -1; });
+    var body = items.length
+      ? '<div class="sf-wish-list">' + items.map(function (p) {
+          return '<div class="sf-wish-row" data-wish-row="' + esc(p.id) + '">' +
+            '<img src="' + esc(imgOf(p)) + '" alt="">' +
+            '<span class="sf-wish-copy"><b>' + esc(pname(p)) + '</b><i>' + money(p.price) + '</i></span>' +
+            '<button type="button" class="btn btn-secondary btn-sm" data-wish-add="' + esc(p.id) + '">' + icon('bag') + esc(t('addToBag')) + '</button>' +
+            '<button type="button" class="btn btn-ghost btn-sm" data-wish-remove="' + esc(p.id) + '" aria-label="' + esc(EN ? 'Remove' : 'حذف') + '">' + icon('trash') + '</button>' +
+          '</div>';
+        }).join('') + '</div>'
+      : '<div class="sf-wish-empty">' + icon('heart') +
+          '<b>' + esc(EN ? 'Your wishlist is empty' : 'قائمة المفضلة فارغة') + '</b>' +
+          '<span>' + esc(EN ? 'Tap the heart on any product to save it here.' : 'اضغط على القلب في أي منتج لحفظه هنا.') + '</span></div>';
+    var m = DS.modal({
+      title: icon('heart') + ' ' + esc(EN ? 'Wishlist' : 'المفضلة'),
+      sub: esc(EN ? items.length + ' saved items' : items.length + ' منتج محفوظ'),
+      body: body,
+      className: 'sf-modal-backdrop',
+      modalClass: 'sf-modal',
+      actions: [{ label: t('close'), variant: 'btn-secondary' }]
+    });
+    DS.$$('[data-wish-add]', m.el).forEach(function (b) {
+      b.addEventListener('click', function () { addToCart(b.getAttribute('data-wish-add')); });
+    });
+    DS.$$('[data-wish-remove]', m.el).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.getAttribute('data-wish-remove');
+        DS.store.set(WISH_KEY, wishIds().filter(function (x) { return x !== id; }));
+        updateWishUI();
+        var row = m.el.querySelector('[data-wish-row="' + id + '"]');
+        if (row) row.remove();
+        DS.toast(EN ? 'Removed from wishlist' : 'تم الحذف من المفضلة', 'info');
+      });
+    });
   }
 
   /* ── Promo code (applied in the bag, honoured at checkout) ─────── */
@@ -448,9 +537,7 @@
     var fee = deliveryFee();
     var closed = closedVendors();
     var closedDetail = closedVendorDetail();
-    var vatBase = Math.max(0, cartTotal() - totalDiscount());
-    var vat = DS.data.vatAmount ? DS.data.vatAmount(vatBase) : 0;
-    var total = Math.max(0, cartTotal() + fee - totalDiscount() + vat);
+    var total = Math.max(0, cartTotal() + fee - totalDiscount());
     var closedText = closedDetail.map(function (c) {
       return EN ? (c.name + ' (opens at ' + c.opensAt + ')') : (c.name + ' (نفتح الساعة ' + c.opensAt + ')');
     }).join('، ');
@@ -465,7 +552,6 @@
         (saleAmount() ? '<div class="sf-sum-row" style="color:var(--success)"><span>⚡ ' + esc(EN ? 'Store sale' : (DS.data.storeSale().label || 'تخفيضات المتجر')) + '</span><span>− ' + money(saleAmount()) + '</span></div>' : '') +
         (promoAmount() ? '<div class="sf-sum-row" style="color:var(--success)"><span>' + esc(EN ? 'Discount' : 'الخصم') + ' · ' + esc(promoCode()) + '</span><span>− ' + money(promoAmount()) + '</span></div>' : '') +
         '<div class="sf-sum-row"><span>' + esc(t('delivery')) + (groups().length > 1 ? ' (' + groups().length + ')' : '') + '</span><span>' + money(fee) + '</span></div>' +
-        '<div class="sf-sum-row vat"><span>' + esc(EN ? 'VAT' : 'ضريبة القيمة المضافة') + ' · ' + (DS.data.vatRate ? DS.data.vatRate() : 15) + '%</span><span>' + money(vat) + '</span></div>' +
         '<div class="sf-sum-row total"><span>' + esc(t('total')) + '</span><b>' + money(total) + '</b></div>' +
       '</div>';
   }
@@ -613,6 +699,7 @@
     var disabled = offline || out;
     var info = ratingInfo(p);
     return '<article class="sf-card' + (disabled ? ' is-out' : '') + (offline ? ' is-offline' : '') + '">' +
+      '<button type="button" class="sf-fav' + (wishHas(p.id) ? ' is-on' : '') + '" data-fav="' + esc(p.id) + '" aria-pressed="' + (wishHas(p.id) ? 'true' : 'false') + '" aria-label="' + esc(EN ? 'Save to wishlist' : 'حفظ في المفضلة') + '">' + icon('heart') + '</button>' +
       '<button type="button" class="sf-card-media product-image-container" data-view="' + esc(p.id) + '" aria-label="' + esc(t('quickView')) + '">' +
         '<img src="' + esc(imgOf(p)) + '" alt="' + esc(pname(p)) + '" loading="lazy" onerror="this.onerror=null;this.src=\'' + esc(url('assets/product-placeholder.svg')) + '\'">' +
         '<span class="sf-badge-stack">' + badges + '</span>' +
@@ -945,6 +1032,36 @@
     }).join('') + '</div>';
   }
 
+  /* ── "Shop by Category" — four square editorial cards (TASK 1) ── */
+  function categorySquareMarkup() {
+    var list = catalogProducts();
+    var counts = {}, order = [];
+    list.forEach(function (p) {
+      var c = pcat(p);
+      if (!c) return;
+      if (!counts[c]) { counts[c] = 0; order.push(c); }
+      counts[c]++;
+    });
+    var cats = order.slice().sort(function (a, b) { return counts[b] - counts[a]; }).slice(0, 4);
+    if (!cats.length) return '';
+    return '<section class="sf-cat-squares-wrap">' +
+      '<div class="sf-toolbar-head" style="margin-bottom:16px"><div>' +
+        '<div class="sf-eyebrow">' + icon('grid') + esc(EN ? 'Browse' : 'تصفّح') + '</div>' +
+        '<h2 class="sf-section-title">' + esc(EN ? 'Shop by Category' : 'تسوّق حسب القسم') + '</h2>' +
+      '</div></div>' +
+      '<div class="sf-cat-squares">' + cats.map(function (c) {
+        var first = list.filter(function (p) { return pcat(p) === c; })[0];
+        var art = first ? imgOf(first) : url('assets/product-placeholder.svg');
+        return '<button type="button" class="sf-cat-square" data-cat-jump="' + esc(c) + '">' +
+          '<img src="' + esc(art) + '" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.src=\'' + esc(url('assets/product-placeholder.svg')) + '\'">' +
+          '<span class="sf-cat-square-arrow">' + icon(EN ? 'arrowRight' : 'arrowLeft') + '</span>' +
+          '<span class="sf-cat-square-copy"><b>' + esc(c) + '</b>' +
+            '<i>' + counts[c] + ' ' + esc(EN ? 'products' : 'منتج') + '</i></span>' +
+        '</button>';
+      }).join('') + '</div>' +
+    '</section>';
+  }
+
   function toolbarMarkup() {
     var cats = categories();
     return '<section class="sf-toolbar" id="sfCatalog">' +
@@ -1050,7 +1167,7 @@
     '</div>' : '';
 
     page.setContent(headerMarkup() + '<div class="sf-page">' + note + closedBannerMarkup() + heroMarkup() + railsMarkup() + recommendationsMarkup() + storeDirectoryMarkup() +
-      trustMarkup() + toolbarMarkup() + footerMarkup() + '</div>');
+      categorySquareMarkup() + toolbarMarkup() + trustMarkup() + footerMarkup() + '</div>');
     if (DS.applyBranding) DS.applyBranding();
 
     /* Live SEO — the title + meta description follow the active store/category. */
@@ -1123,6 +1240,25 @@
       });
     });
 
+    /* Category squares + grouped section "view all" jump filters. */
+    DS.$$('[data-cat-jump]', body).forEach(function (b) {
+      b.addEventListener('click', function () {
+        state.cat = b.getAttribute('data-cat-jump') || '';
+        state.page = 1;
+        render();
+        var target = page.body.querySelector('#sfCatalog');
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    /* Header wishlist button. */
+    DS.$$('[data-wishlist-open]', body).forEach(function (b) {
+      if (b.getAttribute('data-wish-bound')) return;
+      b.setAttribute('data-wish-bound', '1');
+      b.addEventListener('click', openWishlist);
+    });
+    updateWishUI();
+
     /* Standalone header search mirrors the catalog search. */
     var slSearch = body.querySelector('[data-sl-search]');
     if (slSearch) {
@@ -1191,51 +1327,7 @@
 
   }
 
-  function renderGrid() {
-    var host = page.body.querySelector('[data-grid]');
-    if (!host) return;
-    var shown = filterProducts();
-    var vendors = [];
-    shown.forEach(function (p) { if (vendors.indexOf(p.tenant_id) === -1) vendors.push(p.tenant_id); });
-
-    var countEl = page.body.querySelector('[data-result-count]');
-    if (countEl) {
-      countEl.innerHTML = state.q.trim()
-        ? esc(t('resultsFor')) + ' <b>“' + esc(state.q.trim()) + '”</b> · ' + shown.length + ' ' + esc(t('item'))
-        : '<b>' + shown.length + '</b> ' + esc(t('item')) + ' · <b>' + vendors.length + '</b> ' +
-          esc(EN ? 'stores' : 'متاجر') + ' · ' + esc(EN ? 'delivered in 30–45 min' : 'توصيل في 30–45 دقيقة');
-    }
-    if (!shown.length) {
-      host.innerHTML = DS.empty({ icon: 'search', title: t('noItems'), text: t('emptyProductsText') });
-      return;
-    }
-
-    var perPage = 30;
-    var totalPages = Math.max(1, Math.ceil(shown.length / perPage));
-    if (state.page > totalPages) state.page = totalPages;
-    if (state.page < 1) state.page = 1;
-    var start = (state.page - 1) * perPage;
-    var pageItems = shown.slice(start, start + perPage);
-
-    /* ONE flat grid — every card lives in the same container so the layout is a
-       real multi-column grid. Grouping by category previously produced one
-       single-card grid per category, which read as a vertical stack. */
-    var pagHtml = '';
-    if (totalPages > 1) {
-      var nums = '';
-      for (var i = 1; i <= totalPages; i++) {
-        nums += '<button type="button" class="sf-page-btn' + (i === state.page ? ' active' : '') + '" data-page="' + i + '">' + i + '</button>';
-      }
-      pagHtml = '<nav class="sf-pagination" aria-label="pagination">' +
-        '<button type="button" class="sf-page-btn sf-page-prev" data-page="prev"' + (state.page <= 1 ? ' disabled' : '') + '>‹</button>' +
-        nums +
-        '<button type="button" class="sf-page-btn sf-page-next" data-page="next"' + (state.page >= totalPages ? ' disabled' : '') + '>›</button>' +
-      '</nav>';
-    }
-    host.innerHTML = '<div class="sf-grid" id="products-grid" data-products-grid>' +
-      pageItems.map(cardMarkup).join('') +
-    '</div>' + pagHtml;
-
+  function bindGrid(host, totalPages) {
     DS.$$('[data-add]', host).forEach(function (b) {
       b.addEventListener('click', function () {
         if (b.disabled) return;
@@ -1246,6 +1338,13 @@
           card.classList.add('just-added');
           setTimeout(function () { card.classList.remove('just-added'); }, 520);
         }
+      });
+    });
+    DS.$$('[data-fav]', host).forEach(function (b) {
+      b.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleWish(b.getAttribute('data-fav'));
       });
     });
     DS.$$('[data-view]', host).forEach(function (b) {
@@ -1267,6 +1366,15 @@
         render();
       });
     });
+    DS.$$('[data-cat-jump]', host).forEach(function (b) {
+      b.addEventListener('click', function () {
+        state.cat = b.getAttribute('data-cat-jump') || '';
+        state.page = 1;
+        render();
+        var target = page.body.querySelector('#sfCatalog');
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
     DS.$$('[data-page]', host).forEach(function (b) {
       b.addEventListener('click', function () {
         var val = b.getAttribute('data-page');
@@ -1278,6 +1386,83 @@
         if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     });
+    updateWishUI();
+  }
+
+  /* TASK 5 — category-first catalog: titled sections, 4-column grids.
+     A search or a pill selection collapses back to one paginated grid. */
+  function groupedMarkup(list) {
+    var cats = [], map = {};
+    list.forEach(function (p) {
+      var c = pcat(p) || (EN ? 'More' : 'المزيد');
+      if (!map[c]) { map[c] = []; cats.push(c); }
+      map[c].push(p);
+    });
+    return '<div class="sf-cat-sections">' + cats.map(function (c) {
+      var items = map[c];
+      var visible = items.slice(0, 8);
+      return '<section class="sf-cat-section" id="cat-' + encodeURIComponent(c) + '">' +
+        '<div class="sf-cat-section-head">' +
+          '<h3>' + esc(c) + '<em>' + items.length + ' ' + esc(EN ? 'products' : 'منتج') + '</em></h3>' +
+          (items.length > visible.length
+            ? '<button type="button" class="sf-cat-viewall" data-cat-jump="' + esc(c) + '">' +
+                esc(EN ? 'View all' : 'عرض الكل') + icon(EN ? 'arrowRight' : 'arrowLeft') + '</button>'
+            : '') +
+        '</div>' +
+        '<div class="sf-grid">' + visible.map(cardMarkup).join('') + '</div>' +
+      '</section>';
+    }).join('') + '</div>';
+  }
+
+  function renderGrid() {
+    var host = page.body.querySelector('[data-grid]');
+    if (!host) return;
+    var shown = filterProducts();
+    var vendors = [];
+    shown.forEach(function (p) { if (vendors.indexOf(p.tenant_id) === -1) vendors.push(p.tenant_id); });
+
+    var countEl = page.body.querySelector('[data-result-count]');
+    if (countEl) {
+      countEl.innerHTML = state.q.trim()
+        ? esc(t('resultsFor')) + ' <b>“' + esc(state.q.trim()) + '”</b> · ' + shown.length + ' ' + esc(t('item'))
+        : '<b>' + shown.length + '</b> ' + esc(t('item')) + ' · <b>' + vendors.length + '</b> ' +
+          esc(EN ? 'stores' : 'متاجر') + ' · ' + esc(EN ? 'delivered in 30–45 min' : 'توصيل في 30–45 دقيقة');
+    }
+    if (!shown.length) {
+      host.innerHTML = DS.empty({ icon: 'search', title: t('noItems'), text: t('emptyProductsText') });
+      return;
+    }
+
+    /* Category sections by default; one flat grid while filtering. */
+    if (!state.q.trim() && !state.cat) {
+      host.innerHTML = groupedMarkup(shown);
+      bindGrid(host, 1);
+      return;
+    }
+
+    var perPage = 30;
+    var totalPages = Math.max(1, Math.ceil(shown.length / perPage));
+    if (state.page > totalPages) state.page = totalPages;
+    if (state.page < 1) state.page = 1;
+    var start = (state.page - 1) * perPage;
+    var pageItems = shown.slice(start, start + perPage);
+
+    var pagHtml = '';
+    if (totalPages > 1) {
+      var nums = '';
+      for (var i = 1; i <= totalPages; i++) {
+        nums += '<button type="button" class="sf-page-btn' + (i === state.page ? ' active' : '') + '" data-page="' + i + '">' + i + '</button>';
+      }
+      pagHtml = '<nav class="sf-pagination" aria-label="pagination">' +
+        '<button type="button" class="sf-page-btn sf-page-prev" data-page="prev"' + (state.page <= 1 ? ' disabled' : '') + '>‹</button>' +
+        nums +
+        '<button type="button" class="sf-page-btn sf-page-next" data-page="next"' + (state.page >= totalPages ? ' disabled' : '') + '>›</button>' +
+      '</nav>';
+    }
+    host.innerHTML = '<div class="sf-grid" id="products-grid" data-products-grid>' +
+      pageItems.map(cardMarkup).join('') +
+    '</div>' + pagHtml;
+    bindGrid(host, totalPages);
   }
 
   /* ─────────────────────────── REVIEWS ─────────────────────────── */
@@ -1577,7 +1762,18 @@
      gently nudge them back to checkout after three seconds. */
   setTimeout(function () {
     var saved = null;
-    try { saved = JSON.parse(localStorage.getItem('ds_cart') || 'null'); } catch (e) {}
+    try {
+      if (DS.api && typeof DS.api.getCart === 'function') {
+        DS.api.getCart().then(function (c) {
+          if (c && Array.isArray(c.items) && c.items.length) {
+            DS.toast(EN ? '🛒 You left products in your bag — complete your order now!' : '🛒 لقد تركت منتجات في سلتك، أكمل طلبك الآن!', 'info');
+          }
+        });
+        saved = null;
+      } else {
+        saved = JSON.parse(localStorage.getItem('ds_cart') || 'null');
+      }
+    } catch (e) {}
     if (saved && Array.isArray(saved.items) && saved.items.length) {
       DS.toast(EN ? '🛒 You left products in your bag — complete your order now!' : '🛒 لقد تركت منتجات في سلتك، أكمل طلبك الآن!', 'info');
     }

@@ -2889,10 +2889,10 @@
     return chatRoom(user, scope, peerId, false);
   }
 
-  function sendMessageTo(scope, peerId, text) {
+  function sendMessageTo(scope, peerId, text, image) {
     var user = DS.session();
     text = String(text == null ? '' : text).trim();
-    if (!user || !text) return null;
+    if (!user || (!text && !image)) return null;
     if (isPeerBlocked(scope, peerId, user)) return { blocked: true };
     var room = chatRoom(user, scope, peerId, true);
     if (!room) return null;
@@ -2900,6 +2900,9 @@
       id: DS.uid('msg'), user_id: user.id, name: user.name, name_en: user.name_en,
       role: user.role, text: text.slice(0, 2000), at: nowISO()
     };
+    /* Optional image attachment (customer photo upload). The data URL is
+       already downscaled by DS.readImage before it reaches this point. */
+    if (image) msg.image = String(image).slice(0, 400000);
     room.messages.push(msg);
     commit();
     return msg;

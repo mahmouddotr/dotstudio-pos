@@ -1,0 +1,90 @@
+/* Premium light editorial theme overrides for customer storefront. */
+html[data-customer-theme="light"] body,
+html[data-customer-theme="light"] body.saleor-store {
+  background: #F9F9F9 !important;
+  color: #111111 !important;
+}
+html[data-customer-theme="light"] body.saleor-store .ds-content,
+html[data-customer-theme="light"] body.saleor-store main {
+  background: #F9F9F9;
+}
+/* Force light default when no theme set */
+html:not([data-customer-theme]) body,
+html:not([data-customer-theme]) body.saleor-store {
+  background: #F9F9F9;
+  color: #111111;
+}
+/* Cards */
+html[data-customer-theme="light"] .card,
+html[data-customer-theme="light"] body.saleor-store .card {
+  background: #FFFFFF !important;
+  border: 1px solid #EAEAEA !important;
+  border-radius: 16px !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04) !important;
+}
+/* Primary buttons lime */
+html[data-customer-theme="light"] .btn-primary,
+html[data-customer-theme="light"] body.saleor-store .btn-primary,
+html[data-customer-theme="light"] .co-place-btn {
+  background: #CCFF00 !important;
+  color: #111111 !important;
+  border-color: #CCFF00 !important;
+  font-weight: 700;
+}
+html[data-customer-theme="light"] .badge.lime {
+  background: #CCFF00 !important;
+  color: #111111 !important;
+}
+/* Lime circle quick-add */
+.sf-quick-add, .quick-add, [data-add] {
+  background: #CCFF00 !important;
+  color: #111111 !important;
+  border: none !important;
+  border-radius: 50% !important;
+}
+/* Product grid cards */
+html[data-customer-theme="light"] body.saleor-store .sf-product-card,
+html[data-customer-theme="light"] body.saleor-store .product-card {
+  background: #FFFFFF !important;
+  border-radius: 16px !important;
+  border: 1px solid #EAEAEA !important;
+}
+/* Sticky header */
+html[data-customer-theme="light"] body.saleor-store header,
+html[data-customer-theme="light"] body.saleor-store .sf-header,
+html[data-customer-theme="light"] body.saleor-store .sl-header {
+  background: rgba(249,249,249,0.85) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #EAEAEA !important;
+}
+/* Stepper */
+.co-stepper { display:flex; gap:12px; margin:16px 0 24px; }
+.co-step { flex:1; text-align:center; padding:12px 8px; border-radius:12px; background:#FFFFFF; border:1px solid #EAEAEA; color:#6B6B6B; font-weight:600; font-size:13px; }
+.co-step.is-active { background:#CCFF00; color:#111111; border-color:#CCFF00; }
+.co-step.is-done { background:#EAFBE0; color:#2E7D32; border-color:#C8E6C9; }
+.co-step-num { display:inline-block; width:24px; height:24px; line-height:24px; border-radius:50%; background:#111111; color:#FFFFFF; margin-inline-end:6px; font-size:12px; }
+.co-step.is-active .co-step-num { background:#111111; color:#CCFF00; }
+.step-pane { display:none; }
+.step-pane.is-active { display:block; }
+/* Bottom nav */
+.ds-bottom-nav { background:#FFFFFF; border-top:1px solid #EAEAEA; }
+/* Mobile */
+@media (max-width: 480px) {
+  .co-stepper { gap:6px; }
+  .co-step { font-size:11px; padding:8px 4px; }
+  .co-step span { display:none; }
+}
+/* Success page */
+.success-page { min-height:70vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:40px 20px; }
+.success-check { width:96px; height:96px; border-radius:50%; background:#CCFF00; display:flex; align-items:center; justify-content:center; margin-bottom:24px; }
+.success-check svg { width:48px; height:48px; color:#111111; }
+.success-title { font-size:28px; font-weight:800; color:#111111; margin-bottom:8px; }
+.success-sub { color:#6B6B6B; margin-bottom:24px; }
+.success-order { font-family:monospace; font-size:18px; font-weight:700; color:#111111; background:#FFFFFF; padding:12px 24px; border-radius:12px; border:1px solid #EAEAEA; margin-bottom:24px; }
+.success-actions { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+.btn-outline { background:#FFFFFF; color:#111111; border:1px solid #111111; }
+/* Cart two-col */
+.cart-page { display:grid; grid-template-columns: 1fr 360px; gap:24px; padding:24px; }
+@media (max-width: 768px) { .cart-page { grid-template-columns:1fr; } }
+.cart-item-card { display:grid; grid-template-columns:80px 1fr auto; gap:12px; padding:16px; background:#FFFFFF; border-radius:16px; border:1px solid #EAEAEA; margin-bottom:12px; }
+.cart-summary-sticky { position:sticky; top:24px; background:#FFFFFF; border-radius:16px; border:1px solid #EAEAEA; padding:20px; }

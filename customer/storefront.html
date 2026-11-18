@@ -13,13 +13,18 @@
   <link rel="stylesheet" href="../shared/css/app.css?v=20261114c">
   <link rel="stylesheet" href="../shared/css/dragon.css?v=ed8cb6">
   <link rel="stylesheet" href="../shared/css/storefront.css?v=20261116e">
+  <link rel="stylesheet" href="../shared/css/premium-2026.css?v=20261118">
   <link rel="stylesheet" href="../shared/css/chat.css?v=55ad20">
+  <link rel="stylesheet" href="../shared/css/storefront-2026.css?v=20261118">
   <script>
-    /* Apply the saved customer theme before paint (no white flash). */
+    /* Apply the saved customer theme before paint (no white flash). Dark is default. */
     (function () {
       try {
         var t = localStorage.getItem('ds_customer_theme');
-        document.documentElement.setAttribute('data-customer-theme', t === 'light' ? 'light' : 'dark');
+        var theme = (t === 'light' || t === 'dark') ? t : 'dark';
+        document.documentElement.setAttribute('data-customer-theme', theme);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', theme === 'dark' ? '#0A0A0A' : '#F9F9F9');
       } catch (e) {
         document.documentElement.setAttribute('data-customer-theme', 'dark');
       }
@@ -662,6 +667,45 @@
 
 <body>
   <div id="app"></div>
+  <!-- Editorial storefront reference layout (premium) -->
+  <template id="sf-editorial-reference">
+    <header class="sf-header-sticky" style="position:sticky;top:0;z-index:50;">
+      <div class="sf-header-inner" style="display:flex;align-items:center;justify-content:space-between;gap:16px;">
+        <a class="sf-logo" href="#" style="margin-inline-start:auto;"><img src="../assets/img/LOGO-WHAIT.png" alt="DotStudio" style="height:40px!important;width:auto!important;"></a>
+        <input type="search" class="sf-search" placeholder="Search">
+        <a class="sf-account" href="#">Account</a>
+        <a class="sf-cart" href="#">Cart</a>
+      </div>
+    </header>
+    <section class="sf-hero-editorial" style="position:relative;width:100%;">
+      <img src="../assets/img/LOGO-WHAIT.png" alt="Hero" style="width:100%;display:block;">
+      <div class="sf-hero-text" style="position:absolute;left:40px;top:40px;">
+        <h1>Spring / Summer 2024</h1>
+        <div class="sf-hero-buttons">
+          <a href="#" class="sf-btn">Shop Women</a>
+          <a href="#" class="sf-btn">Shop Men</a>
+        </div>
+      </div>
+    </section>
+    <section class="sf-categories">
+      <h2>Shop by Category</h2>
+      <div class="sf-cat-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+        <img src="../assets/img/LOGO-WHAIT.png" alt="Category" style="aspect-ratio:1/1;object-fit:cover;">
+        <img src="../assets/img/LOGO-WHAIT.png" alt="Category" style="aspect-ratio:1/1;object-fit:cover;">
+        <img src="../assets/img/LOGO-WHAIT.png" alt="Category" style="aspect-ratio:1/1;object-fit:cover;">
+        <img src="../assets/img/LOGO-WHAIT.png" alt="Category" style="aspect-ratio:1/1;object-fit:cover;">
+      </div>
+    </section>
+    <section class="sf-product-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+      <!-- product cards -->
+    </section>
+    <footer class="sf-footer-editorial">
+      <div class="sf-trust-badges">
+        <span>Complimentary Shipping</span>
+        <span>Easy Returns</span>
+      </div>
+    </footer>
+  </template>
 
   <!-- Giveaway lead magnet → customer/win.html -->
   <div class="sf-giveaway" id="sfGiveaway" hidden>
@@ -680,6 +724,7 @@
   <script src="../shared/js/core.js?v=20261117b"></script>
   <script src="../shared/js/security.js?v=20261106e"></script>
 <script src="../shared/js/data.js?v=20261114a"></script>
+<script src="../shared/js/api-service.js?v=20261118"></script>
 
   <script src="../shared/js/auth.js?v=20261106e"></script>
   <script src="../shared/js/shell.js?v=20261117b"></script>

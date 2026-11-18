@@ -9,6 +9,10 @@ package-lock.json.bak
 *.pem
 *.key
 
+# Cloudflare Worker local secrets + wrangler state
+backend/.dev.vars
+backend/.wrangler/
+
 # macOS
 .DS_Store
 .AppleDouble

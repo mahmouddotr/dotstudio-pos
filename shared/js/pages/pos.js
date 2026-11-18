@@ -916,4 +916,7 @@
     }
   });
 
+  /* Backend-ready: warm the product catalogue through the API service. */
+  try { if (DS.api && typeof DS.api.getProducts === 'function') DS.api.getProducts().catch(function () {}); } catch (e) {}
+
 })();

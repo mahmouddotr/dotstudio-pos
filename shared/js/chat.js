@@ -114,6 +114,52 @@
     return DS.date(iso);
   }
 
+  /* ── Image attachment (replaces the old voice-note button) ──────
+     One hidden file input per composer; the picked photo is shrunk by
+     DS.readImage and stored on the message, never on the tenant data. */
+  function bindAttach(root, getScope, getPeerId, onSent) {
+    var btn = root.querySelector('[data-chat-attach]');
+    var file = root.querySelector('[data-chat-file]');
+    if (!btn || !file) return;
+    if (btn.getAttribute('data-attach-bound')) return;
+    btn.setAttribute('data-attach-bound', '1');
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      file.click();
+    });
+    file.addEventListener('change', function () {
+      var f = file.files && file.files[0];
+      if (!f) return;
+      var en = DS.lang() === 'en';
+      if (!/^image\//.test(f.type)) {
+        DS.toast(en ? 'Please choose an image' : 'اختر صورة من فضلك', 'error');
+        file.value = '';
+        return;
+      }
+      if (f.size > 10 * 1024 * 1024) {
+        DS.toast(en ? 'Image is too large' : 'حجم الصورة كبير جداً', 'error');
+        file.value = '';
+        return;
+      }
+      btn.classList.add('is-loading');
+      DS.readImage(f, function (data) {
+        btn.classList.remove('is-loading');
+        var scope = getScope();
+        var peer = getPeerId();
+        if (!scope || !peer) return;
+        var caption = en ? '📷 Photo' : '📷 صورة';
+        var res = DS.data.sendMessageTo(scope, peer, caption, data);
+        file.value = '';
+        if (!res || res.blocked) {
+          DS.toast(t('noPermission'), 'error');
+          return;
+        }
+        DS.toast(en ? 'Photo sent' : 'تم إرسال الصورة', 'success');
+        if (onSent) onSent();
+      }, 760);
+    });
+  }
+
   function messagesMarkup(room, user) {
     var msgs = ((room && room.messages) || []).slice(-120);
     if (!msgs.length) {
@@ -146,7 +192,10 @@
       html += '<div class="chat-msg' + (mine ? ' mine' : '') + (grouped ? ' grouped' : '') + '">' + av +
         '<div class="chat-msg-body">' +
           (!mine && !grouped ? '<div class="chat-name">' + esc(name) + '</div>' : '') +
-          '<div class="chat-bubble">' + esc(DS.lang() === 'en' ? (m.text_en || m.text) : m.text) + '</div>' +
+          '<div class="chat-bubble">' +
+            (m.image ? '<img class="chat-bubble-img" src="' + esc(m.image) + '" alt="' + esc(DS.lang() === 'en' ? 'Attached image' : 'صورة مرفقة') + '" loading="lazy">' : '') +
+            esc(DS.lang() === 'en' ? (m.text_en || m.text) : m.text) +
+          '</div>' +
           '<div class="chat-meta">' + esc(DS.timeShort(m.at)) + (mine ? '<span class="ticks seen">✓✓</span>' : '') + '</div>' +
         '</div></div>';
     });
@@ -435,7 +484,8 @@
       return '<div class="chat-thread" data-chat-thread>' + messagesMarkup(room, user) + '</div>' +
         quickRepliesMarkup() +
         '<div class="chat-compose">' +
-          '<button type="button" class="chat-mic-btn" aria-label="Voice note" title="Voice note">' + icon('mic') + '</button>' +
+          '<button type="button" class="chat-attach-btn" data-chat-attach aria-label="' + esc(t('sendMessage') === 'Send' ? 'Attach image' : 'إرفاق صورة') + '" title="' + esc(t('sendMessage') === 'Send' ? 'Attach image' : 'إرفاق صورة') + '">' + icon('paperclip') + '</button>' +
+          '<input type="file" accept="image/*" class="chat-file-input" data-chat-file hidden>' +
           '<div class="chat-compose-box"><textarea rows="1" data-chat-input placeholder="' + esc(t('sendMessage')) + '" aria-label="' + esc(t('sendMessage')) + '"></textarea></div>' +
           '<button type="button" class="chat-send" data-chat-send aria-label="' + esc(t('send')) + '">' + icon('send') + '</button>' +
         '</div>';
@@ -515,6 +565,13 @@
         DS.data.togglePeerBlock(state.scope, contact.id, user);
         DS.toast(t('chatUnblocked'), 'success');
         render();
+      });
+      if (contact) bindAttach(el, function () { return state.scope; }, function () { return contact.id; }, function () {
+        var th = el.querySelector('[data-chat-thread]');
+        if (th) {
+          th.innerHTML = messagesMarkup(roomOf(user, state.scope, contact), user);
+          th.scrollTop = th.scrollHeight;
+        }
       });
 
       var input = el.querySelector('[data-chat-input]');
@@ -634,7 +691,8 @@
               '<button type="button" class="btn btn-secondary btn-sm" data-dsc-unblock>' + esc(t('chatUnblock')) + '</button></div>'
           : quickRepliesMarkup('dsc-quick-replies') +
             '<div class="chat-compose dsc-compose">' +
-              '<button type="button" class="chat-mic-btn" aria-label="Voice note" title="Voice note">' + icon('mic') + '</button>' +
+              '<button type="button" class="chat-attach-btn" data-chat-attach aria-label="' + esc(t('sendMessage') === 'Send' ? 'Attach image' : 'إرفاق صورة') + '" title="' + esc(t('sendMessage') === 'Send' ? 'Attach image' : 'إرفاق صورة') + '">' + icon('paperclip') + '</button>' +
+          '<input type="file" accept="image/*" class="chat-file-input" data-chat-file hidden>' +
               '<div class="chat-compose-box">' +
               '<textarea rows="1" data-dsc-input placeholder="' + esc(t('sendMessage')) + '" aria-label="' + esc(t('sendMessage')) + '"></textarea></div>' +
               '<button type="button" class="chat-send" data-dsc-send aria-label="' + esc(t('send')) + '">' + icon('send') + '</button></div>') +
@@ -702,6 +760,7 @@
         DS.toast(t('chatUnblocked'), 'success');
         rerender();
       });
+      bindAttach(root, function () { return scope; }, function () { return driver.id; }, rerender);
       var input = root.querySelector('[data-dsc-input]');
       var sendBtn = root.querySelector('[data-dsc-send]');
       function send() {
@@ -768,7 +827,8 @@
               '<button type="button" class="btn btn-secondary btn-sm" data-dsc-unblock>' + esc(t('chatUnblock')) + '</button></div>'
           : quickRepliesMarkup('dsc-quick-replies') +
             '<div class="chat-compose dsc-compose">' +
-              '<button type="button" class="chat-mic-btn" aria-label="Voice note" title="Voice note">' + icon('mic') + '</button>' +
+              '<button type="button" class="chat-attach-btn" data-chat-attach aria-label="' + esc(t('sendMessage') === 'Send' ? 'Attach image' : 'إرفاق صورة') + '" title="' + esc(t('sendMessage') === 'Send' ? 'Attach image' : 'إرفاق صورة') + '">' + icon('paperclip') + '</button>' +
+          '<input type="file" accept="image/*" class="chat-file-input" data-chat-file hidden>' +
               '<div class="chat-compose-box">' +
               '<textarea rows="1" data-dsc-input placeholder="' + esc(t('sendMessage')) + '" aria-label="' + esc(t('sendMessage')) + '"></textarea></div>' +
               '<button type="button" class="chat-send" data-dsc-send aria-label="' + esc(t('send')) + '">' + icon('send') + '</button></div>') +
@@ -836,6 +896,7 @@
         DS.toast(t('chatUnblocked'), 'success');
         rerender();
       });
+      bindAttach(root, function () { return scope; }, function () { return company.id; }, rerender);
       var input = root.querySelector('[data-dsc-input]');
       var sendBtn = root.querySelector('[data-dsc-send]');
       function send() {
@@ -964,7 +1025,8 @@
               '<button type="button" class="btn btn-secondary btn-sm" data-dsc-unblock>' + esc(t('chatUnblock')) + '</button></div>'
           : quickRepliesMarkup('dsc-quick-replies') +
             '<div class="chat-compose dsc-compose">' +
-              '<button type="button" class="chat-mic-btn" aria-label="Voice note" title="Voice note">' + icon('mic') + '</button>' +
+              '<button type="button" class="chat-attach-btn" data-chat-attach aria-label="' + esc(t('sendMessage') === 'Send' ? 'Attach image' : 'إرفاق صورة') + '" title="' + esc(t('sendMessage') === 'Send' ? 'Attach image' : 'إرفاق صورة') + '">' + icon('paperclip') + '</button>' +
+          '<input type="file" accept="image/*" class="chat-file-input" data-chat-file hidden>' +
               '<div class="chat-compose-box">' +
               '<textarea rows="1" data-dsc-input placeholder="' + esc(t('sendMessage')) + '" aria-label="' + esc(t('sendMessage')) + '"></textarea></div>' +
               '<button type="button" class="chat-send" data-dsc-send aria-label="' + esc(t('send')) + '">' + icon('send') + '</button></div>') +
@@ -1032,6 +1094,7 @@
         DS.toast(t('chatUnblocked'), 'success');
         rerender();
       });
+      bindAttach(root, function () { return scope; }, function () { return peerId; }, rerender);
       var input = root.querySelector('[data-dsc-input]');
       var sendBtn = root.querySelector('[data-dsc-send]');
       function send() {
@@ -1192,50 +1255,6 @@
     }
   };
 
-  console.log('%cDotStudio® POS · chat ready (1-on-1)', 'color:#CCFF00;font-weight:bold');
-  /* ── Voice notes (MediaRecorder) ─────────────────────────────── */
-  function recordVoiceNote(onDone) {
-    onDone = onDone || function () {};
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      onDone(null);
-      return;
-    }
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
-      var chunks = [];
-      var mr;
-      try { mr = new MediaRecorder(stream); }
-      catch (e) { stream.getTracks().forEach(function (tr) { tr.stop(); }); onDone(null); return; }
-      mr.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
-      mr.onstop = function () {
-        stream.getTracks().forEach(function (tr) { tr.stop(); });
-        var blob = new Blob(chunks, { type: mr.mimeType || 'audio/webm' });
-        var url = '';
-        try { url = URL.createObjectURL(blob); } catch (e) { url = ''; }
-        onDone(url);
-      };
-      mr.start();
-      setTimeout(function () { if (mr.state !== 'inactive') mr.stop(); }, 4000);
-    }).catch(function () { onDone(null); });
-  }
-
-  document.addEventListener('click', function (e) {
-    var mic = e.target && e.target.closest ? e.target.closest('.chat-mic-btn') : null;
-    if (!mic) return;
-    e.preventDefault();
-    if (mic.getAttribute('data-recording') === '1') return;
-    mic.setAttribute('data-recording', '1');
-    mic.classList.add('is-recording');
-    var compose = mic.parentElement;
-    var ta = compose ? compose.querySelector('textarea') : null;
-    var sendBtn = compose ? compose.querySelector('.chat-send') : null;
-    recordVoiceNote(function (url) {
-      mic.removeAttribute('data-recording');
-      mic.classList.remove('is-recording');
-      if (!ta) return;
-      ta.value = url ? ('🎤 Voice note: ' + url) : '🎤 Voice note';
-      ta.dispatchEvent(new Event('input', { bubbles: true }));
-      if (sendBtn) sendBtn.click();
-    });
-  });
+  console.log('%cDotStudio® POS · chat ready (1-on-1 + image attachments)', 'color:#CCFF00;font-weight:bold');
 
 })();

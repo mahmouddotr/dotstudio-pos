@@ -17,9 +17,80 @@ body, button, input { font-family: 'SF Pro AR', 'SF Pro Display', sans-serif !im
    Loaded LAST on the customer pages.
    ═══════════════════════════════════════════════════════════════ */
 
-/* ───────────────────────── 1 · TOKENS ───────────────────────── */
+/* ───────────────────────── 1 · TOKENS (Dark by default) ───────────────────────── */
 body.saleor-store,
 body.saleor-checkout {
+  color-scheme: dark;
+
+  --bg: #0A0A0A;
+  --bg-body: #0A0A0A;
+  --bg-primary: #0A0A0A;
+  --bg-main: #0A0A0A;
+  --card-bg: #141414;
+  --bg-surface: #141414;
+
+  --surface: #141414;
+  --surface-solid: #141414;
+  --surface-2: #1F1F1F;
+  --surface-3: #262626;
+  --surface-hover: #1A1A1A;
+  --bg-elevated: rgba(20, 20, 20, 0.96);
+  --bg-glass: rgba(20, 20, 20, 0.92);
+  --material-dark: rgba(20, 20, 20, 0.96);
+
+  --text: #FFFFFF;
+  --text-main: #FFFFFF;
+  --text-primary: #FFFFFF;
+  --text-secondary: #A0A0A0;
+  --text-tertiary: #A0A0A0;
+  --text-disabled: #666666;
+
+  --accent: #CCFF00;
+  --accent-lime: #CCFF00;
+  --lime: #CCFF00;
+  --lime-strong: #D9FF4D;
+  --lime-deep: #A8D400;
+  --lime-soft: rgba(204, 255, 0, 0.16);
+  --lime-soft-2: rgba(204, 255, 0, 0.24);
+  --lime-glow: rgba(204, 255, 0, 0.30);
+  --on-lime: #111111;
+
+  --border: rgba(255, 255, 255, 0.10);
+  --border-soft: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-lime: rgba(204, 255, 0, 0.45);
+
+  --danger: #FF453A;
+  --danger-soft: rgba(255, 69, 58, 0.14);
+  --success: #30D158;
+  --success-soft: rgba(48, 209, 88, 0.14);
+  --warning: #FF9F0A;
+  --warning-soft: rgba(255, 159, 10, 0.14);
+  --info: #64D2FF;
+  --info-soft: rgba(100, 210, 255, 0.14);
+  --purple: #BF5AF2;
+  --purple-soft: rgba(191, 90, 242, 0.14);
+  --orange: #FF9F0A;
+  --orange-soft: rgba(255, 159, 10, 0.14);
+  --blue-soft: rgba(100, 210, 255, 0.14);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.30);
+  --shadow-md: 0 12px 30px rgba(0, 0, 0, 0.38);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.48);
+  --shadow-float: 0 20px 50px rgba(0, 0, 0, 0.45);
+  --ring: 0 0 0 3px rgba(204, 255, 0, 0.28);
+  --ring-lime: 0 0 0 3px rgba(204, 255, 0, 0.28);
+
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Light mode overrides (opt-in via theme toggle) */
+html[data-customer-theme="light"] body.saleor-store,
+html[data-customer-theme="light"] body.saleor-checkout,
+html[data-theme="light"] body.saleor-store,
+html[data-theme="light"] body.saleor-checkout {
   color-scheme: light;
 
   --bg: #F9F9F9;
@@ -27,6 +98,7 @@ body.saleor-checkout {
   --bg-primary: #F9F9F9;
   --bg-main: #F9F9F9;
   --card-bg: #FFFFFF;
+  --bg-surface: #FFFFFF;
 
   --surface: #FFFFFF;
   --surface-solid: #FFFFFF;

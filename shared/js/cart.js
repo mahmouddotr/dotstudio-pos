@@ -46,7 +46,10 @@
   function flush() {
     if (timer) { clearTimeout(timer); timer = null; }
     if (pending == null) return;
-    try { localStorage.setItem(KEY, JSON.stringify(pending)); } catch (e) {}
+    try {
+      if (DS.api && typeof DS.api.setCart === 'function') DS.api.setCart(pending);
+      else localStorage.setItem(KEY, JSON.stringify(pending));
+    } catch (e) { try { localStorage.setItem(KEY, JSON.stringify(pending)); } catch (e2) {} }
     pending = null;
   }
 

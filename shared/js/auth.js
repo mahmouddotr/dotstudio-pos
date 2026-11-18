@@ -506,7 +506,7 @@
       }
       try { DS.setSession(existing, true); } catch (e) {}
 
-      window.location.href = '/customer/storefront.html';
+      window.location.href = (DS.url ? DS.url('customer/storefront.html') : 'customer/storefront.html');
       return { ok: true, user: user };
     } catch (error) {
       console.warn('[auth] verifyOTP failed', error);
@@ -643,7 +643,7 @@
             if (!user) return;
             __saveFirebaseSession(user);
             if (__isLoginPage()) {
-              try { window.location.href = '/customer/storefront.html'; } catch (e) {}
+              try { window.location.href = (DS.url ? DS.url('customer/storefront.html') : 'customer/storefront.html'); } catch (e) {}
             }
           });
         } catch (e) { console.warn('[auth] onAuthStateChanged failed', e); }
@@ -651,6 +651,57 @@
     } catch (e) { console.warn('[auth] initFirebaseAuthState failed', e); }
   }
   __initFirebaseAuthState();
+
+  /* ───────────────────────────── LOGOUT (Firebase-aware) ─────────────────────────────
+     Centralised sign-out used by the storefront header button and every other
+     surface: tears down the Firebase session, wipes the local session keys and
+     sends the user back to the login page. */
+  (function () {
+    var _origLogout = (typeof DS.logout === 'function') ? DS.logout : function () {};
+    DS.logout = function (silent) {
+      try {
+        if (DS.firebase && typeof DS.firebase.signOut === 'function') DS.firebase.signOut();
+      } catch (e) {}
+      try {
+        if (window.firebaseAuth && typeof window.firebaseAuth.signOut === 'function') window.firebaseAuth.signOut();
+      } catch (e) {}
+      try {
+        if (window.firebase && window.firebase.auth) {
+          var a = window.firebase.auth();
+          if (a && typeof a.signOut === 'function') a.signOut();
+        }
+      } catch (e) {}
+      try { _origLogout(silent); } catch (e) {}
+      try {
+        ['cz_session','cz_user','cz_role','cz_mock','cz_login_at','cz_remember','ds_permissions','ds_admin_backup'].forEach(function (k) {
+          try { localStorage.removeItem(k); } catch (e2) {}
+          try { sessionStorage.removeItem(k); } catch (e2) {}
+        });
+      } catch (e) {}
+      if (!silent) {
+        try { window.location.href = (DS.url ? DS.url('index.html') : 'index.html'); } catch (e) { window.location.href = 'index.html'; }
+      }
+    };
+    /* Inject a visible Logout button into the storefront header when it is missing. */
+    function injectLogout() {
+      try {
+        if (!/storefront\.html/i.test(String(location.pathname || ''))) return;
+        var header = document.querySelector('.sl-header, .sf-header, header');
+        if (!header) return;
+        if (header.querySelector('[data-auth-logout]')) return;
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.setAttribute('data-auth-logout', '1');
+        btn.textContent = (DS.lang && DS.lang() === 'en') ? 'Log out' : 'تسجيل الخروج';
+        btn.style.cssText = 'margin-inline-start:8px;padding:6px 10px;border-radius:8px;background:transparent;border:1px solid var(--border,rgba(255,255,255,.15));color:inherit;cursor:pointer;font-size:12px;';
+        btn.addEventListener('click', function () { DS.logout(); });
+        var actions = header.querySelector('.sl-actions, .sf-actions');
+        (actions || header).appendChild(btn);
+      } catch (e) {}
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectLogout);
+    else setTimeout(injectLogout, 0);
+  })();
 
   console.log('%cDotStudio® · auth ready', 'color:#CCFF00');
 })();

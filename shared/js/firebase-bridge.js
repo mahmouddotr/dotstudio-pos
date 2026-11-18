@@ -92,13 +92,50 @@
   }
 
   function google() {
+    /* Direct, synchronous popup when Firebase is already loaded (triggered by a
+       real user click so the browser does not block it). */
+    try {
+      if (window.firebaseAuth && window.signInWithPopup) {
+        var provider = window.googleProvider;
+        if (!provider && window.GoogleAuthProvider) provider = new window.GoogleAuthProvider();
+        return window.signInWithPopup(window.firebaseAuth, provider)
+          .then(function (res) { return { ok: true, uid: res.user.uid, email: res.user.email, name: res.user.displayName }; })
+          .catch(function (err) {
+            var code = (err && err.code) ? String(err.code) : 'firebase';
+            if (code.indexOf('popup-closed-by-user') === -1) {
+              console.warn('[auth] firebase google failed', err);
+            }
+            return { ok: false, error: code };
+          });
+      }
+    } catch (err) {
+      var code = (err && err.code) ? String(err.code) : 'firebase';
+      if (code.indexOf('popup-closed-by-user') === -1) {
+        console.warn('[auth] firebase google failed', err);
+      }
+      return Promise.resolve({ ok: false, error: code });
+    }
     return ensure().then(function (ok) {
       if (!ok) return { ok: false, error: 'not_configured' };
       var provider = window.googleProvider || new (window.GoogleAuthProvider || Object)();
       var fn = window.signInWithPopup;
-      return fn(auth(), provider)
-        .then(function (res) { return { ok: true, uid: res.user.uid, email: res.user.email, name: res.user.displayName }; })
-        .catch(function (err) { return { ok: false, error: (err && err.code) || 'firebase' }; });
+      try {
+        return fn(auth(), provider)
+          .then(function (res) { return { ok: true, uid: res.user.uid, email: res.user.email, name: res.user.displayName }; })
+          .catch(function (err) {
+            var code = (err && err.code) ? String(err.code) : 'firebase';
+            if (code.indexOf('popup-closed-by-user') === -1) {
+              console.warn('[auth] firebase google failed', err);
+            }
+            return { ok: false, error: code };
+          });
+      } catch (err) {
+        var code = (err && err.code) ? String(err.code) : 'firebase';
+        if (code.indexOf('popup-closed-by-user') === -1) {
+          console.warn('[auth] firebase google failed', err);
+        }
+        return { ok: false, error: code };
+      }
     });
   }
 

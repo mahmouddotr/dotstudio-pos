@@ -624,6 +624,12 @@
         '</nav>' +
         search +
         '<div class="sl-actions">' +
+          '<button type="button" class="sl-icon-btn sl-account-btn" data-profile aria-label="' + esc(EN ? 'My account' : 'حسابي') + '" title="' + esc(EN ? 'My account' : 'حسابي') + '">' +
+            icon('user') +
+          '</button>' +
+          '<button type="button" class="sl-icon-btn sl-wish-btn" data-wishlist-open aria-label="' + esc(EN ? 'Wishlist' : 'المفضلة') + '" title="' + esc(EN ? 'Wishlist' : 'المفضلة') + '">' +
+            icon('heart') + '<b class="sl-wish-count" data-wishlist-count data-empty="1">0</b>' +
+          '</button>' +
           '<button type="button" class="sl-icon-btn sl-theme-toggle" data-theme-toggle aria-label="' +
             esc(DS.customerTheme() === 'dark' ? (EN ? 'Switch to light mode' : 'التبديل للوضع الفاتح') : (EN ? 'Switch to dark mode' : 'التبديل للوضع الداكن')) +
             '" title="' + esc(EN ? 'Theme' : 'المظهر') + '">' +
@@ -647,17 +653,46 @@
 
   function customerFooter() {
     var EN = DS.lang() === 'en';
-    return '<footer class="sf-footer"><div class="sf-footer-inner">' +
-      '<div class="sf-footer-brand">' +
+    var store = url('customer/storefront.html');
+    var catLinks = (EN
+      ? ['Clothing', 'Hot drinks', 'Perfumes', 'Accessories']
+      : ['ملابس', 'مشروبات ساخنة', 'عطور', 'إكسسوارات'])
+      .map(function (c) { return '<a href="' + store + '?cat=' + encodeURIComponent(c) + '#sfCatalog" data-footer-cat="' + esc(c) + '">' + esc(c) + '</a>'; })
+      .join('');
+    return '<footer class="sf-footer sf-footer-2026"><div class="sf-footer-grid">' +
+      '<div class="sf-footer-col sf-footer-brand">' +
         '<img src="' + url('assets/img/LOGO-WHAIT.png') + '" alt="DotStudio">' +
-        '<span>© ' + new Date().getFullYear() + ' DotStudio® · ' + esc(EN ? 'All rights reserved.' : 'كل الحقوق محفوظة.') + '</span>' +
+        '<p>' + esc(EN
+          ? 'Every store, one bag. Curated products from the brands you already love — delivered to your door with live tracking.'
+          : 'كل المتاجر في سلة واحدة. منتجات مختارة من العلامات التي تحبها — تصلك إلى بابك مع تتبع لحظي.') + '</p>' +
+        '<div class="sf-footer-badges">' +
+          '<span>' + icon('shield') + esc(EN ? 'Secure payment 100%' : 'دفع آمن 100%') + '</span>' +
+          '<span>' + icon('truck') + esc(EN ? 'Free shipping' : 'شحن مجاني') + '</span>' +
+        '</div>' +
       '</div>' +
-      '<nav class="sf-footer-links" aria-label="' + esc(EN ? 'Store links' : 'روابط المتجر') + '">' +
-        '<a href="' + url('customer/storefront.html') + '">' + esc(EN ? 'Home' : 'الرئيسية') + '</a>' +
-        '<a href="' + url('auth/jobs/jobs.html') + '">' + esc(EN ? 'Jobs' : 'الوظائف') + '</a>' +
-        '<a href="' + url('auth/public-chat.html') + '">' + esc(EN ? 'Messages' : 'الرسائل') + '</a>' +
-        '<button type="button" data-customer-logout>' + esc(EN ? 'Sign out' : 'تسجيل الخروج') + '</button>' +
-      '</nav>' +
+      '<div class="sf-footer-col">' +
+        '<h4>' + esc(EN ? 'Categories' : 'الأقسام') + '</h4>' +
+        catLinks +
+      '</div>' +
+      '<div class="sf-footer-col">' +
+        '<h4>' + esc(EN ? 'Customer service' : 'خدمة العملاء') + '</h4>' +
+        '<a href="' + url('customer/my-orders.html') + '">' + icon('receipt') + esc(EN ? 'My orders' : 'طلباتي') + '</a>' +
+        '<a href="' + url('customer/tracking.html') + '">' + icon('mapPin') + esc(EN ? 'Track my order' : 'تتبع طلبي') + '</a>' +
+        '<a href="' + url('auth/jobs/jobs.html') + '">' + icon('jobs') + esc(EN ? 'Jobs' : 'الوظائف') + '</a>' +
+        '<a href="' + url('auth/public-chat.html') + '">' + icon('chat') + esc(EN ? 'Message us' : 'راسلنا') + '</a>' +
+        '<button type="button" data-customer-logout>' + icon('logout') + esc(EN ? 'Sign out' : 'تسجيل الخروج') + '</button>' +
+      '</div>' +
+      '<div class="sf-footer-col">' +
+        '<h4>' + esc(EN ? 'Payment methods' : 'طرق الدفع') + '</h4>' +
+        '<div class="sf-pay-badges">' +
+          '<span>Visa</span><span>Mastercard</span><span>' + esc(EN ? 'Vodafone Cash' : 'فودافون كاش') + '</span>' +
+          '<span>InstaPay</span><span>' + esc(EN ? 'Cash' : 'كاش') + '</span>' +
+        '</div>' +
+        '<a href="' + url('customer/storefront.html') + '">' + icon('lock') + esc(EN ? 'Safe & encrypted checkout' : 'دفع آمن ومشفّر') + '</a>' +
+      '</div>' +
+    '</div><div class="sf-footer-bottom">' +
+      '<b>© ' + new Date().getFullYear() + ' DotStudio®</b>' +
+      '<span>' + esc(EN ? 'All rights reserved · Made in Egypt' : 'كل الحقوق محفوظة · صُنع في مصر') + '</span>' +
     '</div></footer>';
   }
 
@@ -787,6 +822,13 @@
     var folderMatch = String(window.location.pathname || '').match(/\/(admin|owner|cashier|delivery|customer)\//);
     var folder = folderMatch && FOLDER_ROLES[folderMatch[1]];
     if (folder && folder.indexOf(user.role) === -1) {
+      /* Security requirement: a customer attempting to access a protected
+         non-customer area (e.g. owner dashboard) must be sent to login. */
+      if (user.role === 'customer' && folderMatch[1] !== 'customer') {
+        try { if (DS.logout) DS.logout(true); } catch (e) {}
+        window.location.replace(DS.url('index.html'));
+        return null;
+      }
       window.location.replace(DS.url(DS.roleHome(user)));
       return null;
     }

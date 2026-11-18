@@ -486,7 +486,8 @@ html[dir="rtl"] .chat-msg.mine .chat-meta { justify-content: flex-start; }
 .chat-live-dot.is-online { background: #22c55e; }
 .chat-live-dot.is-offline { background: #ef4444; animation: none; box-shadow: none; }
 
-/* ───────────────────────────── mic button ──────────────────────────── */
+/* ─────────────────────────── attach button ─────────────────────────── */
+.chat-attach-btn,
 .chat-mic-btn {
   width: 40px;
   height: 40px;
@@ -500,9 +501,24 @@ html[dir="rtl"] .chat-msg.mine .chat-meta { justify-content: flex-start; }
   cursor: pointer;
   transition: all 0.18s ease;
 }
+.chat-attach-btn svg,
 .chat-mic-btn svg { width: 17px; height: 17px; }
+.chat-attach-btn:hover,
 .chat-mic-btn:hover { border-color: var(--lime, #CCFF00); color: var(--lime, #CCFF00); }
+.dsc-compose .chat-attach-btn,
 .dsc-compose .chat-mic-btn { width: 36px; height: 36px; }
+.chat-attach-btn.is-loading { opacity: 0.5; pointer-events: none; }
+.chat-file-input { display: none !important; }
+.chat-bubble-img {
+  display: block;
+  max-width: min(240px, 100%);
+  max-height: 240px;
+  width: auto;
+  height: auto;
+  border-radius: 12px;
+  margin-bottom: 6px;
+  object-fit: cover;
+}
 
 /* ─────────────────────────── quick replies ─────────────────────────── */
 .chat-quick-replies {

@@ -378,7 +378,7 @@
       openNow: 'مفتوح الآن', closedNow: 'مغلق الآن', storeRating: 'تقييم المتجر',
       seeAll: 'عرض الكل', resultsFor: 'نتائج البحث عن', noItems: 'لا توجد منتجات مطابقة',
       subtotalLabel: 'المجموع الفرعي', deliveryLabel: 'التوصيل', totalLabel: 'الإجمالي',
-      checkoutNow: 'إتمام الطلب', orderSummaryHint: 'الأسعار تشمل ضريبة القيمة المضافة',
+      checkoutNow: 'إتمام الطلب', orderSummaryHint: 'دفع آمن · بياناتك محمية ومشفّرة',
       profileTitle: 'الملف الشخصي', accountType: 'نوع الحساب', storeLabel: 'المتجر',
       subscriptionTitle: 'اختر الباقة المناسبة', subscriptionSub: 'فعّل اشتراكك عبر واتساب في خطوة واحدة — بدون نماذج داخلية.',
       subscribe: 'اشترك الآن', currentPlan: 'باقتك الحالية', renew: 'تجديد', monthly: 'شهري', sixMonths: '6 أشهر', sixmonths: '6 أشهر', yearly: 'سنوي',
@@ -592,7 +592,7 @@
       openNow: 'Open now', closedNow: 'Closed now', storeRating: 'Store rating',
       seeAll: 'See all', resultsFor: 'Results for', noItems: 'No matching products',
       subtotalLabel: 'Subtotal', deliveryLabel: 'Delivery', totalLabel: 'Total',
-      checkoutNow: 'Checkout', orderSummaryHint: 'Prices include VAT',
+      checkoutNow: 'Checkout', orderSummaryHint: 'Secure payment · your data is encrypted',
       profileTitle: 'Profile', accountType: 'Account type', storeLabel: 'Store',
       subscriptionTitle: 'Choose the right plan', subscriptionSub: 'Activate your plan on WhatsApp in one step — no internal forms.',
       subscribe: 'Subscribe', currentPlan: 'Your current plan', renew: 'Renew', monthly: 'Monthly', sixMonths: '6 months', sixmonths: '6 months', yearly: 'Yearly',
@@ -802,7 +802,7 @@
   var LS_CUSTOMER_THEME = 'ds_customer_theme';
   function customerTheme() {
     try { var v = localStorage.getItem(LS_CUSTOMER_THEME); if (v === 'light' || v === 'dark') return v; } catch (e) {}
-    try { return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light'; } catch (e) { return 'dark'; }
+    return 'dark';
   }
   function syncThemeColor() {
     var meta = document.querySelector('meta[name="theme-color"]');
@@ -1059,6 +1059,7 @@
     more: '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
     refresh: '<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
     image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/>',
+    paperclip: '<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
     tag: '<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>',
     layers: '<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.84Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65M22 12.65l-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
     grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>',
@@ -1430,7 +1431,7 @@ mic: '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M
       if (item.type === 'order') { if (DS.openOrder) DS.openOrder(item.order.id); return; }
       if (item.type === 'product') {
         if (window.location.pathname.indexOf('/owner/') > -1 || window.location.pathname.indexOf('/cashier/') > -1) {
-          location.href = 'products.html';
+          location.href = (DS.shell && DS.shell.hrefFor) ? DS.shell.hrefFor('products') : (DS.url ? DS.url('owner/products.html') : 'owner/products.html');
         } else {
           location.href = (DS.shell && DS.shell.hrefFor) ? DS.shell.hrefFor('products') : 'products.html';
         }

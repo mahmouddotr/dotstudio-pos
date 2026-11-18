@@ -15,7 +15,8 @@
     eyebrow: t('storefront'),
     icon: 'cart',
     sub: EN ? 'Confirm your details and place the order.' : 'أكد بياناتك وأكمل طلبك.',
-    actions: '<a class="btn btn-secondary" href="' + url('customer/storefront.html') + '">' + icon('arrowLeft') + esc(t('continueShopping')) + '</a>',
+    actions: '<button type="button" class="btn btn-secondary" data-theme-toggle aria-label="' + esc(EN ? 'Toggle theme' : 'تبديل المظهر') + '" title="' + esc(EN ? 'Theme' : 'المظهر') + '">' + icon((DS.customerTheme && DS.customerTheme() === 'dark') ? 'sun' : 'moon') + '</button>' +
+      '<a class="btn btn-secondary" href="' + url('customer/storefront.html') + '">' + icon('arrowLeft') + esc(t('continueShopping')) + '</a>',
     content: DS.skeleton.rows(4)
   });
   if (!page) return;
@@ -25,11 +26,30 @@
   var companies = (DS.data.companies || []).filter(function (c) { return c.status !== 'suspended'; });
   var state = {
     payment: 'cash', company: companies[0] ? companies[0].id : '', lat: null, lng: null,
-    redeem: false, fawryRef: '', receiptData: '', receiptName: '', transactionId: ''
+    redeem: false, fawryRef: '', receiptData: '', receiptName: '', transactionId: '', step: 1,
+    deliveryMode: 'inhouse', speed: 'standard',
+    form: { name: '', phone: '', address: '', city: '', notes: '' }
   };
+
+  /* Delivery pricing rules (TASK 3):
+     · In-house  → one dynamic store fee, never a service fee.
+     · External  → the courier tariff + a flat 5 EGP service fee.
+     · Express   → a small speed surcharge on the chosen channel.
+     VAT is intentionally absent: the storefront no longer adds 15%. */
+  var SERVICE_FEE = 5;
+  var EXPRESS_INHOUSE = 15;
+  var EXPRESS_EXTERNAL = 10;
 
   /* Manual wallet payments need a human check before the order is prepared. */
   function isManualPayment(method) { return method === 'vodafone' || method === 'instapay'; }
+
+  function payLabel(method) {
+    if (method === 'cash') return EN ? 'Cash on delivery' : 'كاش عند الاستلام';
+    if (method === 'vodafone') return EN ? 'Vodafone Cash' : 'فودافون كاش';
+    if (method === 'instapay') return EN ? 'InstaPay' : 'إنستاباي';
+    if (method === 'online') return EN ? 'Pay online' : 'الدفع الإلكتروني';
+    return EN ? 'Fawry' : 'فوري';
+  }
 
   /* ── Cart → validated lines, keeping each item's vendor ─────────── */
   function validItems() {
@@ -92,16 +112,29 @@
     return haversineKm(lat1, lon1, lat2, lon2);
   }
 
-  /* Dynamic fee = store distance base, or the chosen company's own tariff,
-     then the admin free-delivery rule can zero it out. */
-  function deliveryQuote(vlist, sub) {
+  /* Single delivery fee for ONE chosen channel (TASK 3). */
+  function isExternal() { return state.deliveryMode === 'external'; }
+  function serviceFee() { return isExternal() ? SERVICE_FEE : 0; }
+
+  function channelBase(vlist, mode, speed) {
+    mode = mode || state.deliveryMode;
+    speed = speed || state.speed;
     var distance = distanceFor(vlist);
-    var storeBase = 10 + (distance * 5);            // 10 EGP base + 5 EGP/km
-    storeBase = Math.min(Math.round(storeBase), 100);
-    var company = selectedCompany();
-    var amount = company
-      ? Math.max(0, Math.round((Number(company.fee) || 0) + distance * 2))
-      : Math.max(1, storeBase);
+    if (mode === 'external') {
+      var company = selectedCompany();
+      var tariff = company ? Number(company.fee) : 0;
+      return Math.max(1, Math.round(tariff || 25)) + (speed === 'express' ? EXPRESS_EXTERNAL : 0);
+    }
+    var storeBase = Math.min(Math.round(10 + distance * 5), 100);
+    return Math.max(1, storeBase + (speed === 'express' ? EXPRESS_INHOUSE : 0));
+  }
+
+  function deliveryQuote(vlist, sub, mode, speed) {
+    mode = mode || state.deliveryMode;
+    speed = speed || state.speed;
+    var distance = distanceFor(vlist);
+    var base = channelBase(vlist, mode, speed);
+    var company = mode === 'external' ? selectedCompany() : null;
 
     var fd = DS.data.freeDelivery ? DS.data.freeDelivery() : { enabled: false };
     var free = false;
@@ -109,13 +142,16 @@
       if (fd.until && new Date(fd.until).getTime() < Date.now()) free = false;
       else if (fd.mode === 'always') free = true;
       else if (fd.mode === 'threshold' && (Number(sub) || 0) >= (Number(fd.min_order) || 0)) free = true;
-      else if (fd.mode === 'company' && (!fd.company_id || (company && company.id === fd.company_id))) free = true;
+      else if (fd.mode === 'company' && mode === 'external' && (!fd.company_id || (company && company.id === fd.company_id))) free = true;
     }
     return {
       distance: Math.round(distance * 10) / 10,
-      fee: free ? 0 : amount,
+      fee: free ? 0 : base,
+      service: mode === 'external' ? SERVICE_FEE : 0,
       free: free,
-      base: amount
+      base: base,
+      mode: mode,
+      speed: speed
     };
   }
 
@@ -123,6 +159,75 @@
     return deliveryQuote(vlist, sub).fee;
   }
   function closedVendors(vlist) { return (vlist || []).filter(function (v) { return !v.open; }); }
+
+  /* ── Egyptian phone helpers (TASK 6B.1) ───────────────────────────
+     Local 01xxxxxxxxx and +201xxxxxxxxx are both normalised to the
+     same 10 digits, then rendered as "+20 10 1234 5678". */
+  function phoneDigits(v) {
+    var d = String(v || '').replace(/[^\d]/g, '');
+    if (d.indexOf('0020') === 0) d = d.slice(4);
+    else if (d.indexOf('20') === 0 && d.length > 10) d = d.slice(2);
+    if (d.charAt(0) === '0') d = d.slice(1);
+    return d.slice(0, 10);
+  }
+  function phoneDisplay(v) {
+    var d = phoneDigits(v);
+    if (!d) return '';
+    var out = '+20 ' + d.slice(0, 2);
+    if (d.length > 2) out += ' ' + d.slice(2, 6);
+    if (d.length > 6) out += ' ' + d.slice(6, 10);
+    return out;
+  }
+  function phoneValid(v) {
+    var d = phoneDigits(v);
+    if (d.length === 10) return true;
+    return /^\+?[0-9]{7,15}$/.test(String(v || '').replace(/[\s\-()]/g, ''));
+  }
+
+  /* ── Form state survives re-renders (payment / delivery switches) ── */
+  function seedForm() {
+    var q = DS.store.get('ds_quick_customer', null) || {};
+    if (!state.form.name) state.form.name = q.name || user.name || '';
+    if (!state.form.phone) state.form.phone = q.phone || user.phone || '';
+    if (!state.form.address) state.form.address = q.address || DS.loc(user, 'address') || '';
+    if (!state.form.city) state.form.city = q.city || DS.loc(user, 'city') || '';
+    if (state.form.phone) state.form.phone = phoneDisplay(state.form.phone);
+    if (!state.lat && q.lat) { state.lat = Number(q.lat) || null; state.lng = Number(q.lng) || null; }
+  }
+  function captureForm() {
+    if (!page.body) return;
+    var map = { name: '#coName', phone: '#coPhone', address: '#coAddress', city: '#coCity', notes: '#coNotes' };
+    Object.keys(map).forEach(function (k) {
+      var el = page.body.querySelector(map[k]);
+      if (el) state.form[k] = el.value;
+    });
+  }
+
+  /* Street / city autocomplete suggestions, built from real data. */
+  function suggestions() {
+    var saved = DS.data.addressesFor ? DS.data.addressesFor(user) : [];
+    var streets = [], cities = [];
+    saved.forEach(function (a) {
+      var s = DS.loc(a, 'address');
+      if (s && streets.indexOf(s) === -1) streets.push(s);
+      var c = DS.loc(a, 'city');
+      if (c && cities.indexOf(c) === -1) cities.push(c);
+    });
+    (DS.data.tenants || []).forEach(function (tn) {
+      var c = DS.loc(tn, 'city');
+      if (c && cities.indexOf(c) === -1) cities.push(c);
+    });
+    (EN ? ['Cairo', 'Giza', 'Alexandria', 'Mansoura'] : ['القاهرة', 'الجيزة', 'الإسكندرية', 'المنصورة'])
+      .forEach(function (c) { if (cities.indexOf(c) === -1) cities.push(c); });
+    return { streets: streets, cities: cities };
+  }
+
+  function datalist(id, values) {
+    if (!values || !values.length) return '';
+    return '<datalist id="' + id + '">' + values.map(function (v) {
+      return '<option value="' + esc(v) + '"></option>';
+    }).join('') + '</datalist>';
+  }
 
   function orderItems(vlist) {
     return vlist.map(function (v) {
@@ -223,7 +328,11 @@
       '<div class="pay-form">' +
         '<div class="pay-field">' +
           '<label for="receiptImage">' + esc(t('payReceiptLabel')) + ' *</label>' +
-          '<input type="file" accept="image/*" id="receiptImage" required>' +
+          '<label class="pay-receipt-drop" for="receiptImage" data-receipt-drop>' +
+            icon('paperclip') +
+            '<span data-receipt-drop-label>' + esc(state.receiptName || (EN ? 'Upload the transfer receipt' : 'أرفق صورة الإيصال')) + '</span>' +
+          '</label>' +
+          '<input type="file" accept="image/*" id="receiptImage" required class="pay-receipt-input">' +
           '<div class="pay-receipt-preview" data-receipt-preview' + (state.receiptData ? '' : ' hidden') + '>' +
             '<img src="' + esc(state.receiptData) + '" alt="' + esc(t('payReceiptLabel')) + '">' +
             '<span data-receipt-name>' + esc(state.receiptName || '') + '</span>' +
@@ -251,9 +360,17 @@
     var loyalty = loyaltyDiscount();
     var discount = Math.min(sub, (promo ? promo.amount : 0) + saleAmount + loyalty);
     var quote = deliveryQuote(vlist, sub);
-    var vatBase = Math.max(0, sub - discount);
-    var vat = DS.data.vatAmount ? DS.data.vatAmount(vatBase) : 0;
-    var total = Math.max(0, sub + fee(vlist, sub) - discount + vat);
+    /* No VAT on the storefront: subtotal + one delivery fee (+ 5 EGP
+       service fee only for an external courier) − discounts. */
+    var shipFee = quote.fee;
+    var service = quote.service;
+    var total = Math.max(0, sub + shipFee + service - discount);
+    var inBase = deliveryQuote(vlist, sub, 'inhouse', 'standard').fee;
+    var inEx = deliveryQuote(vlist, sub, 'inhouse', 'express').fee;
+    var extBase = deliveryQuote(vlist, sub, 'external', 'standard').fee;
+    var extEx = deliveryQuote(vlist, sub, 'external', 'express').fee;
+    var inFree = inBase === 0;
+    var extFree = extBase === 0;
     var primary = vlist[0] ? vlist[0].tn : (DS.data.tenants[0] || {});
     var saved = DS.data.addressesFor ? DS.data.addressesFor(user) : [];
     var addressCards = saved.map(function (a, i) {
@@ -284,51 +401,148 @@
         '</button>'
       : '';
 
-    var nameVal = quick && quick.name ? quick.name : (user.name || '');
-    var phoneVal = quick && quick.phone ? quick.phone : (user.phone || '');
-    var addressVal = quick && quick.address ? quick.address : (DS.loc(user, 'address') || '');
-    var cityVal = quick && quick.city ? quick.city : (DS.loc(user, 'city') || DS.loc(primary, 'city') || '');
+    seedForm();
+    var nameVal = state.form.name;
+    var phoneVal = state.form.phone;
+    var addressVal = state.form.address;
+    var cityVal = state.form.city || DS.loc(primary, 'city') || '';
+    var sugg = suggestions();
+    var companyName = (companies.filter(function (c) { return c.id === state.company; })[0] || companies[0] || {}).name || (EN ? 'Courier partner' : 'شركة توصيل');
 
+    function stepInd(n, label) {
+      var done = state.step > n;
+      return '<button type="button" class="co-step' + (state.step === n ? ' is-active' : '') + (done ? ' is-done' : '') +
+        '" data-step-ind="' + n + '" data-step-goto="' + n + '">' +
+        '<span class="co-step-num">' + (done ? '✓' : n) + '</span>' + esc(label) + '</button>';
+    }
+    var stepper = '<div class="co-stepper">' +
+      stepInd(1, EN ? 'Shipping' : 'الشحن') +
+      stepInd(2, EN ? 'Payment' : 'الدفع') +
+      stepInd(3, EN ? 'Review' : 'المراجعة') +
+    '</div>';
     var form = warning + '<div class="checkout-grid">' +
-      '<div class="checkout-section">' +
+      '<div class="checkout-section">' + stepper +
+        '<div class="step-pane' + (state.step===1?' is-active':'') + '" data-step-pane="1">' +
         '<div class="card"><div class="card-head"><div class="section-title">' + icon('user') + esc(t('customerInfo')) + '</div>' + (preview ? '<span class="badge purple">' + esc(EN ? 'Preview' : 'معاينة') + '</span>' : '') + '</div>' +
           '<div class="card-body">' + quickBtn +
             (addressCards ? '<div class="field" style="margin-bottom:14px"><label>' + esc(EN ? 'Saved addresses' : 'العناوين المحفوظة') + '</label>' +
               '<div class="co-address-cards">' + addressCards + '</div></div>' : '') +
             '<div class="co-fields">' +
               '<div class="co-field"><input class="co-input" id="coName" placeholder=" " autocomplete="name" value="' + esc(nameVal) + '"><label for="coName">' + esc(t('customerName')) + ' *</label></div>' +
-              '<div class="co-field"><input class="co-input" id="coPhone" placeholder=" " autocomplete="tel" dir="ltr" inputmode="tel" value="' + esc(phoneVal) + '"><label for="coPhone">' + esc(t('phone')) + ' *</label></div>' +
-              '<div class="co-field co-field-full"><input class="co-input" id="coAddress" placeholder=" " autocomplete="street-address" value="' + esc(addressVal) + '"><label for="coAddress">' + esc(t('deliveryTo')) + ' *</label></div>' +
-              '<div class="co-field"><input class="co-input" id="coCity" placeholder=" " autocomplete="address-level2" value="' + esc(cityVal) + '"><label for="coCity">' + esc(t('city')) + '</label></div>' +
-              '<div class="co-field is-select"><select class="co-input" id="coCompany">' +
-                '<option value="">' + esc(EN ? 'Store delivery' : 'توصيل المتجر') + ' (' + money(fee(vlist, sub)) + ')</option>' +
+              '<div class="co-field"><input class="co-input" id="coPhone" placeholder=" " autocomplete="tel" dir="ltr" inputmode="tel" value="' + esc(phoneVal) + '"><label for="coPhone">' + esc(EN ? 'Phone (+20)' : 'الهاتف (+20)') + ' *</label></div>' +
+              '<div class="co-field co-field-full"><input class="co-input" id="coAddress" placeholder=" " autocomplete="street-address" list="coStreetList" value="' + esc(addressVal) + '"><label for="coAddress">' + esc(t('deliveryTo')) + ' *</label></div>' +
+              '<div class="co-field"><input class="co-input" id="coCity" placeholder=" " autocomplete="address-level2" list="coCityList" value="' + esc(cityVal) + '"><label for="coCity">' + esc(t('city')) + '</label></div>' +
+              '<div class="co-field co-field-full"><textarea class="co-input" id="coNotes" rows="2" placeholder=" ">' + esc(state.form.notes || '') + '</textarea><label for="coNotes">' + esc(t('notes')) + '</label></div>' +
+            '</div>' +
+            datalist('coStreetList', sugg.streets) + datalist('coCityList', sugg.cities) +
+            '<div class="co-delivery-block">' +
+              '<div class="co-delivery-title">' + esc(EN ? 'Delivery method' : 'طريقة التوصيل') + '</div>' +
+              '<div class="co-mode-grid">' +
+                '<button type="button" class="co-mode' + (!isExternal() ? ' is-active' : '') + '" data-delivery-mode="inhouse">' +
+                  icon('store') +
+                  '<b>' + esc(EN ? 'In-house delivery' : 'توصيل المتجر') + '</b>' +
+                  '<i>' + esc(EN ? 'Store driver' : 'مندوب المتجر') + ' · ' + (inFree ? esc(EN ? 'FREE' : 'مجاني') : money(inBase)) + '</i>' +
+                '</button>' +
+                (companies.length ? '<button type="button" class="co-mode' + (isExternal() ? ' is-active' : '') + '" data-delivery-mode="external">' +
+                  icon('truck') +
+                  '<b>' + esc(EN ? 'Delivery company' : 'شركة توصيل') + '</b>' +
+                  '<i>' + esc(companyName) + ' · ' + (extFree ? esc(EN ? 'FREE' : 'مجاني') : money(extBase)) + '</i>' +
+                '</button>' : '') +
+              '</div>' +
+              '<div class="co-speed-grid">' +
+                '<button type="button" class="co-speed' + (state.speed !== 'express' ? ' is-active' : '') + '" data-speed="standard">' +
+                  '<span>' + esc(EN ? 'Standard · 45–60 min' : 'عادي · 45–60 دقيقة') + '</span>' +
+                  '<b>' + money(isExternal() ? extBase : inBase) + '</b>' +
+                '</button>' +
+                '<button type="button" class="co-speed' + (state.speed === 'express' ? ' is-active' : '') + '" data-speed="express">' +
+                  '<span>' + esc(EN ? 'Express · 20–30 min' : 'سريع · 20–30 دقيقة') + '</span>' +
+                  '<b>' + money(isExternal() ? extEx : inEx) + '</b>' +
+                '</button>' +
+              '</div>' +
+              (isExternal() && companies.length ? '<div class="co-field is-select"><select class="co-input" id="coCompany">' +
                 companies.map(function (c) { return '<option value="' + esc(c.id) + '"' + (state.company === c.id ? ' selected' : '') + '>' + esc(c.name) + ' · ' + money(c.fee) + '</option>'; }).join('') +
-              '</select><label for="coCompany">' + esc(t('deliveryCompany')) + '</label></div>' +
-              '<div class="co-field co-field-full"><textarea class="co-input" id="coNotes" rows="2" placeholder=" "></textarea><label for="coNotes">' + esc(t('notes')) + '</label></div>' +
+              '</select><label for="coCompany">' + esc(t('deliveryCompany')) + '</label></div>' : '') +
+              '<div class="co-delivery-title">' + esc(EN ? 'No VAT · service fee only for a courier company' : 'بدون ضريبة · رسوم خدمة 5 ج فقط لشركة التوصيل') + '</div>' +
             '</div>' +
           '</div></div>' +
+          '<div class="step-nav" style="display:flex;gap:8px;margin:12px 0">' +
+            '<button type="button" class="btn btn-primary" data-step-next="2" style="flex:1">' + esc(EN?'Next':'التالي') + '</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="step-pane' + (state.step===2?' is-active':'') + '" data-step-pane="2">' +
         '<div class="card"><div class="card-head"><div class="section-title">' + icon('wallet') + esc(t('choosePayment')) + '</div></div>' +
           '<div class="card-body"><div class="payment-options payment-options-4" role="radiogroup" aria-label="' + esc(t('choosePayment')) + '">' +
-            '<button type="button" class="payment-option' + (state.payment === 'cash' ? ' active' : '') + '" data-pay="cash" role="radio" aria-checked="' + (state.payment === 'cash' ? 'true' : 'false') + '">' + icon('wallet') + esc(EN ? 'Cash on delivery' : 'كاش عند الاستلام') + '</button>' +
-            '<button type="button" class="payment-option' + (state.payment === 'fawry' ? ' active' : '') + '" data-pay="fawry" role="radio" aria-checked="' + (state.payment === 'fawry' ? 'true' : 'false') + '">' + icon('card') + esc(EN ? 'Fawry' : 'فوري') + '</button>' +
-            '<button type="button" class="payment-option' + (state.payment === 'vodafone' ? ' active' : '') + '" data-pay="vodafone" role="radio" aria-checked="' + (state.payment === 'vodafone' ? 'true' : 'false') + '">' + icon('phone') + esc(EN ? 'Vodafone Cash' : 'فودافون كاش') + '</button>' +
-            '<button type="button" class="payment-option' + (state.payment === 'instapay' ? ' active' : '') + '" data-pay="instapay" role="radio" aria-checked="' + (state.payment === 'instapay' ? 'true' : 'false') + '">' + icon('card') + esc(EN ? 'InstaPay' : 'إنستاباي') + '</button>' +
-          '</div>' + paymentInstructions(total, primary) + '</div></div>' +
+            '<button type="button" class="payment-option' + (state.payment === 'cash' ? ' active' : '') + '" data-pay="cash" role="radio" aria-checked="' + (state.payment === 'cash' ? 'true' : 'false') + '">' + icon('wallet') + '<span>' + esc(EN ? 'Cash on delivery' : 'كاش عند الاستلام') + '</span></button>' +
+            '<button type="button" class="payment-option' + (state.payment === 'vodafone' ? ' active' : '') + '" data-pay="vodafone" role="radio" aria-checked="' + (state.payment === 'vodafone' ? 'true' : 'false') + '">' + icon('phone') + '<span>' + esc(EN ? 'Vodafone Cash' : 'فودافون كاش') + '</span></button>' +
+            '<button type="button" class="payment-option' + (state.payment === 'instapay' ? ' active' : '') + '" data-pay="instapay" role="radio" aria-checked="' + (state.payment === 'instapay' ? 'true' : 'false') + '">' + icon('card') + '<span>' + esc(EN ? 'InstaPay' : 'إنستاباي') + '</span></button>' +
+            '<button type="button" class="payment-option' + (state.payment === 'online' ? ' active' : '') + '" data-pay="online" role="radio" aria-checked="' + (state.payment === 'online' ? 'true' : 'false') + '">' + icon('card') + '<span>' + esc(EN ? 'Pay online' : 'الدفع الإلكتروني') + '</span></button>' +
+          '</div>' +
+          (!isManualPayment(state.payment) ? '<div class="co-pay-hint">' + icon('shield') + '<span>' +
+            esc(state.payment === 'cash'
+              ? (EN ? 'Pay the driver in cash when your order arrives.' : 'ادفع للمندوب نقداً عند وصول الطلب.')
+              : (EN ? 'You will be redirected to the secure payment gateway.' : 'سيتم تحويلك إلى بوابة الدفع الآمنة.')) +
+            '</span></div>' : '') +
+          paymentInstructions(total, primary) + '</div></div>' +
+        '<div class="step-nav" style="display:flex;gap:8px;margin:12px 0">' +
+          '<button type="button" class="btn btn-secondary" data-step-prev="1">' + esc(EN?'Back':'رجوع') + '</button>' +
+          '<button type="button" class="btn btn-primary" data-step-next="3" style="flex:1">' + esc(EN?'Next':'التالي') + '</button>' +
+        '</div>' +
+        '</div>' +
+        '<div class="step-pane' + (state.step===3?' is-active':'') + '" data-step-pane="3">' +
+        '<div class="card"><div class="card-head"><div class="section-title">' + icon('checkCircle') + esc(EN ? 'Review your order' : 'مراجعة الطلب') + '</div></div>' +
+          '<div class="card-body" style="padding-top:2px;padding-bottom:2px">' +
+            '<div class="co-review-block">' +
+              '<div class="co-review-copy"><span>' + esc(EN ? 'Contact' : 'بيانات التواصل') + '</span>' +
+                '<b>' + esc(nameVal || '—') + '</b><b dir="ltr" style="font-weight:500;color:var(--text-secondary)">' + esc(phoneVal || '—') + '</b></div>' +
+              '<button type="button" class="co-review-edit" data-step-goto="1">' + icon('edit') + esc(EN ? 'Edit' : 'تعديل') + '</button>' +
+            '</div>' +
+            '<div class="co-review-block">' +
+              '<div class="co-review-copy"><span>' + esc(EN ? 'Delivery address' : 'عنوان التوصيل') + '</span>' +
+                '<b>' + esc([addressVal, cityVal].filter(Boolean).join('، ') || '—') + '</b></div>' +
+              '<button type="button" class="co-review-edit" data-step-goto="1">' + icon('edit') + esc(EN ? 'Edit' : 'تعديل') + '</button>' +
+            '</div>' +
+            '<div class="co-review-block">' +
+              '<div class="co-review-copy"><span>' + esc(EN ? 'Delivery' : 'التوصيل') + '</span>' +
+                '<b>' + esc((isExternal() ? (EN ? 'Courier company · ' : 'شركة توصيل · ') + companyName : (EN ? 'In-house delivery' : 'توصيل المتجر')) +
+                  ' · ' + (state.speed === 'express' ? (EN ? 'Express 20–30 min' : 'سريع 20–30 دقيقة') : (EN ? 'Standard 45–60 min' : 'عادي 45–60 دقيقة'))) + '</b>' +
+                '<b style="font-weight:500;color:var(--text-secondary)">' +
+                  (quote.free ? esc(EN ? 'Free delivery' : 'توصيل مجاني') : esc((EN ? 'Delivery fee ' : 'رسوم التوصيل ') + money(shipFee))) +
+                  (service ? ' + ' + esc((EN ? 'service fee ' : 'رسوم خدمة ') + money(service)) : '') + '</b></div>' +
+              '<button type="button" class="co-review-edit" data-step-goto="1">' + icon('edit') + esc(EN ? 'Edit' : 'تعديل') + '</button>' +
+            '</div>' +
+            '<div class="co-review-block">' +
+              '<div class="co-review-copy"><span>' + esc(EN ? 'Payment method' : 'طريقة الدفع') + '</span>' +
+                '<b>' + esc(payLabel(state.payment)) + '</b>' +
+                (isManualPayment(state.payment) && state.transactionId
+                  ? '<b dir="ltr" style="font-weight:500;color:var(--text-secondary)">' + esc(state.transactionId) + '</b>' : '') +
+                (isManualPayment(state.payment) && !state.receiptData
+                  ? '<b style="font-weight:600;color:var(--danger)">' + esc(EN ? 'Receipt image required' : 'مطلوب صورة الإيصال') + '</b>' : '') + '</div>' +
+              '<button type="button" class="co-review-edit" data-step-goto="2">' + icon('edit') + esc(EN ? 'Edit' : 'تعديل') + '</button>' +
+            '</div>' +
+          '</div></div>' +
         '<div class="card"><div class="card-head"><div class="section-title">' + icon('box') + esc(t('items')) + '</div>' +
           '<span class="badge neutral">' + cart.items.length + ' ' + esc(t('item')) + ' · ' + vlist.length + ' ' + esc(EN ? 'stores' : 'متاجر') + '</span></div>' +
-          '<div class="card-body">' + orderItems(vlist) + '</div></div>' +
+          '<div class="card-body" style="padding-top:8px">' + orderItems(vlist) + '</div></div>' +
+        '<div class="step-nav" style="display:flex;gap:8px;margin:12px 0">' +
+          '<button type="button" class="btn btn-secondary" data-step-prev="2">' + esc(EN?'Back':'رجوع') + '</button>' +
+          '<button type="button" class="btn btn-primary" data-place-top style="flex:1">' + esc(EN ? 'Place order' : 'تأكيد الطلب') + '</button>' +
+        '</div>' +
+      '</div>' +
       '</div>' +
       '<aside class="checkout-sticky">' +
+        '<button type="button" class="co-summary-toggle" data-co-summary-toggle aria-expanded="false">' +
+          '<b>' + esc(t('orderSummary')) + '</b>' +
+          '<span style="display:inline-flex;align-items:center;gap:10px"><span class="co-summary-total" data-co-summary-total>' + money(total) + '</span>' +
+          '<span class="co-summary-chev">' + icon('chevronDown') + '</span></span>' +
+        '</button>' +
         '<div class="card"><div class="card-head"><div class="section-title">' + icon('receipt') + esc(t('orderSummary')) + '</div></div><div class="card-body">' +
           '<div class="summary-line"><span>' + esc(t('subtotal')) + '</span><span>' + money(sub) + '</span></div>' +
           (saleAmount ? '<div class="summary-line" style="color:var(--success)"><span>⚡ ' + esc(EN ? 'Store sale' : (DS.data.storeSale().label || 'تخفيضات المتجر')) + '</span><span>− ' + money(saleAmount) + '</span></div>' : '') +
           (promo && promo.amount ? '<div class="summary-line" style="color:var(--success)"><span>' + esc(EN ? 'Promo' : 'كود الخصم') + ' · ' + esc(promo.code) + '</span><span data-sum-discount>− ' + money(promo.amount) + '</span></div>' : '') +
           '<div class="summary-line co-loyalty-line" data-loyalty-line style="color:var(--success);' + (loyalty ? '' : 'display:none') + '"><span>' + icon('star') + esc(EN ? 'Loyalty · 100 pts' : 'نقاط الولاء · 100 نقطة') + '</span><span data-sum-loyalty>− ' + money(loyalty || (DS.loyalty ? DS.loyalty.REDEEM_VALUE : 10)) + '</span></div>' +
-          vlist.map(function (v) {
-            return '<div class="summary-line co-sum-fee"><span>' + icon('truck') + ' ' + esc(v.name) + '</span><span>' + money(v.fee) + '</span></div>';
-          }).join('') +
-          '<div class="summary-line"><span>' + esc(t('delivery')) + ' · ' + esc(EN ? quote.distance + ' km' : quote.distance + ' كم') +
-            (quote.free ? ' · ' + esc(EN ? 'FREE' : 'مجاني') : '') + '</span><span data-sum-fee>' + money(fee(vlist, sub)) + '</span></div>' +
+          '<div class="summary-line"><span>' + icon('truck') + ' ' + esc(t('delivery')) + ' · ' + esc(EN ? quote.distance + ' km' : quote.distance + ' كم') +
+            (quote.free ? ' · ' + esc(EN ? 'FREE' : 'مجاني') : '') + '</span><span data-sum-fee>' + money(shipFee) + '</span></div>' +
+          (service ? '<div class="summary-line" data-sum-service><span>' + esc(EN ? 'Service fee' : 'رسوم الخدمة') + '</span><span>' + money(service) + '</span></div>' : '') +
           promoMarkup(sub) +
           '<label class="co-loyalty-toggle' + (loyaltyPoints() >= (DS.loyalty ? DS.loyalty.POINTS_PER_REDEEM : 100) ? '' : ' is-disabled') + '">' +
             '<input type="checkbox" data-loyalty-redeem' + (state.redeem ? ' checked' : '') + (loyaltyPoints() >= (DS.loyalty ? DS.loyalty.POINTS_PER_REDEEM : 100) ? '' : ' disabled') + '>' +
@@ -336,11 +550,11 @@
             '<span class="co-loyalty-copy"><b>' + esc(EN ? 'Use 100 points for 10 EGP off' : 'استخدام 100 نقطة للحصول على خصم 10 جنيه') + '</b>' +
               '<i>' + esc(EN ? 'Balance: ' : 'رصيدك: ') + '<b data-loyalty-balance>' + loyaltyPoints() + '</b> ' + esc(EN ? 'points' : 'نقطة') + '</i></span>' +
           '</label>' +
-          '<div class="summary-line vat"><span>' + esc(EN ? 'VAT' : 'ضريبة القيمة المضافة') + ' · ' + (DS.data.vatRate ? DS.data.vatRate() : 15) + '%</span><span>' + money(vat) + '</span></div>' +
           '<div class="summary-line total"><span>' + esc(t('total')) + '</span><span class="num" data-sum-total>' + money(total) + '</span></div>' +
           '<div class="checkout-hint">' + icon('shield') + esc(t('orderSummaryHint')) + '</div>' +
           '<button type="button" class="co-place-btn" data-place' + (closed.length ? ' disabled' : '') + '>' +
-            icon(closed.length ? 'alert' : 'check') + '<span>' + esc(closed.length
+            '<span class="co-spinner" data-co-spinner hidden></span>' +
+            '<span data-place-label>' + esc(closed.length
               ? (EN ? 'Store closed — opens at ' + (closed[0].opensAt || '10:00') : 'المتجر مغلق — نفتح الساعة ' + (closed[0].opensAt || '10:00'))
               : t('confirmOrder')) + '</span>' +
             '<b>' + money(total) + '</b></button>' +
@@ -360,13 +574,117 @@
 
     page.setContent(coHeader() + '<div class="co-page">' + form + '</div>');
 
+    /* ── Form bindings (kept in state so a re-render never loses typing) ── */
+    [['#coName', 'name'], ['#coAddress', 'address'], ['#coCity', 'city'], ['#coNotes', 'notes']].forEach(function (pair) {
+      var el = page.body.querySelector(pair[0]);
+      if (el) el.addEventListener('input', function () { state.form[pair[1]] = el.value; });
+    });
+    var phoneEl = page.body.querySelector('#coPhone');
+    if (phoneEl) {
+      phoneEl.addEventListener('input', function () {
+        phoneEl.value = phoneEl.value.replace(/[^\d+\s]/g, '');
+        state.form.phone = phoneEl.value;
+      });
+      phoneEl.addEventListener('blur', function () {
+        if (phoneDigits(phoneEl.value)) phoneEl.value = phoneDisplay(phoneEl.value);
+        state.form.phone = phoneEl.value;
+      });
+    }
+
+    function validateStep1(silent) {
+      captureForm();
+      if (!String(state.form.name || '').trim() || !String(state.form.phone || '').trim() || !String(state.form.address || '').trim()) {
+        if (!silent) DS.toast(EN ? 'Please fill in your name, phone and address.' : 'يرجى إكمال الاسم والهاتف والعنوان.', 'error');
+        return false;
+      }
+      if (!phoneValid(state.form.phone)) {
+        if (!silent) DS.toast(EN ? 'Enter a valid Egyptian phone number (+20).' : 'أدخل رقم هاتف مصري صحيح (+20).', 'error');
+        return false;
+      }
+      return true;
+    }
+
+    /* ── 3-step navigation (client-side, preserves typed input) ── */
+    function goToStep(n) {
+      if (n > 1 && state.step === 1 && !validateStep1()) return;
+      captureForm();
+      state.step = n;
+      DS.$$('[data-step-pane]', page.body).forEach(function (p) {
+        p.classList.toggle('is-active', Number(p.getAttribute('data-step-pane')) === n);
+      });
+      DS.$$('[data-step-ind]', page.body).forEach(function (p) {
+        var i = Number(p.getAttribute('data-step-ind'));
+        p.classList.toggle('is-active', i === n);
+        p.classList.toggle('is-done', i < n);
+        var num = p.querySelector('.co-step-num');
+        if (num) num.textContent = i < n ? '✓' : String(i);
+      });
+      var drawer = page.body.querySelector('.checkout-sticky');
+      if (drawer) drawer.classList.remove('is-open');
+    }
+    DS.$$('[data-step-next]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () { goToStep(Number(b.getAttribute('data-step-next'))); });
+    });
+    DS.$$('[data-step-prev]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () { goToStep(Number(b.getAttribute('data-step-prev'))); });
+    });
+    DS.$$('[data-step-goto]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () { goToStep(Number(b.getAttribute('data-step-goto'))); });
+    });
+    DS.$$('[data-step-ind]', page.body).forEach(function (b) {
+      if (!b.hasAttribute('data-step-goto')) b.addEventListener('click', function () { goToStep(Number(b.getAttribute('data-step-ind'))); });
+    });
+
+    /* TASK 4 — a manual transfer cannot be confirmed before the proof. */
+    function manualGate() {
+      var blocked = !closed.length && isManualPayment(state.payment) &&
+        (!state.receiptData || !String(state.transactionId || '').trim());
+      var btn = page.body.querySelector('[data-place]');
+      var top = page.body.querySelector('[data-place-top]');
+      if (btn) {
+        btn.classList.toggle('is-off', blocked);
+        btn.disabled = blocked || !!closed.length;
+        var label = btn.querySelector('[data-place-label]');
+        if (label) {
+          label.textContent = closed.length
+            ? (EN ? 'Store closed' : 'المتجر مغلق')
+            : (blocked ? (EN ? 'Upload receipt & transaction ID' : 'أرفق الإيصال ورقم العملية') : t('confirmOrder'));
+        }
+      }
+      if (top) {
+        top.disabled = blocked || !!closed.length;
+        top.classList.toggle('is-off', blocked);
+      }
+    }
+
     DS.$$('[data-pay]', page.body).forEach(function (b) {
       b.addEventListener('click', function () {
         var next = b.getAttribute('data-pay');
+        captureForm();
         /* Switching the method clears the receipt + reference: a receipt
            never follows the customer to another payment channel. */
         if (next !== state.payment) { state.receiptData = ''; state.receiptName = ''; state.transactionId = ''; }
-        state.payment = next; state.fawryRef = ''; render();
+        state.payment = next; state.fawryRef = '';
+        render();
+      });
+    });
+
+    /* ── Delivery channel + speed (one fee only, TASK 3) ── */
+    DS.$$('[data-delivery-mode]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var mode = b.getAttribute('data-delivery-mode');
+        if (mode === 'external' && !companies.length) return;
+        captureForm();
+        state.deliveryMode = mode === 'external' ? 'external' : 'inhouse';
+        if (!state.company && companies[0]) state.company = companies[0].id;
+        render();
+      });
+    });
+    DS.$$('[data-speed]', page.body).forEach(function (b) {
+      b.addEventListener('click', function () {
+        captureForm();
+        state.speed = b.getAttribute('data-speed') === 'express' ? 'express' : 'standard';
+        render();
       });
     });
 
@@ -396,7 +714,10 @@
             var name = preview.querySelector('[data-receipt-name]');
             if (name) name.textContent = f.name || '';
           }
+          var dropLabel = page.body.querySelector('[data-receipt-drop-label]');
+          if (dropLabel) dropLabel.textContent = f.name || (EN ? 'Receipt attached' : 'تم إرفاق الإيصال');
           DS.toast(EN ? 'Receipt attached' : 'تم إرفاق صورة الإيصال', 'success');
+          manualGate();
         });
       });
     }
@@ -405,17 +726,13 @@
     var txInput = page.body.querySelector('#transactionId');
     if (txInput) txInput.addEventListener('input', function () {
       state.transactionId = txInput.value;
+      manualGate();
     });
     var co = page.body.querySelector('#coCompany');
     if (co) co.addEventListener('change', function () {
+      captureForm();
       state.company = co.value;
-      /* Live summary refresh — the delivery fee follows the chosen company. */
-      var feeEl = page.body.querySelector('[data-sum-fee]');
-      var totalEl = page.body.querySelector('[data-sum-total]');
-      var newFee = fee(vlist, sub);
-      var newDisc = Math.min(sub, (promo ? promo.amount : 0) + saleAmount + loyaltyDiscount());
-      if (feeEl) feeEl.textContent = money(newFee);
-      if (totalEl) totalEl.textContent = money(Math.max(0, sub + newFee - newDisc));
+      render();
     });
 
     /* Saved address cards → fill the address field + remember coordinates so
@@ -425,38 +742,48 @@
         var idx = Number(b.getAttribute('data-co-addr')) || 0;
         var a = saved[idx];
         if (!a) return;
-        var addrEl = page.body.querySelector('#coAddress');
-        if (addrEl) addrEl.value = EN ? (a.address_en || a.address) : a.address;
-        var cityEl = page.body.querySelector('#coCity');
-        if (cityEl && (a.city || a.city_en)) cityEl.value = EN ? (a.city_en || a.city) : a.city;
+        captureForm();
+        state.form.address = EN ? (a.address_en || a.address) : a.address;
+        if (a.city || a.city_en) state.form.city = EN ? (a.city_en || a.city) : a.city;
+        state.addrIdx = idx;
         state.lat = Number(a.lat) || null;
         state.lng = Number(a.lng) || null;
         DS.$$('[data-co-addr]', page.body).forEach(function (x) { x.classList.toggle('is-active', x === b); });
-        /* Re-render the summary fee with the new distance. */
-        var q = deliveryQuote(vlist, sub);
-        var feeEl = page.body.querySelector('[data-sum-fee]');
-        var totalEl = page.body.querySelector('[data-sum-total]');
-        var newDisc = Math.min(sub, (promo ? promo.amount : 0) + saleAmount + loyaltyDiscount());
-        if (feeEl) feeEl.textContent = money(q.fee);
-        if (totalEl) totalEl.textContent = money(Math.max(0, sub + q.fee - newDisc));
+        render();
       });
     });
+    if (typeof state.addrIdx === 'number') {
+      DS.$$('[data-co-addr]', page.body).forEach(function (x) {
+        x.classList.toggle('is-active', Number(x.getAttribute('data-co-addr')) === state.addrIdx);
+      });
+    }
     var quickBtnEl = page.body.querySelector('[data-quick-pay]');
     if (quickBtnEl && quick) quickBtnEl.addEventListener('click', function () {
-      [['#coName', quick.name], ['#coPhone', quick.phone], ['#coAddress', quick.address], ['#coCity', quick.city]].forEach(function (pair) {
-        var el = page.body.querySelector(pair[0]);
-        if (el && pair[1]) el.value = pair[1];
-      });
+      captureForm();
+      state.form.name = quick.name || state.form.name;
+      state.form.phone = phoneDisplay(quick.phone || state.form.phone);
+      state.form.address = quick.address || state.form.address;
+      state.form.city = quick.city || state.form.city;
       state.lat = Number(quick.lat) || null;
       state.lng = Number(quick.lng) || null;
-      quickBtnEl.classList.add('is-filled');
       DS.toast(EN ? 'Details filled — place your order in one tap.' : 'تم تعبئة بياناتك — أكّد الطلب بضغطة واحدة.', 'success');
+      render();
+    });
+
+    /* Mobile summary drawer (sticky bar at the bottom). */
+    var sumToggle = page.body.querySelector('[data-co-summary-toggle]');
+    if (sumToggle) sumToggle.addEventListener('click', function () {
+      var drawer = page.body.querySelector('.checkout-sticky');
+      if (!drawer) return;
+      var open = drawer.classList.toggle('is-open');
+      sumToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
 
     var promoApply = page.body.querySelector('[data-co-promo-apply]');
     if (promoApply) promoApply.addEventListener('click', function () {
       var input = page.body.querySelector('[data-co-promo]');
       var code = input ? input.value.trim().toUpperCase() : '';
+      captureForm();
       if (!code) { DS.store.set('ds_promo', ''); render(); return; }
       var check = DS.data.validateDiscount(code, sub);
       if (!check.ok) {
@@ -484,12 +811,8 @@
     var loyaltyToggle = page.body.querySelector('[data-loyalty-redeem]');
     if (loyaltyToggle) loyaltyToggle.addEventListener('change', function () {
       state.redeem = !!loyaltyToggle.checked;
-      var line = page.body.querySelector('[data-loyalty-line]');
-      var totalEl = page.body.querySelector('[data-sum-total]');
-      var activeFee = fee(vlist, sub);
-      var activeDisc = Math.min(sub, (promo ? promo.amount : 0) + saleAmount + loyaltyDiscount());
-      if (line) line.style.display = loyaltyDiscount() ? '' : 'none';
-      if (totalEl) totalEl.textContent = money(Math.max(0, sub + activeFee - activeDisc));
+      captureForm();
+      render();
       DS.toast(state.redeem
         ? (EN ? '100 points applied · 10 EGP off' : 'تم استخدام 100 نقطة · خصم 10 جنيه')
         : (EN ? 'Loyalty discount removed' : 'تم إلغاء خصم النقاط'), state.redeem ? 'success' : 'info');
@@ -506,6 +829,18 @@
     } else if (place) {
       place.addEventListener('click', placeOrder);
     }
+    var placeTop = page.body.querySelector('[data-place-top]');
+    if (placeTop) placeTop.addEventListener('click', function () {
+      if (closed.length) {
+        DS.toast(EN
+          ? 'The store is closed right now — we open at ' + (closed[0].opensAt || '10:00') + '.'
+          : 'المتجر مغلق حالياً. نفتح الساعة ' + (closed[0].opensAt || '10:00') + '.', 'error');
+        return;
+      }
+      placeOrder();
+    });
+
+    manualGate();
   }
 
   var busy = false;
@@ -520,17 +855,18 @@
     if (!btn) return;
     var left = Math.ceil(ms / 1000);
     btn.disabled = true;
-    btn.classList.add('is-locked');
+    btn.classList.add('is-locked', 'is-loading');
     var original = btn.innerHTML;
     function tick() {
       if (left <= 0) {
         btn.disabled = false;
-        btn.classList.remove('is-locked');
+        btn.classList.remove('is-locked', 'is-loading');
         btn.innerHTML = original;
         if (lockTimer) { clearInterval(lockTimer); lockTimer = null; }
         return;
       }
-      btn.textContent = (DS.lang() === 'en' ? 'Please wait ' : 'انتظر ') + left + 's';
+      btn.innerHTML = '<span class="co-spinner"></span><span>' +
+        (DS.lang() === 'en' ? 'Placing your order ' : 'جارٍ تأكيد الطلب ') + left + 's</span>';
       left--;
     }
     tick();
@@ -563,13 +899,14 @@
       DS.toast(EN ? 'Please wait a moment before placing another order.' : 'انتظر لحظة قبل إرسال طلب آخر.', 'warning');
       return;
     }
-    var name = (page.body.querySelector('#coName').value || '').trim();
-    var phone = (page.body.querySelector('#coPhone').value || '').trim();
-    var address = (page.body.querySelector('#coAddress').value || '').trim();
-    var city = (page.body.querySelector('#coCity').value || '').trim();
-    var notes = (page.body.querySelector('#coNotes').value || '').trim();
+    captureForm();
+    var name = String(state.form.name || '').trim();
+    var phone = String(state.form.phone || '').trim();
+    var address = String(state.form.address || '').trim();
+    var city = String(state.form.city || '').trim();
+    var notes = String(state.form.notes || '').trim();
     if (!name || !phone || !address) { DS.toast(t('required'), 'error'); return; }
-    if (!/^[0-9+\-\s]{7,20}$/.test(phone)) { DS.toast(t('invalidPhone'), 'error'); return; }
+    if (!phoneValid(phone)) { DS.toast(t('invalidPhone'), 'error'); return; }
     var items = validItems();
     if (!items.length) { DS.toast(t('outOfStock'), 'error'); return; }
     var vlist = vendors(items);
@@ -587,13 +924,27 @@
     var saleAmount = DS.data.storeSaleAmount ? DS.data.storeSaleAmount(sub) : 0;
     var loyalty = loyaltyDiscount();
     var discount = Math.min(sub, (promo ? promo.amount : 0) + saleAmount + loyalty);
-    var finalFee = fee(vlist, sub);
-    var vatBase = Math.max(0, sub - discount);
-    var vat = DS.data.vatAmount ? DS.data.vatAmount(vatBase) : 0;
-    var total = Math.max(0, sub + finalFee - discount + vat);
+    var finalQuote = deliveryQuote(vlist, sub);
+    var finalFee = finalQuote.fee;
+    var serviceFeeAmt = finalQuote.service;
+    var total = Math.max(0, sub + finalFee + serviceFeeAmt - discount);
     var now = new Date().toISOString();
     var primary = vlist[0].tn;
     var manual = isManualPayment(state.payment);
+    /* Pay Online (Paymob): redirect to the gateway instead of creating a local order. */
+    if (state.payment === 'online') {
+      busy = true; lastPlaceAt = Date.now(); lockButton(LOCK_MS);
+      if (DS.api && typeof DS.api.checkoutPaymob === 'function') {
+        DS.api.checkoutPaymob(total, 'EGP', { name: name, phone: phone, address: address }).then(function (data) {
+          var redirectUrl = data && (data.iframe_url || data.payment_url || data.url);
+          if (redirectUrl) { window.location.href = redirectUrl; }
+          else { busy = false; DS.toast(EN ? 'Payment gateway unavailable' : 'بوابة الدفع غير متاحة', 'error'); }
+        }).catch(function () { busy = false; DS.toast(EN ? 'Payment gateway unavailable' : 'بوابة الدفع غير متاحة', 'error'); });
+      } else {
+        busy = false; DS.toast(EN ? 'Payment gateway unavailable' : 'بوابة الدفع غير متاحة', 'error');
+      }
+      return;
+    }
     /* Anti-fraud gate — nothing is created when the receipt or the
        transaction reference is missing, forged or already used. */
     if (!guardManualPayment()) return;
@@ -606,6 +957,29 @@
       name: name, phone: phone, address: address, city: city,
       lat: Number(state.lat) || null, lng: Number(state.lng) || null, saved_at: now
     });
+    /* Phase 2: persist the order to the real backend (Cloudflare Worker). */
+    try {
+      if (DS.api && typeof DS.api.createOrder === 'function') {
+        DS.api.createOrder({
+          customer_name: name,
+          tenant_id: primary.id,
+          items: items.map(function (it) { return { product_id: it.product_id, quantity: it.qty }; }),
+          total: total,
+          status: manual ? 'pending_verification' : 'pending'
+        }).catch(function () {});
+      } else if (typeof fetch === 'function') {
+        fetch('http://localhost:8787/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Tenant-ID': String(primary.id || '') },
+          body: JSON.stringify({
+            customer_name: name,
+            tenant_id: primary.id,
+            items: items.map(function (it) { return { product_id: it.product_id, quantity: it.qty }; }),
+            total: total
+          })
+        }).catch(function () {});
+      }
+    } catch (e) {}
     busy = true;
     lastPlaceAt = Date.now();
     lockButton(LOCK_MS);
@@ -615,7 +989,7 @@
       vendors: vlist.map(function (v) {
         return {
           id: v.id, name: v.tn.name, name_en: v.tn.name_en || v.tn.name,
-          subtotal: v.subtotal, delivery_fee: v.fee, items: v.items.length
+          subtotal: v.subtotal, delivery_fee: v.id === primary.id ? finalFee : 0, items: v.items.length
         };
       }),
       multi_vendor: vlist.length > 1,
@@ -633,6 +1007,10 @@
       loyalty_points_used: loyalty ? (DS.loyalty ? DS.loyalty.POINTS_PER_REDEEM : 100) : 0,
       promo_code: promo && promo.amount ? promo.code : null,
       delivery_fee: finalFee,
+      service_fee: serviceFeeAmt,
+      delivery_mode: state.deliveryMode,
+      delivery_speed: state.speed,
+      vat: 0,
       total: total,
       payment_method: state.payment,
       /* A manual transfer is NOT paid yet — it waits on the verification
@@ -678,6 +1056,9 @@
       loyalty_points_used: loyalty ? (DS.loyalty ? DS.loyalty.POINTS_PER_REDEEM : 100) : 0,
       promo_code: promo && promo.amount ? promo.code : null,
       delivery_fee: finalFee,
+      service_fee: serviceFeeAmt,
+      delivery_mode: state.deliveryMode,
+      delivery_speed: state.speed,
       total: total,
       payment_method: state.payment,
       payment_status: order.payment_status || 'pending',

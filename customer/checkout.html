@@ -18,11 +18,14 @@
   <link rel="stylesheet" href="../shared/css/storefront-fonts.css?v=20261111">
   <link rel="manifest" href="../manifest.json">
   <script>
-    /* Apply the saved customer theme before paint (no white flash). */
+    /* Apply the saved customer theme before paint (no white flash). Dark is default. */
     (function () {
       try {
         var t = localStorage.getItem('ds_customer_theme');
-        document.documentElement.setAttribute('data-customer-theme', t === 'light' ? 'light' : 'dark');
+        var theme = (t === 'light' || t === 'dark') ? t : 'dark';
+        document.documentElement.setAttribute('data-customer-theme', theme);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', theme === 'dark' ? '#0A0A0A' : '#F9F9F9');
       } catch (e) {
         document.documentElement.setAttribute('data-customer-theme', 'dark');
       }
@@ -32,18 +35,21 @@
 <link rel="stylesheet" href="../shared/css/pro-max.css?v=20261112final">
 <link rel="stylesheet" href="../shared/css/polish-2026.css?v=20261112final">
 <link rel="stylesheet" href="../shared/css/payments.css?v=20261112final">
+<link rel="stylesheet" href="../shared/css/premium-2026.css?v=20261118">
+<link rel="stylesheet" href="../shared/css/storefront-2026.css?v=20261118">
 </head>
 <body>
   <div id="app"></div>
   <script src="../shared/js/core.js?v=20261117b"></script>
   <script src="../shared/js/security.js?v=20261106e"></script>
 <script src="../shared/js/data.js?v=20261114a"></script>
+<script src="../shared/js/api-service.js?v=20261118"></script>
 
   <script src="../shared/js/auth.js?v=20261106e"></script>
   <script src="../shared/js/shell.js?v=20261117b"></script>
   <script src="../shared/js/ui.js?v=20261112final"></script>
   <script src="../shared/js/cart.js?v=20261114"></script>
-  <script src="../shared/js/pages/checkout.js?v=b0cb79"></script>
+  <script src="../shared/js/pages/checkout.js?v=paymob2026"></script>
   <script src="../shared/js/chatbot.js?v=20261117b"></script>
 
 <script src="../shared/js/error-handler.js?v=20261106e"></script>
