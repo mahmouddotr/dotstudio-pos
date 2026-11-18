@@ -43,3 +43,17 @@ android/app/build/
 android/.gradle/
 ios/App/Pods/
 ios/App/build/
+
+# Phase 0 archive trash
+_ARCHIVE_TRASH/
+# App bundles
+*.app/
+# Python
+*.py
+.venv*/
+__pycache__/
+# Junk/test files
+.work/
+qa-*.js
+dbg-*.js
+*.csv

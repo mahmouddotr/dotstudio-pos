@@ -583,7 +583,7 @@ textarea.co-input {
 @media print {
   @page { size: 80mm auto; margin: 0; }
   html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
-  body { font-family: 'Cairo', 'Inter', sans-serif !important; }
+  body { font-family: 'SF Pro AR', 'SF Pro Display', sans-serif !important; }
   .invoice-container { width: 80mm; margin: 0; padding: 0; }
   .invoice-container {
     width: 80mm !important;

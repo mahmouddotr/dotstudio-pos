@@ -45,32 +45,32 @@
 .dsg-card p{font-size:13.5px;color:#98989F;line-height:1.7;margin-bottom:22px}\
 .dsg-benefits{display:flex;flex-direction:column;gap:10px;text-align:start;margin-bottom:22px}\
 .dsg-benefit{display:flex;align-items:center;gap:11px;font-size:13px;color:#C9C9CF;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:11px 13px}\
-.dsg-benefit b{color:#82FF1F}\
-.dsg-benefit svg{width:18px;height:18px;color:#82FF1F;flex-shrink:0}\
+.dsg-benefit b{color:#CCFF00}\
+.dsg-benefit svg{width:18px;height:18px;color:#CCFF00;flex-shrink:0}\
 .dsg-actions{display:flex;gap:10px}\
 .dsg-btn{flex:1;border:none;border-radius:13px;padding:14px;font-size:14px;font-weight:900;font-family:inherit;cursor:pointer;transition:.18s}\
-.dsg-btn.allow{background:#82FF1F;color:#0A0A0B}\
+.dsg-btn.allow{background:#CCFF00;color:#0A0A0B}\
 .dsg-btn.allow:hover{background:#6FE60A;transform:translateY(-1px)}\
 .dsg-btn.deny{background:rgba(255,255,255,.06);color:#98989F;border:1px solid rgba(255,255,255,.09)}\
 .dsg-btn.deny:hover{color:#F5F5F7}\
-.dsg-status{font-size:12px;color:#82FF1F;margin-top:14px;min-height:16px;font-weight:700}\
+.dsg-status{font-size:12px;color:#CCFF00;margin-top:14px;min-height:16px;font-weight:700}\
 .dsg-map{width:100%;height:260px;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:#101012;position:relative}\
 .dsg-map .leaflet-tile{mix-blend-mode:normal !important}\
 .dsg-map canvas{display:block;width:100%;height:100%}\
-.dsg-map-badge{position:absolute;top:12px;inset-inline-start:12px;background:rgba(10,10,11,.85);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:7px 12px;font-size:11.5px;font-weight:800;color:#82FF1F;z-index:500}\
-.dsg-eta{margin-top:8px;text-align:end;color:#82FF1F;font-size:12px;font-weight:800}\
+.dsg-map-badge{position:absolute;top:12px;inset-inline-start:12px;background:rgba(10,10,11,.85);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:7px 12px;font-size:11.5px;font-weight:800;color:#CCFF00;z-index:500}\
+.dsg-eta{margin-top:8px;text-align:end;color:#CCFF00;font-size:12px;font-weight:800}\
 .dst-live-eta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;padding:10px 12px;background:#101214;border:1px solid rgba(130,255,31,.16);border-radius:12px;color:#C9C9D1;font-size:12px;line-height:1.4}\
 .dst-live-eta-main{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}\
-.dst-live-eta-main b{color:#82FF1F;font-size:13px;white-space:nowrap}\
+.dst-live-eta-main b{color:#CCFF00;font-size:13px;white-space:nowrap}\
 .dst-live-dist{color:#8A8A92;font-size:11px;direction:ltr;margin-inline-start:4px}\
 .dst-msg-btn{border:1px solid rgba(130,255,31,.35);background:rgba(130,255,31,.1);color:#B9FF8A;border-radius:9px;padding:7px 10px;font:800 11.5px "Figtree",system-ui,sans-serif;cursor:pointer;white-space:nowrap;transition:.18s}\
-.dst-msg-btn:hover{background:#82FF1F;color:#0A0A0B}\
-.dst-moto-bubble{width:38px;height:38px;border-radius:50%;background:#82FF1F;border:3px solid #0A0A0B;display:grid;place-items:center;box-shadow:0 0 0 6px rgba(130,255,31,.16),0 8px 20px rgba(0,0,0,.55);overflow:hidden}\
+.dst-msg-btn:hover{background:#CCFF00;color:#0A0A0B}\
+.dst-moto-bubble{width:38px;height:38px;border-radius:50%;background:#CCFF00;border:3px solid #0A0A0B;display:grid;place-items:center;box-shadow:0 0 0 6px rgba(130,255,31,.16),0 8px 20px rgba(0,0,0,.55);overflow:hidden}\
 .dst-moto-bubble img{width:27px;height:27px;object-fit:contain;display:block}\
 .dst-moto-bubble svg{width:21px;height:21px;color:#0A0A0B}\
 .dst-house-pin svg{width:19px;height:19px;color:#2563EB}\
 .dst-dot svg{width:17px;height:17px}\
-.dsg-ic svg{width:34px;height:34px;color:#82FF1F}\
+.dsg-ic svg{width:34px;height:34px;color:#CCFF00}\
 .dst-moto-bubble.fallback{font-size:20px;color:#0A0A0B}\
 .dst-house-pin{width:38px;height:38px;border-radius:50%;background:#fff;border:3px solid #60A5FA;display:grid;place-items:center;font-size:19px;box-shadow:0 0 0 6px rgba(96,165,250,.15),0 8px 20px rgba(0,0,0,.55)}\
 .dst-track{display:flex;flex-direction:column;gap:0}\
@@ -78,9 +78,9 @@
 .dst-step:last-child{padding-bottom:0}\
 .dst-step::before{content:"";position:absolute;inset-inline-start:17px;top:38px;bottom:0;width:2px;background:rgba(255,255,255,.09)}\
 .dst-step:last-child::before{display:none}\
-.dst-step.done::before{background:#82FF1F}\
+.dst-step.done::before{background:#CCFF00}\
 .dst-dot{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-size:16px;background:rgba(255,255,255,.06);color:#6E6E73;border:2px solid rgba(255,255,255,.08);z-index:1}\
-.dst-step.done .dst-dot{background:#82FF1F;color:#0A0A0B;border-color:#82FF1F}\
+.dst-step.done .dst-dot{background:#CCFF00;color:#0A0A0B;border-color:#CCFF00}\
 .dst-step.active .dst-dot{animation:dsgPulse 1.8s infinite}\
 .dst-info b{display:block;font-size:14px;color:#F5F5F7;font-weight:800}\
 .dst-step:not(.done) .dst-info b{color:#6E6E73}\
@@ -208,8 +208,8 @@
     var bg = document.createElement('div'); bg.className = 'dsg-bg'; bg.id = 'dstBg';
     bg.innerHTML = '<div class="dsg-card" style="max-width:440px;text-align:start">' +
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><h3 style="margin:0">تتبّع الطلب</h3><button id="dstClose" style="background:none;border:none;color:#98989F;font-size:22px;cursor:pointer">×</button></div>' +
-      '<p style="text-align:start;margin-bottom:16px">رقم الطلب: <b style="color:#82FF1F">#' + esc(String(orderId).slice(-6)) + '</b> · <span id="dstStage" style="color:#82FF1F;font-weight:800;display:inline-flex;align-items:center;gap:6px">' + svgIcon(meta.icon) + ' ' + meta.ar + '</span></p>' +
-      '<div id="dstBar" style="height:7px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;margin-bottom:20px"><div style="height:100%;width:' + meta.pct + '%;background:linear-gradient(90deg,#82FF1F,#46C400);border-radius:4px;transition:width .6s"></div></div>' +
+      '<p style="text-align:start;margin-bottom:16px">رقم الطلب: <b style="color:#CCFF00">#' + esc(String(orderId).slice(-6)) + '</b> · <span id="dstStage" style="color:#CCFF00;font-weight:800;display:inline-flex;align-items:center;gap:6px">' + svgIcon(meta.icon) + ' ' + meta.ar + '</span></p>' +
+      '<div id="dstBar" style="height:7px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;margin-bottom:20px"><div style="height:100%;width:' + meta.pct + '%;background:linear-gradient(90deg,#CCFF00,#46C400);border-radius:4px;transition:width .6s"></div></div>' +
       '<div class="dst-track" id="dstTrack">' + STAGES.map(function (s) {
         var idx = ORDER.indexOf(s.k), cur = ORDER.indexOf(st.stage);
         var cls = cur >= idx ? 'done' : '';
@@ -373,7 +373,7 @@
     if (!badge) return;
     if (force || deliveryActive()) {
       badge.textContent = '📍 موقع المندوب مباشر';
-      badge.style.color = '#82FF1F';
+      badge.style.color = '#CCFF00';
     } else {
       badge.textContent = '⏸ بانتظار بدء التوصيل';
       badge.style.color = '#FBBF24';
@@ -545,7 +545,7 @@
           var customerLabel = document.documentElement.lang === 'ar' ? 'موقعك' : 'You';
           st.driverMarker = L.marker(st.driver, { icon: driverIcon, zIndexOffset: 500 }).bindTooltip(driverLabel, { direction: 'top', offset: [0, -22] }).addTo(map._dsTrackingLayers);
           st.customerMarker = L.marker(st.customer, { icon: customerIcon, zIndexOffset: 400 }).bindTooltip(customerLabel, { direction: 'top', offset: [0, -22] }).addTo(map._dsTrackingLayers);
-          st.line = L.polyline([st.driver, st.customer], { color: (document.body.classList.contains('saleor-store') || document.body.classList.contains('saleor-checkout')) ? '#A8D400' : '#82FF1F', weight: 4, opacity: .9, dashArray: '9 8', lineCap: 'round' }).addTo(map._dsTrackingLayers);
+          st.line = L.polyline([st.driver, st.customer], { color: (document.body.classList.contains('saleor-store') || document.body.classList.contains('saleor-checkout')) ? '#A8D400' : '#CCFF00', weight: 4, opacity: .9, dashArray: '9 8', lineCap: 'round' }).addTo(map._dsTrackingLayers);
           var km = distanceKm(st.driver, st.customer);
           /* Product rule: 1 km ≈ 1 minute. */
           setEta(el, etaMinutes(km), km);
@@ -570,13 +570,13 @@
     for (var i = 0; i < W; i += 40) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, H); x.stroke(); }
     for (var j = 0; j < H; j += 40) { x.beginPath(); x.moveTo(0, j); x.lineTo(W, j); x.stroke(); }
     var a = { x: W * 0.2, y: H * 0.75 }, b = { x: W * 0.8, y: H * 0.3 };
-    x.strokeStyle = light ? '#A8D400' : '#82FF1F'; x.lineWidth = 3; x.setLineDash([9, 7]);
+    x.strokeStyle = light ? '#A8D400' : '#CCFF00'; x.lineWidth = 3; x.setLineDash([9, 7]);
     x.beginPath(); x.moveTo(a.x, a.y); x.quadraticCurveTo(W * 0.5, H * 0.2, b.x, b.y); x.stroke(); x.setLineDash([]);
     function dot(p, col, lbl) {
       x.fillStyle = col; x.beginPath(); x.arc(p.x, p.y, 9, 0, 7); x.fill();
       x.fillStyle = '#0A0A0B'; x.font = 'bold 10px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(lbl, p.x, p.y);
     }
-    dot(a, light ? '#CCFF00' : '#82FF1F', 'D'); dot(b, '#60A5FA', 'C');
+    dot(a, light ? '#CCFF00' : '#CCFF00', 'D'); dot(b, '#60A5FA', 'C');
     x.fillStyle = light ? 'rgba(17,17,17,.82)' : 'rgba(255,255,255,.82)'; x.font = 'bold 11px sans-serif'; x.textAlign = 'start';
     x.fillText('Driver / المندوب', a.x + 14, a.y); x.fillText('Customer / العميل', b.x + 14, b.y);
     x.fillStyle = light ? 'rgba(17,17,17,.50)' : 'rgba(255,255,255,.5)'; x.font = '11px sans-serif'; x.textAlign = 'start';
@@ -674,7 +674,7 @@
           markers.forEach(function (m) { m.remove(); });
           lines.forEach(function (l) { l.remove(); });
           markers = []; lines = [];
-          var colors = ['#82FF1F', '#60A5FA', '#F59E0B'];
+          var colors = ['#CCFF00', '#60A5FA', '#F59E0B'];
           drivers.forEach(function (d, i) {
             var ico = L.divIcon({
               className: 'dsf-driver',
@@ -734,7 +734,7 @@
             y: H - 30 - ((p[0] - minLat) / (maxLat - minLat || 0.01)) * (H - 60)
           };
         }
-        var colors = ['#82FF1F', '#60A5FA', '#F59E0B'];
+        var colors = ['#CCFF00', '#60A5FA', '#F59E0B'];
         drivers.forEach(function (d, i) {
           var a = pt(d.pos), b = pt(d.dest);
           ctx.strokeStyle = colors[i % 3]; ctx.lineWidth = 2; ctx.setLineDash([7, 6]);

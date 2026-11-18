@@ -1844,5 +1844,5 @@ mic: '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', enforceAuthGate);
   else enforceAuthGate();
 
-  console.log('%cDotStudio® POS · core ready', 'color:#82FF1F;font-weight:bold');
+  console.log('%cDotStudio® POS · core ready', 'color:#CCFF00;font-weight:bold');
 })();

@@ -1192,7 +1192,7 @@
     }
   };
 
-  console.log('%cDotStudio® POS · chat ready (1-on-1)', 'color:#82FF1F;font-weight:bold');
+  console.log('%cDotStudio® POS · chat ready (1-on-1)', 'color:#CCFF00;font-weight:bold');
   /* ── Voice notes (MediaRecorder) ─────────────────────────────── */
   function recordVoiceNote(onDone) {
     onDone = onDone || function () {};

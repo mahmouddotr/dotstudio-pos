@@ -72,7 +72,7 @@
         'box-shadow:0 18px 50px rgba(0,0,0,.42)',
         '-webkit-backdrop-filter:blur(22px) saturate(160%)',
         'backdrop-filter:blur(22px) saturate(160%)',
-        'font:500 13px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Inter,sans-serif',
+        'font:500 13px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","SF Pro Display",sans-serif',
         'opacity:0', 'transform:translateY(10px) scale(.98)',
         'transition:opacity .28s ease,transform .28s cubic-bezier(.2,.8,.2,1)',
         'pointer-events:auto', 'direction:' + (isAr() ? 'rtl' : 'ltr')

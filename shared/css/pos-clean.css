@@ -143,12 +143,12 @@ html[dir="rtl"] .pos-right { direction: rtl; }
   cursor: pointer;
   transition: all var(--transition-fast);
 }
-.pos-voice-btn:hover { color: var(--lime, #82FF1F); border-color: var(--lime, #82FF1F); }
+.pos-voice-btn:hover { color: var(--lime, #CCFF00); border-color: var(--lime, #CCFF00); }
 .pos-voice-btn svg { width: 15px; height: 15px; }
 .pos-voice-btn.is-live {
   color: #0A0A0B;
-  background: var(--lime, #82FF1F);
-  border-color: var(--lime, #82FF1F);
+  background: var(--lime, #CCFF00);
+  border-color: var(--lime, #CCFF00);
   animation: posVoicePulse 1.4s ease-in-out infinite;
 }
 @keyframes posVoicePulse {

@@ -238,7 +238,7 @@
         var pos = host._positions[d.id];
         bounds.push(pos);
         var ao = activeOrderFor(d);
-        var color = ao ? '#F59E0B' : '#82FF1F';
+        var color = ao ? '#F59E0B' : '#CCFF00';
         var ico = L.divIcon({ className: 'ds-live-driver', html: '<div style="width:34px;height:34px;border-radius:50%;background:' + color + ';border:3px solid #0A0A0B;display:grid;place-items:center;color:#0A0A0B;font-weight:900;font-size:12px">' + (i + 1) + '</div>', iconSize: [34, 34], iconAnchor: [17, 17] });
         L.marker(pos, { icon: ico }).bindTooltip(DS.loc(d, 'name') + (ao ? ' · ' + ao.order_no : ''), { direction: 'top' }).addTo(host._layer);
       });

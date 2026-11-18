@@ -37,7 +37,7 @@
   padding: 26px 24px 18px;
   transform: translateY(10px) scale(0.98);
   transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  font-family: 'Cairo', 'Inter', sans-serif !important;
+  font-family: 'SF Pro AR', 'SF Pro Display', sans-serif !important;
   direction: ltr;
 }
 

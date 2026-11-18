@@ -32,7 +32,7 @@
   /* Apple accents */
   --accent-blue: #007AFF;
   --accent-green: #30D158;
-  --accent-lime: #82FF1F;
+  --accent-lime: #CCFF00;
   --accent-red: #FF453A;
   --accent-yellow: #FFD60A;
   --accent-orange: #FF9F0A;
@@ -170,7 +170,7 @@
 
   /* Ambient mesh colours */
   --mesh-blue: #007AFF;
-  --mesh-lime: #82FF1F;
+  --mesh-lime: #CCFF00;
   --mesh-indigo: #5E5CE6;
 }
 

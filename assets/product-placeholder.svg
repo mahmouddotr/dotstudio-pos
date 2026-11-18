@@ -5,12 +5,12 @@
       <stop offset="1" stop-color="#0A0A0B"/>
     </linearGradient>
     <linearGradient id="lime" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#82FF1F"/>
+      <stop offset="0" stop-color="#CCFF00"/>
       <stop offset="1" stop-color="#46C400"/>
     </linearGradient>
   </defs>
   <rect width="400" height="400" fill="url(#bg)"/>
-  <circle cx="200" cy="180" r="92" fill="#82FF1F" opacity="0.05"/>
+  <circle cx="200" cy="180" r="92" fill="#CCFF00" opacity="0.05"/>
   <g fill="none" stroke="url(#lime)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.9">
     <path d="M130 158 L200 118 L270 158 L270 252 L200 292 L130 252 Z"/>
     <path d="M130 158 L200 198 L270 158"/>

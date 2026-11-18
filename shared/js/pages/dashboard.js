@@ -729,7 +729,7 @@
                 industry: en ? 'Retail' : 'تجارة', industry_en: 'Retail',
                 plan: 'monthly', subscription_start: now, subscription_end: end,
                 status: 'active', avatar_id: 'av' + (1 + Math.floor(Math.random() * 9)),
-                color: '#82FF1F', rating: 4.8, delivery_fee: 30,
+                color: '#CCFF00', rating: 4.8, delivery_fee: 30,
                 lat: 30.0444, lng: 31.2357,
                 description: '', description_en: '', created_at: now
               });

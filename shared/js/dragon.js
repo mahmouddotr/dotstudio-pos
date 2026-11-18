@@ -586,5 +586,5 @@
     scopeProducts: scopeProducts, scopeOrders: scopeOrders, hash: hash,
     seedDemoOrders: seedDemoOrders
   };
-  console.log('%cDotStudio® · dragon suite ready', 'color:#82FF1F');
+  console.log('%cDotStudio® · dragon suite ready', 'color:#CCFF00');
 })();

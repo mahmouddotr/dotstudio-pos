@@ -550,7 +550,7 @@
       return '<span style="position:absolute;left:' + ((i + 0.5) / series.length * 100) + '%;transform:translateX(-50%);bottom:0;font-size:9px;color:var(--text-tertiary);white-space:nowrap">' + esc(s.label) + '</span>';
     }).join('');
     return '<div class="chart-box"><svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" role="img">' +
-      '<defs><linearGradient id="dsArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#82FF1F" stop-opacity=".30"/><stop offset="1" stop-color="#82FF1F" stop-opacity="0"/></linearGradient></defs>' +
+      '<defs><linearGradient id="dsArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#CCFF00" stop-opacity=".30"/><stop offset="1" stop-color="#CCFF00" stop-opacity="0"/></linearGradient></defs>' +
       grid + '<path d="' + area + '" fill="url(#dsArea)"/>' +
       '<path d="' + line + '" fill="none" stroke="var(--lime)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>' +
       dots + '</svg><div style="position:absolute;inset:0;pointer-events:none">' + labels + '</div></div>';
@@ -568,7 +568,7 @@
 
   function donut(items, opts) {
     opts = opts || {};
-    var colors = ['#82FF1F', '#64D2FF', '#BF5AF2', '#FF9F0A', '#30D158', '#FF453A'];
+    var colors = ['#CCFF00', '#64D2FF', '#BF5AF2', '#FF9F0A', '#30D158', '#FF453A'];
     var total = items.reduce(function (s, x) { return s + (Number(x.value) || 0); }, 0) || 1;
     var r = 54, c = 2 * Math.PI * r, offset = 0;
     var arcs = items.map(function (it, i) {
@@ -582,7 +582,7 @@
     }).join('');
     return '<div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap"><div style="position:relative;width:140px;height:140px;flex-shrink:0"><svg viewBox="0 0 140 140" width="140" height="140">' +
       '<circle cx="70" cy="70" r="' + r + '" fill="none" stroke="var(--surface-3)" stroke-width="18"/>' + arcs +
-      '<text x="70" y="66" text-anchor="middle" font-size="18" font-weight="700" fill="var(--text-primary)" font-family="Inter,sans-serif">' + (opts.center || items.length) + '</text>' +
+      '<text x="70" y="66" text-anchor="middle" font-size="18" font-weight="700" fill="var(--text-primary)" font-family="SF Pro Display,sans-serif">' + (opts.center || items.length) + '</text>' +
       '<text x="70" y="84" text-anchor="middle" font-size="9" fill="var(--text-tertiary)">' + esc(opts.label || '') + '</text></svg></div>' +
       '<div style="flex:1;min-width:140px">' + legend + '</div></div>';
   }
@@ -608,8 +608,8 @@
           '<rect x="500" y="330" width="140" height="100" rx="4"/><rect x="690" y="340" width="90" height="80" rx="4"/>' +
         '</g>' +
         '<g fill="#16212B" opacity=".7"><circle cx="360" cy="90" r="26"/><circle cx="610" cy="280" r="34"/><circle cx="150" cy="260" r="20"/></g>' +
-        '<path id="dsRoute" d="M140 380 C 250 360, 300 300, 400 280 S 560 220, 660 130" fill="none" stroke="#82FF1F" stroke-opacity=".35" stroke-width="7" stroke-linecap="round"/>' +
-        '<path d="M140 380 C 250 360, 300 300, 400 280 S 560 220, 660 130" fill="none" stroke="#82FF1F" stroke-width="2.4" stroke-dasharray="7 7" stroke-linecap="round"/>' +
+        '<path id="dsRoute" d="M140 380 C 250 360, 300 300, 400 280 S 560 220, 660 130" fill="none" stroke="#CCFF00" stroke-opacity=".35" stroke-width="7" stroke-linecap="round"/>' +
+        '<path d="M140 380 C 250 360, 300 300, 400 280 S 560 220, 660 130" fill="none" stroke="#CCFF00" stroke-width="2.4" stroke-dasharray="7 7" stroke-linecap="round"/>' +
       '</svg>';
     var pctX = 17 + (progress / 100) * 52;
     var pctY = 79 - (progress / 100) * 50;
@@ -619,7 +619,7 @@
       '<div class="moto-marker' + (opts.animate ? '' : ' static') + '" data-moto style="left:' + pctX + '%;top:' + pctY + '%">' + icon('bike') + '</div>' +
       '<div class="map-badge"><span class="dot"></span>' + esc(opts.badge || t('live')) + '</div>' +
       '<div class="map-eta"><div class="lbl">' + esc(t('eta')) + '</div><div class="val" data-eta>' + esc(opts.etaText || ((opts.eta || 12) + ' ' + (DS.lang() === 'ar' ? 'دقيقة' : 'min'))) + '</div><div class="sub" data-distance>' + esc(opts.distanceText || ((opts.distance || '2.0') + ' ' + (DS.lang() === 'ar' ? 'كم' : 'km'))) + '</div></div>' +
-      (opts.legend === false ? '' : '<div class="map-legend"><span><i style="background:#82FF1F"></i>' + esc(t('store')) + '</span><span><i style="background:#fff"></i>' + esc(t('customerLabel')) + '</span><span><i style="background:#64D2FF"></i>' + esc(t('driver')) + '</span></div>') +
+      (opts.legend === false ? '' : '<div class="map-legend"><span><i style="background:#CCFF00"></i>' + esc(t('store')) + '</span><span><i style="background:#fff"></i>' + esc(t('customerLabel')) + '</span><span><i style="background:#64D2FF"></i>' + esc(t('driver')) + '</span></div>') +
       '</div>';
   }
   function mapMount(el, opts) {
@@ -846,12 +846,12 @@
     '@media print {',
     '  @page { size: 80mm auto; margin: 0 !important; }',
     '  html, body { margin: 0 !important; padding: 0 !important; background: #ffffff !important; }',
-    '  body { font-family: "Cairo", "Inter", sans-serif !important; }',
+    '  body { font-family: "SF Pro AR", "SF Pro Display", sans-serif !important; }',
     '  body * { visibility: hidden !important; }',
     '  .invoice-print-area, .invoice-print-area *, .invoice-container, .invoice-container * { visibility: visible !important; }',
     '  .invoice-container { width: 80mm !important; max-width: 80mm !important; margin: 0 !important; padding: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: #ffffff !important; color: #000000 !important; }',
     '  .invoice-modal-wrapper { display: block !important; margin: 0 !important; padding: 0 !important; }',
-    '  .invoice-print-area { position: absolute !important; left: 0 !important; top: 0 !important; width: 80mm !important; margin: 0 !important; padding: 0 !important; box-sizing: border-box !important; background: #ffffff !important; color: #000000 !important; font-family: "Cairo", "Inter", sans-serif !important; }',
+    '  .invoice-print-area { position: absolute !important; left: 0 !important; top: 0 !important; width: 80mm !important; margin: 0 !important; padding: 0 !important; box-sizing: border-box !important; background: #ffffff !important; color: #000000 !important; font-family: "SF Pro AR", "SF Pro Display", sans-serif !important; }',
     '}'
   ].join('\n');
   DS.thermalCss = THERMAL_CSS;
@@ -942,5 +942,5 @@
     return '<img src="' + esc(order.proof.url) + '" alt="proof" style="width:34px;height:26px;object-fit:cover;border-radius:5px;border:1px solid var(--border);cursor:pointer" data-proof="' + esc(order.id) + '">';
   };
 
-  console.log('%cDotStudio® POS · ui ready', 'color:#82FF1F;font-weight:bold');
+  console.log('%cDotStudio® POS · ui ready', 'color:#CCFF00;font-weight:bold');
 })();

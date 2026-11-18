@@ -129,5 +129,5 @@
   };
 
   if (state.configured) setTimeout(function () { ensure(); }, 400);
-  console.log('%cDotStudio® · firebase bridge ' + (state.configured ? 'armed' : 'offline mode'), 'color:#82FF1F');
+  console.log('%cDotStudio® · firebase bridge ' + (state.configured ? 'armed' : 'offline mode'), 'color:#CCFF00');
 })();

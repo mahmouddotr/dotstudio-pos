@@ -57,7 +57,7 @@ code.
 | Token | Value | Meaning |
 | --- | --- | --- |
 | `--accent` | `#CCFF00` | Brand lemon (marketing, logo plate) |
-| `--lime` / `--accent-lime` | `#82FF1F` | Primary interactive accent |
+| `--lime` / `--accent-lime` | `#CCFF00` | Primary interactive accent |
 | `--lime-strong` | `#94FF45` | Hover state |
 | `--lime-deep` | `#63D400` | Pressed state |
 | `--lime-soft` | `rgba(130,255,31,.10)` | Accent wash |
@@ -419,7 +419,7 @@ backgrounds, max width 80 mm, zero page margin.
     "text-secondary":{ "value": "#86868B" },
     "text-tertiary": { "value": "#48484A" },
     "brand-lemon":   { "value": "#CCFF00" },
-    "accent-lime":   { "value": "#82FF1F" },
+    "accent-lime":   { "value": "#CCFF00" },
     "blue":          { "value": "#007AFF" },
     "green":         { "value": "#30D158" },
     "yellow":        { "value": "#FFD60A" },

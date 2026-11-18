@@ -652,5 +652,5 @@
   }
   __initFirebaseAuthState();
 
-  console.log('%cDotStudio® · auth ready', 'color:#82FF1F');
+  console.log('%cDotStudio® · auth ready', 'color:#CCFF00');
 })();

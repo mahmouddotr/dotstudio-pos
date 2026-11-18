@@ -94,7 +94,7 @@ body.saleor-store.ds-impersonating .ds-app { padding-top: 0; }
   display: block;
 }
 .sl-logo span {
-  font-family: "Clash Display", "GE SS Two", -apple-system, BlinkMacSystemFont, "SF Pro Display", Inter, sans-serif;
+  font-family: "SF Pro Display", "SF Pro Display", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Display", sans-serif;
   font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -131,7 +131,7 @@ body.saleor-store.ds-impersonating .ds-app { padding-top: 0; }
   background: transparent;
   outline: none;
   color: #0b0b0c;
-  font: 500 14px/1 "GE SS Two", -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, sans-serif;
+  font: 500 14px/1 "SF Pro AR", -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", sans-serif;
 }
 .sl-search input::placeholder { color: #8a8a94; }
 .sl-search input::-webkit-search-cancel-button { -webkit-appearance: none; }
@@ -165,7 +165,7 @@ body.saleor-store.ds-impersonating .ds-app { padding-top: 0; }
   border-radius: 999px;
   background: #0b0b0c;
   color: #fff;
-  font: 600 13.5px/1 "GE SS Two", -apple-system, BlinkMacSystemFont, Inter, sans-serif;
+  font: 600 13.5px/1 "SF Pro AR", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
   cursor: pointer;
   transition: transform 0.2s, background 0.2s;
 }
@@ -203,7 +203,7 @@ body.saleor-store.ds-impersonating .ds-app { padding-top: 0; }
   border: 0;
   background: transparent;
   color: #52525b;
-  font: 500 13.5px/1 "GE SS Two", -apple-system, BlinkMacSystemFont, Inter, sans-serif;
+  font: 500 13.5px/1 "SF Pro AR", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
   padding: 9px 14px;
   border-radius: 999px;
   white-space: nowrap;
@@ -491,7 +491,7 @@ body.saleor-checkout .ds-content { max-width: none; padding: 0; margin: 0; }
   gap: 9px;
   color: #0b0b0c;
   text-decoration: none;
-  font: 700 16px/1 "Clash Display", "GE SS Two", -apple-system, sans-serif;
+  font: 700 16px/1 "SF Pro Display", "SF Pro Display", -apple-system, sans-serif;
   letter-spacing: -0.02em;
 }
 .co-header a.co-brand img { width: 30px; height: 30px; object-fit: contain; }

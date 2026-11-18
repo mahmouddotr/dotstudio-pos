@@ -297,7 +297,7 @@
         '</div>' +
       '</div>' +
       '<div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text-tertiary);">' +
-        '<span style="display:inline-flex;align-items:center;gap:6px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#82FF1F;"></span> Xprinter XP-235B · 50mm × 30mm Thermal Label</span>' +
+        '<span style="display:inline-flex;align-items:center;gap:6px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#CCFF00;"></span> Xprinter XP-235B · 50mm × 30mm Thermal Label</span>' +
       '</div>';
 
     DS.modal({

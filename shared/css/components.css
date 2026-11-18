@@ -859,7 +859,7 @@ html[dir="rtl"] .chat-room.active { box-shadow: inset -2px 0 0 var(--accent-lime
   border-radius: 9999px;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  color: #82FF1F;
+  color: #CCFF00;
   font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, sans-serif);
   font-size: 12px;
   font-weight: 600;
@@ -876,18 +876,18 @@ html[dir="rtl"] .chat-room.active { box-shadow: inset -2px 0 0 var(--accent-lime
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #82FF1F;
-  box-shadow: 0 0 8px #82FF1F;
+  background: #CCFF00;
+  box-shadow: 0 0 8px #CCFF00;
   animation: dsPulseDot 2s ease-in-out infinite;
   flex-shrink: 0;
 }
 @keyframes dsPulseDot {
-  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 8px #82FF1F; }
-  50% { opacity: 0.55; transform: scale(0.85); box-shadow: 0 0 4px #82FF1F; }
+  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 8px #CCFF00; }
+  50% { opacity: 0.55; transform: scale(0.85); box-shadow: 0 0 4px #CCFF00; }
 }
 .ds-scanner-badge.is-scanning {
   background: rgba(130, 255, 31, 0.25);
-  border-color: #82FF1F;
+  border-color: #CCFF00;
   box-shadow: 0 0 24px rgba(130, 255, 31, 0.5);
   transform: scale(1.05);
 }
@@ -928,7 +928,7 @@ html[dir="rtl"] .chat-room.active { box-shadow: inset -2px 0 0 var(--accent-lime
   align-items: center;
   text-align: center;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
-  font-family: Inter, -apple-system, sans-serif;
+  font-family: 'SF Pro Display', -apple-system, sans-serif;
 }
 .label-container .label-store {
   font-size: 9px;
@@ -996,7 +996,7 @@ html[dir="rtl"] .chat-room.active { box-shadow: inset -2px 0 0 var(--accent-lime
   border-radius: 16px;
   padding: 24px;
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", sans-serif;
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
 }
 .invoice-container .inv-head {

@@ -522,15 +522,15 @@
     ];
     var body = '<div style="background:rgba(15,15,18,0.72);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(130,255,31,0.22);border-radius:18px;padding:22px;box-shadow:0 18px 60px rgba(0,0,0,0.45)">' +
       '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">' +
-        '<span style="width:38px;height:38px;border-radius:12px;background:rgba(130,255,31,0.15);color:#82FF1F;display:grid;place-items:center;font-size:20px">?</span>' +
+        '<span style="width:38px;height:38px;border-radius:12px;background:rgba(130,255,31,0.15);color:#CCFF00;display:grid;place-items:center;font-size:20px">?</span>' +
         '<div><b style="color:#fff;font-size:16px;display:block">' + (en ? 'Quick help' : 'مساعدة سريعة') + '</b>' +
         '<span style="color:rgba(255,255,255,0.6);font-size:12px">' + (en ? 'Three steps to get started' : 'ثلاث خطوات للبدء') + '</span></div>' +
       '</div>' +
       '<ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px">' +
       items.map(function (it) {
         return '<li style="display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06)">' +
-          '<span style="width:26px;height:26px;border-radius:8px;background:#82FF1F;color:#0A0A0A;display:grid;place-items:center;font-weight:800;flex-shrink:0">→</span>' +
-          '<div><b style="color:#82FF1F;display:block;margin-bottom:2px">' + it.t + '</b>' +
+          '<span style="width:26px;height:26px;border-radius:8px;background:#CCFF00;color:#0A0A0A;display:grid;place-items:center;font-weight:800;flex-shrink:0">→</span>' +
+          '<div><b style="color:#CCFF00;display:block;margin-bottom:2px">' + it.t + '</b>' +
           '<span style="color:rgba(255,255,255,0.7);font-size:13px">' + it.d + '</span></div></li>';
       }).join('') +
       '</ul></div>';
@@ -1136,5 +1136,5 @@
     }
   })();
 
-  console.log('%cDotStudio® POS · shell ready', 'color:#82FF1F;font-weight:bold');
+  console.log('%cDotStudio® POS · shell ready', 'color:#CCFF00;font-weight:bold');
 })();

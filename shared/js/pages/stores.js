@@ -99,7 +99,7 @@
             industry: root.querySelector('#sIndustry').value.trim() || (DS.lang() === 'en' ? 'Retail' : 'تجارة'), industry_en: 'Retail',
             plan: root.querySelector('#sPlan').value, subscription_start: now, subscription_end: end,
             status: root.querySelector('#sStatus').value, avatar_id: 'av' + (Math.floor(Math.random() * 9) + 1),
-            color: '#82FF1F', rating: 4.8, delivery_fee: Number(root.querySelector('#sFee').value) || 30,
+            color: '#CCFF00', rating: 4.8, delivery_fee: Number(root.querySelector('#sFee').value) || 30,
             lat: 30.0444, lng: 31.2357, description: root.querySelector('#sDesc').value.trim(), created_at: now
           });
           DS.data.addUser({ username: username, password: root.querySelector('#sPass').value || 'owner2026', role: 'owner', name: ownerName, name_en: ownerName, tenant_id: tid, avatar_id: 'av1' });

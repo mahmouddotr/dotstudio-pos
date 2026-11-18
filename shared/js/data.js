@@ -41,7 +41,7 @@
       wallet_vodafone: '01000000001', wallet_instapay: 'caznova@instapay',
       industry: 'أزياء وإكسسوارات', industry_en: 'Fashion & accessories',
       plan: 'yearly', subscription_start: daysAgo(120), subscription_end: daysAhead(245),
-      status: 'active', avatar_id: 'av1', color: '#82FF1F', rating: 4.9, delivery_fee: 35,
+      status: 'active', avatar_id: 'av1', color: '#CCFF00', rating: 4.9, delivery_fee: 35,
       openTime: '10:00', closeTime: '22:00', offline: false,
       lat: 30.0511, lng: 31.3656,
       description: 'ساعات، خواتم، عطور وإكسسوارات مختارة بعناية.', description_en: 'Curated watches, rings, perfumes and accessories.',
@@ -241,10 +241,10 @@
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="240" viewBox="0 0 320 240">' +
       '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1B2414"/><stop offset="1" stop-color="#0C0F0A"/></linearGradient></defs>' +
       '<rect width="320" height="240" fill="url(#g)"/>' +
-      '<g opacity=".16" stroke="#82FF1F" stroke-width="1">' +
+      '<g opacity=".16" stroke="#CCFF00" stroke-width="1">' +
       '<path d="M0 60h320M0 120h320M0 180h320M80 0v240M160 0v240M240 0v240"/></g>' +
-      '<circle cx="160" cy="92" r="34" fill="rgba(130,255,31,.14)" stroke="#82FF1F" stroke-width="2"/>' +
-      '<path d="m145 92 11 11 22-24" fill="none" stroke="#82FF1F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<circle cx="160" cy="92" r="34" fill="rgba(130,255,31,.14)" stroke="#CCFF00" stroke-width="2"/>' +
+      '<path d="m145 92 11 11 22-24" fill="none" stroke="#CCFF00" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>' +
       '<text x="160" y="154" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold" fill="#F5F5F7">PROOF OF DELIVERY</text>' +
       '<text x="160" y="174" text-anchor="middle" font-family="Arial" font-size="10" fill="#A1A1A6">' + orderNo + '</text>' +
       '<text x="160" y="190" text-anchor="middle" font-family="Arial" font-size="9" fill="#6E6E73">' + String(at).slice(0, 16).replace('T', ' ') + '</text>' +
