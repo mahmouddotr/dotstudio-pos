@@ -20,6 +20,7 @@
   document.documentElement.setAttribute('data-st-theme', theme);
   document.body.className = 'st-body';
   document.body.setAttribute('dir', EN ? 'ltr' : 'rtl');
+  var pageType = document.body.getAttribute('data-st-page') || 'home';
 
   /* ── departments keep the catalogue tidy ───────────────────────── */
   var DEPTS = [
@@ -70,9 +71,12 @@
   var AV = { caznova: 'av1', smozy: 'av2', bnsheikh: 'av3', mastore: 'av4' };
 
   /* ── state ─────────────────────────────────────────────────────── */
+  var params = new URLSearchParams(location.search);
   var apiProducts = null;
   var cart = DS.cart ? DS.cart.read() : { items: [] };
   var slide = 0, heroTimer = null;
+  var shop = { tn: null, dep: null, cat: params.get('cat') || 'all', sort: 'featured', max: 0 };
+  var pd = { p: null, qty: 1, color: 0, size: '', tab: 0, thumb: 0 };
   var filters = {};
   DEPTS.forEach(function (d) { filters[d.id] = 'all'; });
 
@@ -181,14 +185,14 @@
       '<button class="st-link" data-scroll="stores">' + esc(EN ? 'All stores' : 'كل المتاجر') + I.arrow + '</button></div>' +
       '<div class="st-cats">' + DEPTS.map(function (d) {
         var first = productsFor(d)[0];
-        return '<a class="st-cat" href="#' + d.id + '">' +
+        return '<a class="st-cat" href="' + url('customer/store.html?store=' + d.slug) + '">' +
           '<img src="' + esc(first ? image(first) : d.art) + '" alt="' + esc(label(d)) + '" loading="lazy">' +
           '<div class="st-cat-body"><b>' + esc(label(d)) + '</b><span>' + I.arrow + '</span></div></a>';
       }).join('') + '</div></div></section>';
   }
   function cardMarkup(p) {
     var d = discount(p);
-    return '<article class="st-card" data-product="' + esc(p.id) + '">' +
+    return '<article class="st-card" data-product="' + esc(p.id) + '" data-product-link="' + esc(p.id) + '">' +
       '<div class="st-card-media">' +
         (d ? '<div class="st-card-top"><span class="st-tag">-' + d + '%</span></div>' : '') +
         '<button class="st-fav' + (isWished(p.id) ? ' is-on' : '') + '" data-fav="' + esc(p.id) + '" aria-label="wishlist">' + I.heart + '</button>' +
@@ -218,6 +222,19 @@
       '<div class="st-grid" data-grid="' + d.id + '">' + shown.map(cardMarkup).join('') + '</div>' +
       '</div></section>';
   }
+  function editorialMarkup(d, alt) {
+    var p = productsFor(d)[0];
+    return '<section class="st-editorial' + (alt ? ' alt' : '') + '"><div class="st-wrap st-editorial-inner">' +
+      '<div><span class="st-kicker">' + esc(EN ? 'The new collection' : 'المجموعة الجديدة') + '</span>' +
+      '<h2>' + esc(EN ? (alt ? 'Time,\nperfected.' : 'Style,\nsimplified.') : (alt ? 'الوقت.\nبكامل أناقته.' : 'أناقة.\nبكل بساطة.')) + '</h2>' +
+      '<p>' + esc(sub(d)) + '</p>' +
+      '<div class="st-ed-links"><a class="st-link" href="' + url('customer/store.html?store=' + d.slug) + '">' +
+        esc(EN ? 'Learn more' : 'اعرف المزيد') + I.arrow + '</a>' +
+        '<a class="st-cta" href="' + url('customer/store.html?store=' + d.slug) + '">' +
+        esc(EN ? 'Shop now' : 'تسوق الآن') + '</a></div></div>' +
+      '<div class="st-editorial-art"><img src="' + esc(p ? image(p) : d.art) + '" alt="' + esc(label(d)) + '" loading="lazy"></div>' +
+      '</div></section>';
+  }
   function promoMarkup() {
     return '<div class="st-wrap"><section class="st-promo">' +
       '<div class="st-promo-copy"><span class="st-kicker">' + esc(EN ? 'Limited time' : 'لفترة محدودة') + '</span>' +
@@ -235,12 +252,12 @@
       '<div class="st-stores">' + DEPTS.map(function (d) {
         var tn = tenantFor(d); if (!tn) return '';
         var st = DS.data.storeStatus ? DS.data.storeStatus(tn) : { open: true, hoursLabel: EN ? 'Open 24 hours' : 'مفتوح 24 ساعة' };
-        return '<div class="st-store"><div class="st-store-top">' +
+        return '<a class="st-store" href="' + url('customer/store.html?store=' + d.slug) + '"><div class="st-store-top">' +
           '<img class="st-store-av" src="' + url('assets/img/avatars/' + (AV[d.slug] || 'av1') + '.jpg') + '" alt="">' +
           '<div><b>' + esc(DS.loc(tn, 'name')) + '</b><small>' + esc(DS.loc(tn, 'industry') || '') + '</small></div></div>' +
           '<p>' + esc(DS.loc(tn, 'description') || '') + '</p>' +
           '<div class="st-store-foot"><span class="st-open">' + esc(st.open ? (EN ? 'Open now' : 'مفتوح الآن') : (EN ? 'Closed' : 'مغلق')) + '</span>' +
-          '<span>' + esc(st.hoursLabel) + '</span></div></div>';
+          '<span>' + esc(st.hoursLabel) + '</span></div></a>';
       }).join('') + '</div></div></section>';
   }
   function footerMarkup() {
@@ -249,7 +266,7 @@
       '<p>' + esc(EN ? 'A complete platform for retail, sales and delivery — built for the way you work.' : 'منصة متكاملة للتجارة والمبيعات والتوصيل — مصممة بطريقة تناسب شغلك.') + '</p>' +
       '<div class="st-pay"><span>VISA</span><span>MASTERCARD</span><span>INSTAPAY</span><span>VODAFONE CASH</span></div></div>' +
       '<div><h4>' + esc(EN ? 'Shop' : 'تسوق') + '</h4><ul>' + DEPTS.map(function (d) {
-        return '<li><a href="#' + d.id + '">' + esc(label(d)) + '</a></li>';
+        return '<li><a href="' + url('customer/store.html?store=' + d.slug) + '">' + esc(label(d)) + '</a></li>';
       }).join('') + '</ul></div>' +
       '<div><h4>' + esc(EN ? 'Help' : 'المساعدة') + '</h4><ul>' +
         '<li><a href="' + url('customer/my-orders.html') + '">' + esc(EN ? 'Track your order' : 'تتبع طلبك') + '</a></li>' +
@@ -281,7 +298,7 @@
       '<button data-scroll="categories">' + I.grid + '<span>' + esc(EN ? 'Shop' : 'المتجر') + '</span></button>' +
       '<button data-open-cart>' + I.bag + '<span>' + esc(EN ? 'Cart' : 'السلة') + '</span></button>' +
       '<button data-go="orders">' + I.shield + '<span>' + esc(EN ? 'Orders' : 'طلباتي') + '</span></button>' +
-      '<button data-go="account">' + I.user + '<span>' + esc(EN ? 'Account' : 'حسابي') + '</span></button>' +
+      '<button data-account>' + I.user + '<span>' + esc(EN ? 'Account' : 'حسابي') + '</span></button>' +
       '</nav>';
   }
   function headerMarkup() {
@@ -297,6 +314,161 @@
         '<button class="st-icon-btn st-cart-btn" data-open-cart>' + I.bag + '<span>' + esc(EN ? 'Cart' : 'السلة') + '</span><span class="st-badge" data-count>0</span></button>' +
       '</div></div></header>';
   }
+  /* ── store page ────────────────────────────────────────────────── */
+  function shopList() {
+    var list = productsFor(shop.dep);
+    if (shop.cat !== 'all') list = list.filter(function (p) { return cat(p) === shop.cat; });
+    if (shop.max > 0) list = list.filter(function (p) { return Number(p.price) <= shop.max; });
+    if (shop.sort === 'price-asc') list = list.slice().sort(function (a, b) { return a.price - b.price; });
+    if (shop.sort === 'price-desc') list = list.slice().sort(function (a, b) { return b.price - a.price; });
+    if (shop.sort === 'rating') list = list.slice().sort(function (a, b) { return (b.rating || 0) - (a.rating || 0); });
+    if (shop.sort === 'featured') list = list.slice().sort(function (a, b) { return (b.sold || 0) - (a.sold || 0); });
+    return list;
+  }
+  function paintShopGrid() {
+    var grid = DS.$('[data-shop-grid]'); if (!grid) return;
+    var list = shopList();
+    grid.innerHTML = list.length ? list.map(cardMarkup).join('') :
+      '<div class="st-noresults">' + esc(EN ? 'No products match these filters.' : 'مفيش منتجات مطابقة للفلاتر دي.') + '</div>';
+    var c = DS.$('[data-shop-count]'); if (c) c.textContent = list.length;
+  }
+  function updateShopUrl() {
+    try {
+      var u = new URL(location.href);
+      if (shop.cat === 'all') u.searchParams.delete('cat'); else u.searchParams.set('cat', shop.cat);
+      history.replaceState(null, '', u);
+    } catch (e) {}
+  }
+  function shopSidebar(cats, list) {
+    return '<aside class="st-side">' +
+      '<div class="st-side-group"><h4>' + esc(EN ? 'Categories' : 'الأقسام') + '</h4><div class="st-side-list">' +
+        '<button class="st-pill' + (shop.cat === 'all' ? ' is-active' : '') + '" data-shop-filter="all">' + esc(EN ? 'All products' : 'كل المنتجات') + '<small>' + list.length + '</small></button>' +
+        cats.map(function (c) {
+          var n = productsFor(shop.dep).filter(function (p) { return cat(p) === c; }).length;
+          return '<button class="' + (shop.cat === c ? 'is-active' : '') + '" data-shop-filter="' + esc(c) + '">' + esc(c) + '<small>' + n + '</small></button>';
+        }).join('') + '</div></div>' +
+      '<div class="st-side-group"><h4>' + esc(EN ? 'Max price' : 'السعر الأقصى') + '</h4>' +
+        '<input class="st-range" type="range" min="50" max="' + Math.max(100, shop.max) + '" step="10" value="' + (shop.max || Math.max(100, shop.max)) + '" data-shop-range>' +
+        '<div class="st-side-note"><span>0</span><span data-shop-range-label>' + esc(money(shop.max)) + '</span></div></div>' +
+      '<div class="st-side-group"><button class="st-link" data-shop-clear>' + esc(EN ? 'Clear filters' : 'مسح الفلاتر') + '</button></div>' +
+      '</aside>';
+  }
+  function openMobileFilters() {
+    var cats = [];
+    productsFor(shop.dep).forEach(function (p) { if (cats.indexOf(cat(p)) === -1) cats.push(cat(p)); });
+    var content = DS.$('[data-modal-content]');
+    DS.$('[data-modal-card]').classList.add('is-wide');
+    content.innerHTML = '<div style="padding:clamp(22px,5vw,42px)">' +
+      '<h2 style="margin:0 0 22px">' + esc(EN ? 'Filter products' : 'تصفية المنتجات') + '</h2>' +
+      '<span class="st-option-label">' + esc(EN ? 'Category' : 'القسم') + '</span><div class="st-options">' +
+      ['all'].concat(cats).map(function (c) {
+        return '<button class="st-opt' + (shop.cat === c ? ' is-active' : '') + '" data-mobile-cat="' + esc(c) + '">' +
+          esc(c === 'all' ? (EN ? 'All' : 'الكل') : c) + '</button>';
+      }).join('') + '</div>' +
+      '<span class="st-option-label">' + esc(EN ? 'Sort by' : 'الترتيب') + '</span><div class="st-options">' +
+      [['featured', EN ? 'Featured' : 'الأكثر مبيعاً'], ['price-asc', EN ? 'Price ↑' : 'السعر ↑'], ['price-desc', EN ? 'Price ↓' : 'السعر ↓'], ['rating', EN ? 'Rating' : 'التقييم']].map(function (s) {
+        return '<button class="st-opt' + (shop.sort === s[0] ? ' is-active' : '') + '" data-mobile-sort="' + s[0] + '">' + esc(s[1]) + '</button>';
+      }).join('') + '</div>' +
+      '<button class="st-btn-block" style="margin-top:28px" data-mobile-apply>' + esc(EN ? 'Show results' : 'عرض النتائج') + '</button></div>';
+    DS.$('[data-modal]').classList.add('is-open');
+    DS.$('[data-shade]').classList.add('is-open');
+  }
+  function storeShell() {
+    var slug = params.get('store') || 'mastore';
+    shop.tn = (DS.data.tenants || []).filter(function (tn) { return tn.slug === slug || tn.id === slug; })[0] || DS.data.tenants[0];
+    shop.dep = DEPTS.filter(function (d) { return shop.tn && (d.slug === shop.tn.slug || d.id === shop.tn.id); })[0] || DEPTS[0];
+    var list = productsFor(shop.dep);
+    shop.max = Math.max.apply(null, list.map(function (p) { return Number(p.price) || 0; }).concat([100]));
+    var cats = [];
+    list.forEach(function (p) { if (cats.indexOf(cat(p)) === -1) cats.push(cat(p)); });
+    if (shop.cat !== 'all' && cats.indexOf(shop.cat) === -1) shop.cat = 'all';
+    var st = DS.data.storeStatus ? DS.data.storeStatus(shop.tn) : { open: true, hoursLabel: '24 ساعة' };
+    var cover = shop.dep.art;
+    return '<div class="st-app">' + announceMarkup() + headerMarkup() +
+      '<main style="flex:1">' +
+        '<section class="st-shop-hero"><div class="st-shop-hero-bg"><img src="' + esc(cover) + '" alt=""></div><div class="st-wrap st-shop-hero-inner">' +
+          '<img class="st-shop-av" src="' + url('assets/img/avatars/' + (AV[shop.dep.slug] || 'av1') + '.jpg') + '" alt="">' +
+          '<div><span class="st-kicker">' + esc(DS.loc(shop.tn, 'industry') || '') + '</span>' +
+          '<h1>' + esc(DS.loc(shop.tn, 'name')) + '</h1>' +
+          '<p>' + esc(DS.loc(shop.tn, 'description') || '') + '</p>' +
+          '<div class="st-shop-meta"><span class="st-open">' + esc(st.open ? (EN ? 'Open now' : 'مفتوح الآن') : (EN ? 'Closed' : 'مغلق')) + '</span>' +
+          '<span>' + I.clock + esc(st.hoursLabel) + '</span><span>' + I.truck + esc(EN ? 'Fast delivery' : 'توصيل سريع') + '</span></div>' +
+          '</div></div></section>' +
+        '<div class="st-wrap"><div class="st-crumb"><a href="' + url('customer/storefront.html') + '">' + esc(EN ? 'Home' : 'الرئيسية') + '</a><span>/</span>' +
+          '<a href="' + url('customer/storefront.html') + '#stores">' + esc(EN ? 'Stores' : 'المتاجر') + '</a><span>/</span>' + esc(DS.loc(shop.tn, 'name')) + '</div>' +
+          '<section class="st-shop-page" style="padding-bottom:80px"><div class="st-shop-layout">' +
+            shopSidebar(cats, list) +
+            '<div><div class="st-toolbar">' +
+              '<div><b data-shop-count>' + list.length + '</b> ' + esc(EN ? 'products' : 'منتج') +
+                '<button class="st-icon-btn st-mobile-filter" data-mobile-filters>' + I.grid + '</button></div>' +
+              '<div><select class="st-select" data-shop-sort>' +
+                '<option value="featured">' + esc(EN ? 'Sort: Featured' : 'الترتيب: الأكثر مبيعاً') + '</option>' +
+                '<option value="price-asc">' + esc(EN ? 'Price: low to high' : 'السعر: من الأقل') + '</option>' +
+                '<option value="price-desc">' + esc(EN ? 'Price: high to low' : 'السعر: من الأعلى') + '</option>' +
+                '<option value="rating">' + esc(EN ? 'Top rated' : 'الأعلى تقييماً') + '</option></select></div>' +
+            '</div><div class="st-grid st-grid-3" data-shop-grid>' + shopList().map(cardMarkup).join('') + '</div></div>' +
+          '</div></section></div>' +
+      '</main>' + footerMarkup() + bottomNavMarkup() + overlaysMarkup() + '</div>';
+  }
+
+  /* ── product page ──────────────────────────────────────────────── */
+  function productShell() {
+    pd.p = find(params.get('id')) || products()[0];
+    var p = pd.p;
+    var tn = DS.data.tenantById(p.tenant_id);
+    var dep = DEPTS.filter(function (d) { return tn && d.slug === tn.slug; })[0] || DEPTS[0];
+    var fashion = dep.id === 'fashion' || dep.id === 'luxury';
+    var sizes = fashion ? ['S', 'M', 'L', 'XL', 'XXL'] : [EN ? 'One size' : 'مقاس واحد'];
+    pd.size = sizes[0]; pd.qty = 1; pd.color = 0; pd.tab = 0; pd.thumb = 0;
+    var colors = ['#0a0a0a', '#f5f5f5', '#8b5e3c', '#c9c9c9', '#ccff00'];
+    var related = productsFor(dep).filter(function (x) { return x.id !== p.id; }).slice(0, 4);
+    var old = Number(p.compare_at || p.old_price || 0);
+    var d = discount(p);
+    return '<div class="st-app">' + announceMarkup() + headerMarkup() +
+      '<main style="flex:1"><div class="st-wrap">' +
+        '<div class="st-crumb"><a href="' + url('customer/storefront.html') + '">' + esc(EN ? 'Home' : 'الرئيسية') + '</a><span>/</span>' +
+          '<a href="' + url('customer/store.html?store=' + dep.slug) + '">' + esc(DS.loc(tn, 'name')) + '</a><span>/</span>' + esc(name(p)) + '</div>' +
+        '<section class="st-pd">' +
+          '<div class="st-gallery"><div class="st-thumbs">' + [0, 1, 2, 3].map(function (i) {
+            return '<button class="st-thumb' + (i === 0 ? ' is-active' : '') + '" data-pd-thumb="' + i + '"><img src="' + esc(image(p)) + '" style="object-position:' + (i * 22) + '% 50%" alt=""></button>';
+          }).join('') + '</div><div class="st-pd-main"><img data-pd-main src="' + esc(image(p)) + '" alt="' + esc(name(p)) + '"></div></div>' +
+          '<div class="st-pd-info">' +
+            '<span class="st-kicker">' + esc(DS.loc(tn, 'name') || '') + ' · ' + esc(cat(p)) + '</span>' +
+            '<h1>' + esc(name(p)) + '</h1>' +
+            '<div class="st-pd-rating">' + stars(p.rating) + '<span>' + esc(EN ? '4.8 / 5 · 128 reviews' : '٤٫٨ / ٥ · ١٢٨ تقييم') + '</span></div>' +
+            '<div class="st-pd-price">' + esc(money(p.price)) + (old > p.price ? '<s>' + esc(money(old)) + '</s>' : '') + (d ? '<em>-' + d + '%</em>' : '') + '</div>' +
+            '<p class="st-pd-desc">' + esc(EN ? (p.description_en || p.description || 'A carefully selected piece from our store.') :
+              (p.description || 'قطعة مختارة بعناية من متاجرنا.')) + '</p>' +
+            '<span class="st-option-label">' + esc(EN ? 'Colour' : 'اللون') + '</span>' +
+            '<div class="st-options">' + colors.map(function (c, i) {
+              return '<button class="st-color' + (i === 0 ? ' is-active' : '') + '" data-pd-color="' + i + '" style="background:' + c + '" aria-label="color"></button>';
+            }).join('') + '</div>' +
+            '<span class="st-option-label">' + esc(EN ? 'Size' : 'المقاس') + '</span>' +
+            '<div class="st-options">' + sizes.map(function (s, i) {
+              return '<button class="st-opt' + (i === 0 ? ' is-active' : '') + '" data-pd-size="' + esc(s) + '">' + esc(s) + '</button>';
+            }).join('') + '</div>' +
+            '<div class="st-pd-actions"><div class="st-pd-qty"><button data-pd-qty="-1">−</button><span data-pd-qty-value>1</span><button data-pd-qty="1">+</button></div>' +
+              '<button class="st-cta" data-pd-add>' + esc(EN ? 'Add to cart' : 'أضف للسلة') + I.bag + '</button>' +
+              '<button class="st-icon-btn" data-fav="' + esc(p.id) + '">' + I.heart + '</button></div>' +
+            '<div class="st-trustline"><span>' + I.truck + esc(EN ? 'Free shipping' : 'شحن مجاني') + '</span>' +
+              '<span>' + I.shield + esc(EN ? 'Secure payment' : 'دفع آمن') + '</span>' +
+              '<span>' + I.clock + esc(EN ? '24h store' : 'متجر 24 ساعة') + '</span></div>' +
+            '<div class="st-tabs"><div class="st-tab-btns">' +
+              '<button class="is-active" data-pd-tab="0">' + esc(EN ? 'Description' : 'الوصف') + '</button>' +
+              '<button data-pd-tab="1">' + esc(EN ? 'Details' : 'التفاصيل') + '</button>' +
+              '<button data-pd-tab="2">' + esc(EN ? 'Delivery & returns' : 'التوصيل والإرجاع') + '</button></div>' +
+              '<div class="st-tab-panel is-active">' + esc(EN ? (p.description_en || p.description || '') : (p.description || 'منتج مختار بعناية من متجرنا.')) + '</div>' +
+              '<div class="st-tab-panel"><ul><li>' + esc(cat(p)) + '</li><li>' + esc(DS.loc(tn, 'name')) + '</li>' +
+                '<li>' + esc(EN ? 'High quality material' : 'خامة عالية الجودة') + '</li><li>SKU: ' + esc(p.sku || p.id) + '</li></ul></div>' +
+              '<div class="st-tab-panel">' + esc(EN ? 'Orders are prepared quickly and delivered to your door. Free shipping on orders over 299 EGP. Easy returns within 14 days.' :
+                'تُجهّز الطلبات بسرعة وتُوصّل إلى باب منزلك. شحن مجاني للطلبات فوق ٢٩٩ ج.م وإرجاع سهل خلال ١٤ يوماً.') + '</div></div>' +
+          '</div></section>' +
+          '<section class="st-section" style="padding-top:0"><div class="st-section-head"><div><span class="st-kicker">You may also like</span>' +
+            '<h2>' + esc(EN ? 'More from ' : 'المزيد من ') + esc(DS.loc(tn, 'name')) + '</h2></div></div>' +
+            '<div class="st-grid">' + related.map(cardMarkup).join('') + '</div></section>' +
+        '</div></main>' + footerMarkup() + bottomNavMarkup() + overlaysMarkup() + '</div>';
+  }
+
   function announceMarkup() {
     return '<div class="st-announce"><span class="st-dot"></span><span>' +
       esc(EN ? 'Free shipping on orders over 299 EGP' : 'شحن مجاني للطلبات فوق ٢٩٩ ج.م') +
@@ -306,7 +478,8 @@
   function shell() {
     return '<div class="st-app">' + announceMarkup() + headerMarkup() +
       '<main style="flex:1">' + heroMarkup() + trustMarkup() + catsMarkup() +
-      DEPTS.map(deptMarkup).join('') + promoMarkup() + storesMarkup() + '</main>' +
+      editorialMarkup(DEPTS[0], false) +
+      DEPTS.map(deptMarkup).join('') + editorialMarkup(DEPTS[1], true) + promoMarkup() + storesMarkup() + '</main>' +
       footerMarkup() + bottomNavMarkup() + overlaysMarkup() + '</div>';
   }
 
@@ -316,6 +489,10 @@
     var el = document.createElement('div'); el.className = 'st-toast'; el.textContent = msg;
     box.appendChild(el);
     setTimeout(function () { el.remove(); }, 2600);
+  }
+  function syncLogos() {
+    var src = url(theme === 'dark' ? 'assets/img/LOGO-WHAIT.png' : 'assets/img/LOGO-BLACK.png');
+    DS.$$('.st-brand img, .st-foot-brand img').forEach(function (img) { img.src = src; });
   }
   function refreshCount() {
     var n = (cart.items || []).reduce(function (s, l) { return s + (Number(l.qty) || 0); }, 0);
@@ -426,6 +603,21 @@
         '<div class="st-empty">' + I.heart + '<p>' + esc(EN ? 'Nothing saved yet.' : 'لسه مفيش حاجة محفوظة.') + '</p></div>') + '</div>';
     DS.$('[data-modal]').classList.add('is-open'); DS.$('[data-shade]').classList.add('is-open');
   }
+  function openAccount() {
+    var content = DS.$('[data-modal-content]');
+    DS.$('[data-modal-card]').classList.add('is-wide');
+    var name = DS.loc(user, 'name') || (EN ? 'Guest' : 'ضيف');
+    content.innerHTML = '<div style="padding:clamp(24px,5vw,54px)">' +
+      '<span class="st-kicker">' + esc(EN ? 'Your space' : 'مساحتك') + '</span>' +
+      '<h2 style="margin:6px 0 22px">' + esc(name) + '</h2>' +
+      '<div style="display:grid;gap:10px">' +
+      '<a class="st-btn-block" href="' + url('customer/my-orders.html') + '">' + esc(EN ? 'My orders' : 'طلباتي') + I.arrow + '</a>' +
+      '<a class="st-btn-block" href="' + url('customer/tracking.html') + '">' + esc(EN ? 'Track a delivery' : 'تتبع التوصيل') + I.truck + '</a>' +
+      '<button class="st-btn-block" data-logout>' + esc(EN ? 'Sign out' : 'تسجيل الخروج') + '</button>' +
+      '</div></div>';
+    DS.$('[data-modal]').classList.add('is-open');
+    DS.$('[data-shade]').classList.add('is-open');
+  }
   function goDept(id) {
     closeAll();
     var el = document.getElementById(id);
@@ -449,7 +641,10 @@
     document.addEventListener('click', function (e) {
       var el = e.target.closest('[data-product],[data-add],[data-fav],[data-open-cart],[data-close-drawer],[data-close-modal],[data-shade],' +
         '[data-pill],[data-filter-all],[data-go-dept],[data-scroll],[data-go],[data-qty],[data-remove],[data-checkout],' +
-        '[data-modal-add],[data-search],[data-wishlist],[data-st-theme-toggle],[data-search-product]');
+        '[data-modal-add],[data-search],[data-wishlist],[data-st-theme-toggle],[data-search-product],' +
+        '[data-account],[data-logout],[data-shop-filter],[data-shop-sort],[data-shop-clear],' +
+        '[data-pd-tab],[data-pd-thumb],[data-pd-qty],[data-pd-size],[data-pd-color],[data-product-link],' +
+        '[data-mobile-filters],[data-mobile-cat],[data-mobile-sort],[data-mobile-apply]');
       if (!el || el === document.documentElement || el === document.body) return;
       if (el.hasAttribute('data-shade') || el.hasAttribute('data-close-drawer') || el.hasAttribute('data-close-modal')) { closeAll(); return; }
       if (el.hasAttribute('data-open-cart')) { openDrawer(); return; }
@@ -471,6 +666,8 @@
         return;
       }
       if (el.hasAttribute('data-go')) { goto(el.getAttribute('data-go')); return; }
+      if (el.hasAttribute('data-account')) { openAccount(); return; }
+      if (el.hasAttribute('data-logout')) { closeAll(); if (DS.logout) DS.logout(); location.href = url('index.html'); return; }
       if (el.hasAttribute('data-qty')) {
         var q = el.getAttribute('data-qty').split('|'); setQty(q[0], (function () {
           var line = cart.items.filter(function (l) { return l.id === q[0]; })[0];
@@ -491,12 +688,82 @@
         document.documentElement.setAttribute('data-st-theme', theme);
         try { localStorage.setItem('ds_customer_theme', theme); } catch (e) {}
         el.innerHTML = theme === 'dark' ? I.sun : I.moon;
-        var logo = DS.$('.st-brand img');
-        if (logo) logo.src = url(theme === 'dark' ? 'assets/img/LOGO-WHAIT.png' : 'assets/img/LOGO-BLACK.png');
+        syncLogos();
         return;
       }
       if (el.hasAttribute('data-search-product')) { closeAll(); openProduct(el.getAttribute('data-search-product')); return; }
+      if (el.hasAttribute('data-shop-filter')) {
+        shop.cat = el.getAttribute('data-shop-filter');
+        DS.$$('[data-shop-filter]').forEach(function (b) { b.classList.toggle('is-active', b === el); });
+        paintShopGrid(); updateShopUrl(); return;
+      }
+      if (el.hasAttribute('data-shop-clear')) {
+        shop.cat = 'all'; shop.sort = 'featured'; shop.max = 0;
+        var sel = DS.$('[data-shop-sort]'); if (sel) sel.value = 'featured';
+        var rng = DS.$('[data-shop-range]'); if (rng) rng.value = rng.max;
+        DS.$$('[data-shop-filter]').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-shop-filter') === 'all'); });
+        paintShopGrid(); updateShopUrl(); return;
+      }
+      if (el.hasAttribute('data-pd-tab')) {
+        pd.tab = Number(el.getAttribute('data-pd-tab'));
+        DS.$$('[data-pd-tab]').forEach(function (b) { b.classList.toggle('is-active', Number(b.getAttribute('data-pd-tab')) === pd.tab); });
+        DS.$$('.st-tab-panel').forEach(function (p, i) { p.classList.toggle('is-active', i === pd.tab); });
+        return;
+      }
+      if (el.hasAttribute('data-pd-thumb')) {
+        pd.thumb = Number(el.getAttribute('data-pd-thumb'));
+        var main = DS.$('[data-pd-main]'); if (main && pd.p) main.src = image(pd.p);
+        DS.$$('[data-pd-thumb]').forEach(function (b) { b.classList.toggle('is-active', Number(b.getAttribute('data-pd-thumb')) === pd.thumb); });
+        return;
+      }
+      if (el.hasAttribute('data-pd-qty')) {
+        pd.qty = Math.max(1, pd.qty + Number(el.getAttribute('data-pd-qty')));
+        var qel = DS.$('[data-pd-qty-value]'); if (qel) qel.textContent = pd.qty;
+        return;
+      }
+      if (el.hasAttribute('data-pd-size')) {
+        pd.size = el.getAttribute('data-pd-size');
+        DS.$$('[data-pd-size]').forEach(function (b) { b.classList.toggle('is-active', b === el); });
+        return;
+      }
+      if (el.hasAttribute('data-pd-color')) {
+        pd.color = Number(el.getAttribute('data-pd-color'));
+        DS.$$('[data-pd-color]').forEach(function (b, i) { b.classList.toggle('is-active', i === pd.color); });
+        return;
+      }
+      if (el.hasAttribute('data-mobile-filters')) { openMobileFilters(); return; }
+      if (el.hasAttribute('data-mobile-cat')) {
+        shop.cat = el.getAttribute('data-mobile-cat');
+        DS.$$('[data-mobile-cat]').forEach(function (b) { b.classList.toggle('is-active', b === el); });
+        return;
+      }
+      if (el.hasAttribute('data-mobile-sort')) {
+        shop.sort = el.getAttribute('data-mobile-sort');
+        DS.$$('[data-mobile-sort]').forEach(function (b) { b.classList.toggle('is-active', b === el); });
+        return;
+      }
+      if (el.hasAttribute('data-mobile-apply')) {
+        var sel = DS.$('[data-shop-sort]'); if (sel) sel.value = shop.sort;
+        DS.$$('[data-shop-filter]').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-shop-filter') === shop.cat); });
+        closeAll(); paintShopGrid(); updateShopUrl(); return;
+      }
+      if (el.hasAttribute('data-product-link')) { location.href = url('customer/product.html?id=' + el.getAttribute('data-product-link')); return; }
       if (el.hasAttribute('data-product')) { openProduct(el.getAttribute('data-product')); return; }
+    });
+    var sortEl = DS.$('[data-shop-sort]');
+    if (sortEl) sortEl.addEventListener('change', function () { shop.sort = sortEl.value; paintShopGrid(); });
+    var rangeEl = DS.$('[data-shop-range]');
+    if (rangeEl) rangeEl.addEventListener('input', function () {
+      shop.max = Number(rangeEl.value);
+      var lab = DS.$('[data-shop-range-label]'); if (lab) lab.textContent = money(shop.max);
+      paintShopGrid();
+    });
+    var pdAdd = DS.$('[data-pd-add]');
+    if (pdAdd) pdAdd.addEventListener('click', function () {
+      add(pd.p.id);
+      var line = (cart.items || []).filter(function (l) { return l.id === pd.p.id; })[0];
+      if (line) { line.variant = pd.size || ''; line.color = pd.color; saveCart(); }
+      openDrawer();
     });
   }
   function goSlide(n) {
@@ -511,7 +778,8 @@
   function restart() { clearInterval(heroTimer); startSlider(); }
 
   /* ── boot ──────────────────────────────────────────────────────── */
-  app.innerHTML = shell();
+  app.innerHTML = pageType === 'store' ? storeShell() : pageType === 'product' ? productShell() : shell();
+  syncLogos();
   refreshCount();
   bind();
   renderDrawer();
